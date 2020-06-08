@@ -1,0 +1,4 @@
+[submodule "sentry-native-sys/sentry-native"]
+	path = sentry-native-sys/sentry-native
+	url = https://github.com/getsentry/sentry-native.git
+	branch = 0.3.0

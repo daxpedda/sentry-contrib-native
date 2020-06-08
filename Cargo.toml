@@ -1,0 +1,24 @@
+[package]
+name = "sentry-native"
+version = "0.1.0"
+authors = ["daxpedda <daxpedda@gmail.com>"]
+edition = "2018"
+
+[workspace]
+members = ["sentry-native-sys"]
+
+[dependencies]
+once_cell = "1"
+rmpv = "0.4"
+sys = { package = "sentry-native-sys", path = "sentry-native-sys" }
+thiserror = "1"
+
+[dev-dependencies]
+anyhow = "1"
+rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-macro-feature", features = [
+    "macro"
+] }
+
+[features]
+nightly = []
+test = []

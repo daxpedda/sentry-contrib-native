@@ -1,0 +1,9 @@
+[package]
+name = "sentry-native-sys"
+version = "0.1.0"
+authors = ["daxpedda <daxpedda@gmail.com>"]
+edition = "2018"
+links = "sentry-native"
+
+[build-dependencies]
+anyhow = "1"

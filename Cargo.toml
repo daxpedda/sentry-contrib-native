@@ -1,16 +1,16 @@
 [package]
-name = "sentry-native"
+name = "sentry-contrib-native"
 version = "0.1.0"
 authors = ["daxpedda <daxpedda@gmail.com>"]
 edition = "2018"
 
 [workspace]
-members = ["sentry-native-sys"]
+members = ["sentry-contrib-native-sys"]
 
 [dependencies]
 once_cell = "1"
 rmpv = "0.4"
-sys = { package = "sentry-native-sys", path = "sentry-native-sys" }
+sys = { package = "sentry-contrib-native-sys", path = "sentry-contrib-native-sys" }
 thiserror = "1"
 
 [dev-dependencies]

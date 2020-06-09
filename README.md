@@ -1,20 +1,20 @@
-# sentry-native
+# sentry-contrib-native
 
-[![Crates.io](https://img.shields.io/crates/v/sentry-native.svg)](https://crates.io/crates/sentry-native)
-[![Libraries.io](https://img.shields.io/librariesio/release/cargo/sentry-native.svg)](https://libraries.io/cargo/sentry-native)
-[![Commits since](https://img.shields.io/github/commits-since/daxpedda/sentry-native/latest)](https://github.com/daxpedda/sentry-native/releases/latest)
-[![Resolution](https://isitmaintained.com/badge/resolution/daxpedda/sentry-native.svg)](http://isitmaintained.com/project/daxpedda/sentry-native)
-[![Issues](https://isitmaintained.com/badge/open/daxpedda/sentry-native.svg)](http://isitmaintained.com/project/daxpedda/sentry-native)
-[![License](https://img.shields.io/crates/l/sentry-native)](https://github.com/daxpedda/sentry-native/blob/master/LICENSE)
-[![LoC](https://tokei.rs/b1/github/daxpedda/sentry-native)](https://github.com/daxpedda/sentry-native)
+[![Crates.io](https://img.shields.io/crates/v/sentry-contrib-native.svg)](https://crates.io/crates/sentry-contrib-native)
+[![Libraries.io](https://img.shields.io/librariesio/release/cargo/sentry-contrib-native.svg)](https://libraries.io/cargo/sentry-contrib-native)
+[![Commits since](https://img.shields.io/github/commits-since/daxpedda/sentry-contrib-native/latest)](https://github.com/daxpedda/sentry-contrib-native/releases/latest)
+[![Resolution](https://isitmaintained.com/badge/resolution/daxpedda/sentry-contrib-native.svg)](http://isitmaintained.com/project/daxpedda/sentry-contrib-native)
+[![Issues](https://isitmaintained.com/badge/open/daxpedda/sentry-contrib-native.svg)](http://isitmaintained.com/project/daxpedda/sentry-contrib-native)
+[![License](https://img.shields.io/crates/l/sentry-contrib-native)](https://github.com/daxpedda/sentry-contrib-native/blob/master/LICENSE)
+[![LoC](https://tokei.rs/b1/github/daxpedda/sentry-contrib-native)](https://github.com/daxpedda/sentry-contrib-native)
 
-**[Release](https://github.com/daxpedda/sentry-native/tree/release):**
-[![Build](https://github.com/daxpedda/sentry-native/workflows/CI/badge.svg?branch=release)](https://github.com/daxpedda/sentry-native/actions?query=workflow%3ACI+branch%3Arelease)
-[![Docs](https://docs.rs/sentry-native/badge.svg)](https://docs.rs/sentry-native)
+**[Release](https://github.com/daxpedda/sentry-contrib-native/tree/release):**
+[![Build](https://github.com/daxpedda/sentry-contrib-native/workflows/CI/badge.svg?branch=release)](https://github.com/daxpedda/sentry-contrib-native/actions?query=workflow%3ACI+branch%3Arelease)
+[![Docs](https://docs.rs/sentry-contrib-native/badge.svg)](https://docs.rs/sentry-contrib-native)
 
-**[Master](https://github.com/daxpedda/sentry-native):**
-[![Build](https://github.com/daxpedda/sentry-native/workflows/CI/badge.svg?branch=master)](https://github.com/daxpedda/sentry-native/actions?query=workflow%3ACI+branch%3Amaster)
-[![Docs](https://github.com/daxpedda/sentry-native/workflows/docs/badge.svg)](https://daxpedda.github.io/sentry-native/master/doc/index.html)
+**[Master](https://github.com/daxpedda/sentry-contrib-native):**
+[![Build](https://github.com/daxpedda/sentry-contrib-native/workflows/CI/badge.svg?branch=master)](https://github.com/daxpedda/sentry-contrib-native/actions?query=workflow%3ACI+branch%3Amaster)
+[![Docs](https://github.com/daxpedda/sentry-contrib-native/workflows/docs/badge.svg)](https://daxpedda.github.io/sentry-contrib-native/master/doc/index.html)
 
 **Unofficial** bindings to the [Sentry Native SDK](https://github.com/getsentry/sentry-native) for Rust.
 
@@ -22,8 +22,8 @@ See the [Alternatives section](#alternatives) for details.
 
 ## Branches
 
-- **[release](https://github.com/daxpedda/sentry-native/tree/release)** - For releases only.
-- **[master](https://github.com/daxpedda/sentry-native)** - For active development inluding PR's.
+- **[release](https://github.com/daxpedda/sentry-contrib-native/tree/release)** - For releases only.
+- **[master](https://github.com/daxpedda/sentry-contrib-native)** - For active development inluding PR's.
 
 ## Usage
 
@@ -47,8 +47,8 @@ fn main() {
 
 ## Documentation
 
-- For releases on [crates.io](https://crates.io): [![Docs](https://docs.rs/sentry-native/badge.svg)](https://docs.rs/sentry-native).
-- For the master branch: [![Docs](https://github.com/daxpedda/sentry-native/workflows/docs/badge.svg)](https://daxpedda.github.io/sentry-native/master/doc/index.html).
+- For releases on [crates.io](https://crates.io): [![Docs](https://docs.rs/sentry-contrib-native/badge.svg)](https://docs.rs/sentry-contrib-native).
+- For the master branch: [![Docs](https://github.com/daxpedda/sentry-contrib-native/workflows/docs/badge.svg)](https://daxpedda.github.io/sentry-contrib-native/master/doc/index.html).
 
 Currently, nightly is needed for full documentation: `cargo doc --features nightly`
 
@@ -77,7 +77,7 @@ In comparison the only upside this crate can provide is application crash handli
 
 ## Changelog
 
-See the [CHANGELOG](https://github.com/daxpedda/sentry-native/blob/master/CHANGELOG.md) file for details
+See the [CHANGELOG](https://github.com/daxpedda/sentry-contrib-native/blob/master/CHANGELOG.md) file for details
 
 ## License
 

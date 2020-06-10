@@ -46,30 +46,46 @@ fn main() -> Result<()> {
 
     println!("cargo:rustc-link-search={}", install.join("lib").display());
     println!("cargo:rustc-link-lib=sentry");
-    println!("cargo:rustc-link-lib=mini_chromium");
+    println!(
+        "cargo:rustc-link-search={}",
+        install.join("lib64").display()
+    );
 
-    let target_os = env::var_os("CARGO_CFG_TARGET_OS").unwrap();
+    match env::var("CARGO_CFG_TARGET_OS")
+        .expect("target os not specified")
+        .as_str()
+    {
+        crashpad if crashpad == "windows" || crashpad == "macos" => {
+            println!("cargo:rustc-link-lib=crashpad_client");
+            println!("cargo:rustc-link-lib=crashpad_util");
+            println!("cargo:rustc-link-lib=mini_chromium");
 
-    if target_os == "windows" {
-        println!("cargo:rustc-link-lib=dbghelp");
-        println!("cargo:rustc-link-lib=shlwapi");
-        println!("cargo:rustc-link-lib=winhttp");
-    }
+            let mut handler = String::from("crashpad_handler");
 
-    if target_os == "windows" || target_os == "macos" {
-        println!("cargo:rustc-link-lib=crashpad_client");
-        println!("cargo:rustc-link-lib=crashpad_util");
+            if crashpad == "windows" {
+                println!("cargo:rustc-link-lib=dbghelp");
+                println!("cargo:rustc-link-lib=shlwapi");
 
-        let handler = if target_os == "windows" {
-            "crashpad_handler.exe"
-        } else {
-            "crashpad_handler"
-        };
+                if cfg!(not(feature = "custom-transport")) {
+                    println!("cargo:rustc-link-lib=winhttp");
+                }
 
-        println!(
-            "cargo:HANDLER={}",
-            install.join("bin").join(handler).display()
-        );
+                handler.push_str(".exe");
+            }
+
+            println!(
+                "cargo:HANDLER={}",
+                install.join("bin").join(handler).display()
+            );
+        }
+        "linux" => {
+            if cfg!(not(feature = "custom-transport")) {
+                println!("cargo:rustc-link-lib=curl");
+            }
+
+            println!("cargo:rustc-link-lib=breakpad_client");
+        }
+        other => unimplemented!("target platform {} not implemented", other),
     }
 
     Ok(())
@@ -87,12 +103,28 @@ fn build(out_dir: &Path, source: &Path, install: &Path) -> Result<()> {
         .context("failed to parse path")?
         .to_owned();
 
-    if !Command::new("cmake")
-        .current_dir(source)
-        .args(&["-B", &build, "-D", "BUILD_SHARED_LIBS=OFF"])
-        .status()?
-        .success()
-    {
+    let mut cfg_cmd = Command::new("cmake");
+    // Build static libraries
+    cfg_cmd.args(&[
+        "-B",
+        &build,
+        "-D",
+        "BUILD_SHARED_LIBS=OFF",
+        "-D",
+        "SENTRY_BUILD_TESTS=OFF",
+        "-D",
+        "SENTRY_BUILD_EXAMPLES=OFF",
+    ]);
+
+    if cfg!(feature = "custom-transport") {
+        cfg_cmd.args(&["-D", "SENTRY_TRANSPORT=none"]);
+    }
+
+    if cfg!(target_feature = "crt-static") {
+        cfg_cmd.args(&["-D", "SENTRY_BUILD_RUNTIMESTATIC=ON"]);
+    }
+
+    if !cfg_cmd.current_dir(source).status()?.success() {
         bail!("CMake configuration error");
     }
 

@@ -7,3 +7,6 @@ links = "sentry-native"
 
 [build-dependencies]
 anyhow = "1"
+
+[features]
+custom-transport = []

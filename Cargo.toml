@@ -22,3 +22,4 @@ rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-ma
 [features]
 nightly = []
 test = []
+custom-transport = ["sys/custom-transport"]

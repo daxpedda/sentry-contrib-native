@@ -76,7 +76,7 @@ impl User {
         self.insert("email", email.into())
     }
 
-    /// Sets the email of the user.
+    /// Sets the IP address of the user.
     ///
     /// # Examples
     /// ```

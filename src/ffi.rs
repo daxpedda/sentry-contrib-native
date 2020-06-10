@@ -38,11 +38,11 @@ impl CPath for Path {
         let path = self.as_os_str().as_bytes().iter().copied();
         let mut clean_string = Vec::new();
 
-        for char in path {
-            if char == 0 {
-                clean_string.extend(null_string.clone())
+        for ch in path {
+            if ch == 0 {
+                clean_string.extend(null_string)
             } else {
-                clean_string.push(char)
+                clean_string.push(ch)
             }
         }
 

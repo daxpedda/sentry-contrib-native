@@ -49,12 +49,12 @@ impl Event {
     /// event.insert("extra", extra);
     /// event.capture();
     /// ```
-    pub fn new_message<S: Into<SentryString>>(
-        level: Level,
-        logger: Option<SentryString>,
-        text: S,
-    ) -> Self {
-        let logger = logger.map_or(ptr::null(), |logger| logger.as_cstr().as_ptr());
+    pub fn new_message<L, S>(level: Level, logger: Option<L>, text: S) -> Self
+    where
+        L: Into<SentryString>,
+        S: Into<SentryString>,
+    {
+        let logger = logger.map_or(ptr::null(), |logger| logger.into().as_cstr().as_ptr());
         let text: CString = text.into().into();
 
         Self(Some(unsafe {

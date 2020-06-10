@@ -510,7 +510,7 @@ impl Options {
         };
         #[cfg(not(windows))]
         unsafe {
-            sys::options_add_attachment(self.as_mut(), name.as_ptr(), path.as_ptr())
+            sys::options_add_attachment(self.as_mut(), name.as_ptr(), path.as_ptr() as *const i8)
         };
     }
 
@@ -547,7 +547,7 @@ impl Options {
         };
         #[cfg(not(windows))]
         unsafe {
-            sys::options_set_handler_path(self.as_mut(), path.as_ptr())
+            sys::options_set_handler_path(self.as_mut(), path.as_ptr() as *const i8)
         };
     }
 
@@ -584,7 +584,7 @@ impl Options {
         };
         #[cfg(not(windows))]
         unsafe {
-            sys::options_set_database_path(self.as_mut(), path.as_ptr())
+            sys::options_set_database_path(self.as_mut(), path.as_ptr() as *const i8)
         };
     }
 

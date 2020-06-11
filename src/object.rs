@@ -174,6 +174,13 @@ pub trait Object: Sealed {
 
         map
     }
+
+    /// Workaround for https://github.com/getsentry/sentry-native/issues/235
+    fn add_stacktrace(&self, len: usize) {
+        let v = self.unwrap();
+
+        unsafe { sys::value_add_stacktrace(v, len) };
+    }
 }
 
 impl<T: Sealed> Object for T {}

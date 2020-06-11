@@ -261,6 +261,9 @@ extern "C" {
     #[link_name = "sentry_uuid_nil"]
     pub fn uuid_nil() -> Uuid;
 
+    #[link_name = "sentry_value_add_stacktrace"]
+    pub fn value_add_stacktrace(event: Value, len: usize);
+
     /// Formats the uuid into a string buffer.
     #[link_name = "sentry_uuid_as_string"]
     pub fn uuid_as_string(uuid: *const Uuid, str: *mut c_char);

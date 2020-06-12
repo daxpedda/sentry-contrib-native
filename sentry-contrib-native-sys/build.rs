@@ -40,21 +40,24 @@ fn main() -> Result<()> {
         );
     }
 
+    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("target os not specified");
+
     if !installed {
         build(&out_dir, &source, &install)?;
     }
 
     println!("cargo:rustc-link-search={}", install.join("lib").display());
     println!("cargo:rustc-link-lib=sentry");
-    println!(
-        "cargo:rustc-link-search={}",
-        install.join("lib64").display()
-    );
 
-    match env::var("CARGO_CFG_TARGET_OS")
-        .expect("target os not specified")
-        .as_str()
-    {
+    let lib_path = if target_os == "windows" {
+        install.join("lib")
+    } else {
+        install.join("lib64")
+    };
+
+    println!("cargo:rustc-link-search={}", lib_path.display());
+
+    match target_os.as_str() {
         crashpad if crashpad == "windows" || crashpad == "macos" => {
             println!("cargo:rustc-link-lib=crashpad_client");
             println!("cargo:rustc-link-lib=crashpad_util");

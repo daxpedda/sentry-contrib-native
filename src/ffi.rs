@@ -40,9 +40,16 @@ impl CPath for Path {
 
         for ch in path {
             if ch == 0 {
-                clean_string.extend(null_string)
+                
+                clean_string.extend(
+                    #[cfg(windows)]
+                    null_string.clone()
+                    #[cfg(not(windows))]
+                    null_string
+                );
+                
             } else {
-                clean_string.push(ch)
+                clean_string.push(ch);
             }
         }
 

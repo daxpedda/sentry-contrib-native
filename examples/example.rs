@@ -1,6 +1,6 @@
 use anyhow::Result;
 //use rmpv::decode;
-//use sentry_native::{Object, Map};
+//use sentry_contrib_native::{Object, Map};
 
 fn main() -> Result<()> {
     /*let object = Map::new();

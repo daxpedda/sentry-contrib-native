@@ -1,10 +1,8 @@
 use crate::{Object, Sealed, SentryString, GLOBAL_LOCK};
 use std::net::SocketAddr;
 
-/// A sentry user.
+/// A Sentry user.
 pub struct User(Option<sys::Value>);
-
-object_drop!(User);
 
 impl Default for User {
     fn default() -> Self {
@@ -12,21 +10,16 @@ impl Default for User {
     }
 }
 
-object_sealed!(User);
-object_debug!(User);
-object_clone!(User);
-object_partial_eq!(User);
-object_from_iterator!(User);
-object_extend!(User);
+derive_object!(User);
 
 impl User {
     /// Creates a new user.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{User, Object, Value};
+    /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
-    /// let user = User::new();
+    /// let mut user = User::new();
     /// user.set_id(1);
     /// user.set();
     /// # Ok(()) }
@@ -40,14 +33,14 @@ impl User {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{User, Object, Value};
+    /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
-    /// let user = User::new();
+    /// let mut user = User::new();
     /// user.set_id(1);
     /// user.set();
     /// # Ok(()) }
     /// ```
-    pub fn set_id(&self, id: i32) {
+    pub fn set_id(&mut self, id: i32) {
         self.insert("id", id)
     }
 
@@ -55,15 +48,15 @@ impl User {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{User, Object, Value};
+    /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
-    /// let user = User::new();
+    /// let mut user = User::new();
     /// user.set_id(1);
     /// user.set_username("test");
     /// user.set();
     /// # Ok(()) }
     /// ```
-    pub fn set_username<S: Into<SentryString>>(&self, username: S) {
+    pub fn set_username<S: Into<SentryString>>(&mut self, username: S) {
         self.insert("username", username.into())
     }
 
@@ -71,15 +64,15 @@ impl User {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{User, Object, Value};
+    /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
-    /// let user = User::new();
+    /// let mut user = User::new();
     /// user.set_id(1);
     /// user.set_email("example@test.org");
     /// user.set();
     /// # Ok(()) }
     /// ```
-    pub fn set_email<S: Into<SentryString>>(&self, email: S) {
+    pub fn set_email<S: Into<SentryString>>(&mut self, email: S) {
         self.insert("email", email.into())
     }
 
@@ -87,15 +80,15 @@ impl User {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{User, Object, Value};
+    /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
-    /// let user = User::new();
+    /// let mut user = User::new();
     /// user.set_id(1);
     /// user.set_ip(([1, 1, 1, 1], 443));
     /// user.set();
     /// # Ok(()) }
     /// ```
-    pub fn set_ip<IP: Into<SocketAddr>>(&self, ip: IP) {
+    pub fn set_ip<IP: Into<SocketAddr>>(&mut self, ip: IP) {
         self.insert("ip", &ip.into().to_string())
     }
 
@@ -103,9 +96,9 @@ impl User {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{User, Object, Value};
+    /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
-    /// let user = User::new();
+    /// let mut user = User::new();
     /// user.set_id(1);
     /// user.set();
     /// # Ok(()) }

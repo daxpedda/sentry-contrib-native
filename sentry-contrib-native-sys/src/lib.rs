@@ -1,4 +1,4 @@
-#![warn(clippy::all, clippy::nursery, clippy::pedantic, missing_docs, rustdoc)]
+#![warn(clippy::all, clippy::nursery, clippy::pedantic, missing_docs)]
 #![cfg_attr(
     feature = "nightly",
     feature(external_doc),
@@ -21,7 +21,7 @@ type c_wchar = u16;
 #[derive(Debug, Copy, Clone)]
 pub struct Options([u8; 0]);
 
-/// Represents a sentry protocol value.
+/// Represents a Sentry protocol value.
 ///
 /// The members of this type should never be accessed.  They are only here
 /// so that alignment for the type can be properly determined.
@@ -66,7 +66,7 @@ pub enum Level {
     Fatal = 3,
 }
 
-/// Type of a sentry value.
+/// Type of a Sentry value.
 #[repr(i32)]
 pub enum ValueType {
     /// Null
@@ -242,7 +242,7 @@ extern "C" {
     #[link_name = "sentry_value_new_breadcrumb"]
     pub fn value_new_breadcrumb(type_: *const c_char, message: *const c_char) -> Value;
 
-    /// Serialize a sentry value to msgpack.
+    /// Serialize a Sentry value to msgpack.
     ///
     /// The string is freshly allocated and must be freed with
     /// `sentry_string_free`.  Since msgpack is not zero terminated
@@ -257,6 +257,10 @@ extern "C" {
     #[link_name = "sentry_event_value_add_stacktrace"]
     pub fn event_value_add_stacktrace(event: Value, ips: *mut *mut c_void, len: usize);
 
+    /// Creates the nil uuid.
+    #[link_name = "sentry_uuid_nil"]
+    pub fn uuid_nil() -> Uuid;
+
     /// Formats the uuid into a string buffer.
     #[link_name = "sentry_uuid_as_string"]
     pub fn uuid_as_string(uuid: *const Uuid, str: *mut c_char);
@@ -266,7 +270,7 @@ extern "C" {
     #[link_name = "sentry_options_new"]
     pub fn options_new() -> *mut Options;
 
-    /// Deallocates previously allocated sentry options.
+    /// Deallocates previously allocated Sentry options.
     #[link_name = "sentry_options_free"]
     pub fn options_free(opts: *mut Options);
 
@@ -427,13 +431,13 @@ extern "C" {
     #[link_name = "sentry_init"]
     pub fn init(options: *mut Options) -> c_int;
 
-    /// Shuts down the sentry client and forces transports to flush out.
+    /// Shuts down the Sentry client and forces transports to flush out.
     #[link_name = "sentry_shutdown"]
     pub fn shutdown();
 
     /// Clears the internal module cache.
     ///
-    /// For performance reasons, sentry will cache the list of loaded libraries
+    /// For performance reasons, Sentry will cache the list of loaded libraries
     /// when capturing events. This cache can get out-of-date when loading
     /// or unloading libraries at runtime. It is therefore recommended to
     /// call `sentry_clear_modulecache` when doing so, to make sure that the
@@ -444,7 +448,7 @@ extern "C" {
 
     /// Returns the client options.
     ///
-    /// This might return NULL if sentry is not yet initialized.
+    /// This might return NULL if Sentry is not yet initialized.
     #[link_name = "sentry_get_options"]
     pub fn get_options() -> *const Options;
 
@@ -464,7 +468,7 @@ extern "C" {
     #[link_name = "sentry_user_consent_get"]
     pub fn user_consent_get() -> UserConsent;
 
-    /// Sends a sentry event.
+    /// Sends a Sentry event.
     #[link_name = "sentry_capture_event"]
     pub fn capture_event(event: Value) -> Uuid;
 

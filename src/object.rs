@@ -3,12 +3,12 @@ use rmpv::{decode, Value as MpValue};
 use std::{convert::TryInto, ffi::CString, iter::FromIterator, slice};
 
 pub trait Sealed {
-    fn unwrap(&self) -> sys::Value;
+    fn as_raw(&self) -> sys::Value;
 
     fn take(self) -> sys::Value;
 
     fn to_msgpack(&self) -> Vec<(MpValue, MpValue)> {
-        let object = self.unwrap();
+        let object = self.as_raw();
 
         let mut size_out = 0;
 
@@ -26,35 +26,35 @@ pub trait Sealed {
 }
 
 /// Extention trait for types that function like [`Map`]s:
-/// [`Breadcrumb`](crate::Breadcrumb), [`Event`](crate::Event),
+/// [`Breadcrumb`](crate::Breadcrumb), [`Event`](crate::Event), and
 /// [`User`](crate::User).
 pub trait Object: Sealed {
     /// Sets a value to a key in the map.
     ///
     /// # Panics
-    /// Panics if sentry failed to allocate memory.
+    /// Panics if Sentry failed to allocate memory.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{Event, Map, Object, Value};
+    /// # use sentry_contrib_native::{Event, Map, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let object = Map::new();
+    /// let mut event = Event::new();
+    /// let mut object = Map::new();
     /// object.insert("test", true);
     /// assert_eq!(Value::Bool(true), object.get("test").unwrap());
     /// event.insert("test", object);
     /// event.capture();
     /// # Ok(()) }
     /// ```
-    fn insert<S: Into<SentryString>, V: Into<Value>>(&self, key: S, value: V) {
-        let object = self.unwrap();
+    fn insert<S: Into<SentryString>, V: Into<Value>>(&mut self, key: S, value: V) {
+        let object = self.as_raw();
 
         let key: CString = key.into().into();
         let value = value.into();
 
         match unsafe { sys::value_set_by_key(object, key.as_ptr(), value.take()) } {
             0 => (),
-            _ => panic!("sentry failed to allocate memory"),
+            _ => panic!("Sentry failed to allocate memory"),
         }
     }
 
@@ -65,10 +65,10 @@ pub trait Object: Sealed {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{Event, Map, Object};
+    /// # use sentry_contrib_native::{Event, Map, Object};
     /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let object = Map::new();
+    /// let mut event = Event::new();
+    /// let mut object = Map::new();
     /// object.insert("test", true);
     /// object.remove("test")?;
     /// assert_eq!(None, object.get("test"));
@@ -76,8 +76,8 @@ pub trait Object: Sealed {
     /// event.capture();
     /// # Ok(()) }
     /// ```
-    fn remove<S: Into<SentryString>>(&self, key: S) -> Result<(), Error> {
-        let object = self.unwrap();
+    fn remove<S: Into<SentryString>>(&mut self, key: S) -> Result<(), Error> {
+        let object = self.as_raw();
 
         let key: CString = key.into().into();
 
@@ -91,10 +91,10 @@ pub trait Object: Sealed {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{Event, Map, Object, Value};
+    /// # use sentry_contrib_native::{Event, Map, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let object = Map::new();
+    /// let mut event = Event::new();
+    /// let mut object = Map::new();
     /// object.insert("test", true);
     /// assert_eq!(Value::Bool(true), object.get("test").unwrap());
     /// event.insert("test", object);
@@ -102,11 +102,11 @@ pub trait Object: Sealed {
     /// # Ok(()) }
     /// ```
     fn get<S: Into<SentryString>>(&self, key: S) -> Option<Value> {
-        let object = self.unwrap();
+        let object = self.as_raw();
 
         let key: CString = key.into().into();
 
-        match unsafe { sys::value_get_by_key_owned(object, key.as_ptr()) }.into() {
+        match Value::from_raw(unsafe { sys::value_get_by_key_owned(object, key.as_ptr()) }) {
             Value::Null => None,
             value => Some(value),
         }
@@ -116,31 +116,37 @@ pub trait Object: Sealed {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{Event, Map, Object};
+    /// # use sentry_contrib_native::{Event, Map, Object};
     /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let object = Map::new();
+    /// let mut event = Event::new();
+    /// let mut object = Map::new();
     /// object.insert("test", true);
-    /// assert_eq!(1, object.get_length());
+    /// assert_eq!(1, object.len());
     /// event.insert("test", object);
     /// event.capture();
     /// # Ok(()) }
     /// ```
     #[must_use]
-    fn get_length(&self) -> usize {
-        let object = self.unwrap();
+    fn len(&self) -> usize {
+        let object = self.as_raw();
 
         unsafe { sys::value_get_length(object) }
     }
 
-    /// Turns an [`Map`] to an [`Vec`].
+    /// Returns `true` if the [`Object`] has a length of 0.
+    #[must_use]
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Turns a [`Map`] to a [`Vec`].
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{Event, Map, Object, Value, SentryString};
+    /// # use sentry_contrib_native::{Event, Map, Object, Value, SentryString};
     /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let object = Map::new();
+    /// let mut event = Event::new();
+    /// let mut object = Map::new();
     /// object.insert("test1", 1);
     /// object.insert("test2", 2);
     /// object.insert("test3", 3);
@@ -156,9 +162,9 @@ pub trait Object: Sealed {
 
         for (key, value) in map_mp {
             let key = if let MpValue::String(key) = key {
-                CString::new(key.into_bytes())
-                    .expect("message pack decoding failed")
-                    .into()
+                SentryString::from_cstring(
+                    CString::new(key.into_bytes()).expect("message pack decoding failed"),
+                )
             } else {
                 unreachable!("message pack decoding failed")
             };
@@ -172,7 +178,7 @@ pub trait Object: Sealed {
 
 impl<T: Sealed> Object for T {}
 
-macro_rules! object_drop {
+macro_rules! derive_object {
     ($type:ty) => {
         impl Drop for $type {
             fn drop(&mut self) {
@@ -181,13 +187,8 @@ macro_rules! object_drop {
                 }
             }
         }
-    };
-}
-
-macro_rules! object_sealed {
-    ($type:ty) => {
         impl crate::Sealed for $type {
-            fn unwrap(&self) -> sys::Value {
+            fn as_raw(&self) -> sys::Value {
                 self.0.expect("use after free")
             }
 
@@ -195,11 +196,6 @@ macro_rules! object_sealed {
                 self.0.take().expect("use after free")
             }
         }
-    };
-}
-
-macro_rules! object_debug {
-    ($type:ty) => {
         impl std::fmt::Debug for $type {
             fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 use crate::Object;
@@ -210,22 +206,19 @@ macro_rules! object_debug {
                     .finish()
             }
         }
-    };
-}
-
-macro_rules! object_clone {
-    ($type:ty) => {
         impl Clone for $type {
             fn clone(&self) -> Self {
                 use crate::{Object, Sealed};
 
-                let object = Self::new();
+                let mut object = Self::default();
                 let map = self.to_msgpack();
 
                 for (key, _) in map {
                     let key = if let rmpv::Value::String(key) = key {
-                        std::ffi::CString::new(key.into_bytes())
-                            .expect("message pack decoding failed")
+                        crate::SentryString::from_cstring(
+                            std::ffi::CString::new(key.into_bytes())
+                                .expect("message pack decoding failed"),
+                        )
                     } else {
                         unreachable!("message pack decoding failed")
                     };
@@ -239,11 +232,6 @@ macro_rules! object_clone {
                 object
             }
         }
-    };
-}
-
-macro_rules! object_partial_eq {
-    ($type:ty) => {
         impl PartialEq for $type {
             fn eq(&self, other: &Self) -> bool {
                 use crate::Object;
@@ -251,18 +239,13 @@ macro_rules! object_partial_eq {
                 self.to_vec() == other.to_vec()
             }
         }
-    };
-}
-
-macro_rules! object_from_iterator {
-    ($type:ty) => {
         impl<S: Into<crate::SentryString>, V: Into<crate::Value>> std::iter::FromIterator<(S, V)>
             for $type
         {
             fn from_iter<I: std::iter::IntoIterator<Item = (S, V)>>(map: I) -> Self {
                 use crate::Object;
 
-                let object = Self::new();
+                let mut object = Self::default();
 
                 for (key, value) in map {
                     object.insert(key, value);
@@ -271,11 +254,6 @@ macro_rules! object_from_iterator {
                 object
             }
         }
-    };
-}
-
-macro_rules! object_extend {
-    ($type:ty) => {
         impl Extend<(crate::SentryString, crate::Value)> for $type {
             fn extend<T: std::iter::IntoIterator<Item = (crate::SentryString, crate::Value)>>(
                 &mut self,
@@ -302,15 +280,15 @@ fn mp_to_sentry(mp_value: MpValue) -> Value {
                 .expect("message pack decoding failed"),
         ),
         MpValue::F64(value) => Value::Double(value),
-        MpValue::String(value) => Value::String(
-            CString::new(value.into_bytes())
-                .expect("message pack decoding failed")
-                .into(),
-        ),
+        MpValue::String(value) => Value::String(SentryString::from_cstring(
+            CString::new(value.into_bytes()).expect("message pack decoding failed"),
+        )),
         MpValue::Array(value) => List::from_iter(value.into_iter().map(mp_to_sentry)).into(),
         MpValue::Map(value) => Value::Map(Map::from_iter(value.into_iter().map(|(key, value)| {
             let key = if let MpValue::String(key) = key {
-                CString::new(key.into_bytes()).expect("message pack decoding failed")
+                SentryString::from_cstring(
+                    CString::new(key.into_bytes()).expect("message pack decoding failed"),
+                )
             } else {
                 unreachable!("message pack decoding failed")
             };

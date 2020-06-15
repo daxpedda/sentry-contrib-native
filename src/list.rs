@@ -1,10 +1,25 @@
+//! Sentry list implementation.
+
 use crate::{Error, Value};
 use std::{
     fmt::{Debug, Formatter, Result as FmtResult},
     iter::FromIterator,
 };
 
-/// A sentry list value.
+/// A Sentry list value.
+///
+/// # Examples
+/// ```
+/// # use sentry_contrib_native::{Event, List, Map, Object};
+/// # use std::iter::FromIterator;
+/// let mut event = Event::new();
+///
+/// let mut list = List::new();
+/// list.push(true);
+///
+/// event.insert("extra", Map::from_iter(Some(("some extra data", list))));
+/// event.capture();
+/// ```
 pub struct List(Option<sys::Value>);
 
 impl Drop for List {
@@ -26,16 +41,20 @@ impl Debug for List {
 
 impl Clone for List {
     fn clone(&self) -> Self {
-        let self_raw = self.unwrap();
+        let self_raw = self.as_ref();
         let list = Self::new();
-        let list_raw = list.unwrap();
+        let list_raw = list.as_ref();
 
-        for index in 0..self.get_length() {
+        for index in 0..self.len() {
             match unsafe {
-                sys::value_append(list_raw, sys::value_get_by_index_owned(self_raw, index))
+                sys::value_set_by_index(
+                    list_raw,
+                    index,
+                    sys::value_get_by_index_owned(self_raw, index),
+                )
             } {
                 0 => (),
-                _ => panic!("sentry failed to allocate memory"),
+                _ => panic!("Sentry failed to allocate memory"),
             }
         }
 
@@ -57,7 +76,7 @@ impl Default for List {
 
 impl<V: Into<Value>> FromIterator<V> for List {
     fn from_iter<I: IntoIterator<Item = V>>(iter: I) -> Self {
-        let list = Self::new();
+        let mut list = Self::new();
 
         for item in iter {
             list.push(item);
@@ -67,8 +86,8 @@ impl<V: Into<Value>> FromIterator<V> for List {
     }
 }
 
-impl Extend<Value> for List {
-    fn extend<T: IntoIterator<Item = Value>>(&mut self, iter: T) {
+impl<V: Into<Value>> Extend<V> for List {
+    fn extend<T: IntoIterator<Item = V>>(&mut self, iter: T) {
         for value in iter {
             self.push(value);
         }
@@ -76,184 +95,135 @@ impl Extend<Value> for List {
 }
 
 impl List {
-    /// Creates a new, empty list value.
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_native::{Event, List, Object};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let list = List::new();
-    /// list.push(true);
-    /// event.insert("test", list);
-    /// event.capture();
-    /// # Ok(()) }
-    /// ```
+    /// Creates a new Sentry list.
     #[must_use]
     pub fn new() -> Self {
         Self(Some(unsafe { sys::value_new_list() }))
     }
 
-    pub(crate) unsafe fn from_raw(value: sys::Value) -> Self {
+    /// Crates [`List`] from [`sys::Value`].
+    ///
+    /// # Safety
+    /// This doesn't check if [`sys::Value`] really is a [`List`].
+    pub(crate) const unsafe fn from_raw(value: sys::Value) -> Self {
         Self(Some(value))
     }
 
-    fn unwrap(&self) -> sys::Value {
+    /// Yields [`sys::Value`], ownership is retained.
+    fn as_ref(&self) -> sys::Value {
         self.0.expect("use after free")
     }
 
+    /// Yields [`sys::Value`], [`List`] is consumed and caller is responsible
+    /// for deallocating [`sys::Value`].
     pub(crate) fn take(mut self) -> sys::Value {
         self.0.take().expect("use after free")
     }
 
     /// Converts a [`List`] to a [`Vec`].
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_native::{Event, List, Object, Value};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let list = List::new();
-    /// list.push(true);
-    /// list.push(false);
-    /// assert_eq!(vec![Value::Bool(true), Value::Bool(false)], list.to_vec());
-    /// # Ok(()) }
-    /// ```
     #[must_use]
     pub fn to_vec(&self) -> Vec<Value> {
         let mut list = Vec::new();
 
-        for index in 0..self.get_length() {
+        for index in 0..self.len() {
             if let Some(value) = self.get(index) {
                 list.push(value)
+            } else {
+                list.push(Value::Null)
             }
         }
 
         list
     }
 
-    /// Appends a value to a list.
+    /// Appends a [`value`] to the [`List`].
     ///
     /// # Panics
-    /// Panics if sentry failed to allocate memory.
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_native::{Event, List, Object};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let list = List::new();
-    /// list.push(true);
-    /// event.insert("test", list);
-    /// event.capture();
-    /// # Ok(()) }
-    /// ```
-    pub fn push<V: Into<Value>>(&self, value: V) {
-        let list = self.unwrap();
+    /// Panics if Sentry failed to allocate memory.
+    pub fn push<V: Into<Value>>(&mut self, value: V) {
+        let list = self.as_ref();
 
         let value = value.into();
 
         match unsafe { sys::value_append(list, value.take()) } {
             0 => (),
-            _ => panic!("sentry failed to allocate memory"),
+            _ => panic!("Sentry failed to allocate memory"),
         }
     }
 
     /// Returns the length of the list.
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_native::{Event, List, Object};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let list = List::new();
-    /// list.push(true);
-    /// assert_eq!(1, list.get_length());
-    /// event.insert("test", list);
-    /// event.capture();
-    /// # Ok(()) }
-    /// ```
     #[must_use]
-    pub fn get_length(&self) -> usize {
-        let list = self.unwrap();
+    pub fn len(&self) -> usize {
+        let list = self.as_ref();
 
         unsafe { sys::value_get_length(list) }
     }
 
+    /// Returns `true` if the [`List`] has a length of 0.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Looks up a value in a list by index.
-    ///
-    /// # Errors
-    /// Fails with [`Error::StrUtf8`] if value conversion fails.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{Event, List, Object, Value};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let list = List::new();
+    /// # use sentry_contrib_native::{List, Value};
+    /// let mut list = List::new();
     /// list.push(true);
-    /// assert_eq!(Value::Bool(true), list.get(0).unwrap());
-    /// event.insert("test", list);
-    /// event.capture();
-    /// # Ok(()) }
+    /// assert_eq!(Some(Value::Bool(true)), list.get(0));
     /// ```
     #[must_use]
     pub fn get(&self, index: usize) -> Option<Value> {
-        let list = self.unwrap();
+        let list = self.as_ref();
 
-        match unsafe { sys::value_get_by_index_owned(list, index) }.into() {
+        match Value::from_raw(unsafe { sys::value_get_by_index_owned(list, index) }) {
             Value::Null => None,
             value => Some(value),
         }
     }
 
-    /// Inserts a value into the list at a certain position.
+    /// Inserts a [`Value`] into the [`List`] at position `index`.
     ///
     /// # Panics
-    /// Panics if sentry failed to allocate memory.
+    /// Panics if Sentry failed to allocate memory.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{Event, List, Object, Value};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let list = List::new();
-    /// list.set_by_index(0, true);
-    /// assert_eq!(Value::Bool(true), list.get(0).unwrap());
-    /// event.insert("test", list);
-    /// event.capture();
-    /// # Ok(()) }
+    /// # use sentry_contrib_native::{List, Value};
+    /// let mut list = List::new();
+    /// list.insert(5, true);
+    /// assert_eq!(Some(Value::Bool(true)), list.get(5));
     /// ```
-    pub fn set_by_index<V: Into<Value>>(&self, index: usize, value: V) {
-        let list = self.unwrap();
+    pub fn insert<V: Into<Value>>(&mut self, index: usize, value: V) {
+        let list = self.as_ref();
 
         let value = value.into();
 
         match unsafe { sys::value_set_by_index(list, index, value.take()) } {
             0 => (),
-            _ => panic!("sentry failed to allocate memory"),
+            _ => panic!("Sentry failed to allocate memory"),
         }
     }
 
-    /// Removes a value from the list by index.
+    /// Removes a [`Value`] from the [`List`] at position `index`.
     ///
     /// # Errors
-    /// Fails with [`Error::ListRemove`] if index wasn't found.
+    /// Fails with [`Error::ListRemove`] if position at `index` wasn't found.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{Event, List, Object};
+    /// # use sentry_contrib_native::List;
     /// # fn main() -> anyhow::Result<()> {
-    /// let event = Event::new();
-    /// let list = List::new();
+    /// let mut list = List::new();
     /// list.push(true);
-    /// list.remove_by_index(0)?;
+    /// list.remove(0)?;
     /// assert_eq!(None, list.get(0));
-    /// event.insert("test", list);
-    /// event.capture();
     /// # Ok(()) }
     /// ```
-    pub fn remove_by_index(&self, index: usize) -> Result<(), Error> {
-        let list = self.unwrap();
+    pub fn remove(&mut self, index: usize) -> Result<(), Error> {
+        let list = self.as_ref();
 
         match unsafe { sys::value_remove_by_index(list, index) } {
             0 => Ok(()),
@@ -262,62 +232,91 @@ impl List {
     }
 }
 
-/*
-#[cfg(test)]
-mod test {
-    use crate::{List, Map};
-    use anyhow::Result;
-    use rusty_fork::test_fork;
-    use std::convert::TryFrom;
-    use std::ffi::CString;
+#[test]
+#[allow(clippy::cognitive_complexity)]
+fn list() {
+    use crate::Map;
 
-    #[test_fork]
-    fn test() -> Result<()> {
-        let list = List::new();
+    let mut list = List::new();
+    list.push(true);
 
-        list.push(());
-        assert_eq!(list.get(0), None);
+    let mut list2 = List::new();
+    list2.push(true);
 
-        list.push("test1");
-        assert_eq!(list.get(1), Some("test1".into()));
-        list.push(&String::from("test2"));
-        assert_eq!(list.get(2), Some((&String::from("test2")).into()));
-        list.push(CString::new("test3")?);
-        assert_eq!(list.get(3), Some(CString::new("test3")?));
-
-        list.push(true);
-        assert_eq!(list.get(4), true);
-
-        list.push(5);
-        assert_eq!(list.get(5), Some(5.into()));
-
-        list.push(6.6);
-        assert_eq!(list.get(6), Some(6.6.into()));
-
-        list.push(List::new());
-        assert_eq!(list.get(7), Some(List::new().into()));
-
-        list.push(Map::new());
-        assert_eq!(list.get(8), Some(Map::new().into()));
-
-        list.push("test9", List::new());
-        assert_eq!(list.get(CString::new("test9")?), Some(List::new().into()));
-
-        list.insert("test10", Map::new());
-        assert_eq!(list.get(&String::from("test10")), Some(Map::new().into()));
-
-        list.remove("test3")?;
-        assert_eq!(list.get("test3"), None);
-        list.remove(CString::new("test4")?)?;
-        assert_eq!(list.get("test4"), None);
-        list.remove("test5")?;
-        assert_eq!(list.get(&String::from("test5")), None);
-
-        assert_eq!(list.get_length(), 8);
-
-        assert_eq!(Map::try_from(list.get("test10").unwrap())?.to_vec(), vec!());
-
-        Ok(())
+    #[allow(clippy::redundant_clone)]
+    {
+        assert_eq!(list, list.clone());
+        assert_eq!(list, list2);
+        assert_eq!(list, list2.clone());
+        assert_ne!(list, List::new());
+        assert_ne!(list.clone(), List::new());
+        assert_ne!(list, List::new().clone());
     }
+
+    let mut list = List::new();
+    list.push(());
+    assert_eq!(list.get(0), None);
+
+    list.push(true);
+    assert_eq!(list.get(1), Some(true.into()));
+
+    list.push(5);
+    assert_eq!(list.get(2), Some(5.into()));
+
+    list.push(6.6);
+    assert_eq!(list.get(3), Some(6.6.into()));
+
+    list.push("test1");
+    assert_eq!(list.get(4), Some("test1".into()));
+    list.push(&String::from("test2"));
+    assert_eq!(list.get(5), Some("test2".into()));
+
+    list.push(List::new());
+    assert_eq!(list.get(6), Some(List::new().into()));
+
+    list.push(Map::new());
+    assert_eq!(list.get(7), Some(Map::new().into()));
+
+    list.extend(&["some", "test", "data"]);
+    assert_eq!(list.get(8), Some("some".into()));
+    assert_eq!(list.get(9), Some("test".into()));
+    assert_eq!(list.get(10), Some("data".into()));
+    list.extend(vec!["some", "test", "data"]);
+    list.extend(&vec!["some", "test", "data"]);
+
+    assert_eq!(list.len(), 17);
+
+    assert_eq!(list.to_vec(), list.to_vec());
+    assert_eq!(list, list.clone());
+    assert_ne!(list.to_vec(), Vec::<Value>::new());
+    assert_ne!(list, List::new());
+
+    let new_list: Vec<Value> = vec![
+        ().into(),
+        true.into(),
+        5.into(),
+        6.6.into(),
+        "test1".into(),
+        "test2".into(),
+        List::new().into(),
+        Map::new().into(),
+        "some".into(),
+        "test".into(),
+        "data".into(),
+        "some".into(),
+        "test".into(),
+        "data".into(),
+        "some".into(),
+        "test".into(),
+        "data".into(),
+    ];
+    assert_eq!(list.to_vec(), new_list);
+    assert_eq!(list, List::from_iter(new_list.clone()));
+    #[allow(clippy::redundant_clone)]
+    {
+        assert_eq!(list.clone(), List::from_iter(new_list));
+    }
+
+    let list = List::from_iter(&[(), (), ()]);
+    assert_eq!(list.len(), 3);
 }
-*/

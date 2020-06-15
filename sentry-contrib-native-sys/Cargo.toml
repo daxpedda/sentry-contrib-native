@@ -1,5 +1,5 @@
 [package]
-name = "sentry-native-sys"
+name = "sentry-contrib-native-sys"
 version = "0.1.0"
 authors = ["daxpedda <daxpedda@gmail.com>"]
 edition = "2018"

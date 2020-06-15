@@ -1,7 +1,7 @@
 #![warn(
     clippy::all,
-    //clippy::missing_docs_in_private_items,
     clippy::nursery,
+    clippy::missing_docs_in_private_items,
     clippy::pedantic,
     missing_docs
 )]
@@ -47,7 +47,7 @@ pub use user::User;
 pub use value::Value;
 
 /// Sentry errors.
-#[derive(Debug, Error, PartialEq)]
+#[derive(Debug, Error, Eq, PartialEq)]
 pub enum Error {
     /// String contains invalid UTF-8.
     #[error("string contains invalid UTF-8")]
@@ -58,8 +58,8 @@ pub enum Error {
     /// Sample rate outside of allowed range.
     #[error("sample rate outside of allowed range")]
     SampleRateRange,
-    /// Initializing sentry failed.
-    #[error("failed to initialize sentry")]
+    /// Initializing Sentry failed.
+    #[error("failed to initialize Sentry")]
     Init,
     /// Failed to remove value from list by index.
     #[error("failed to remove value from list by index")]
@@ -67,9 +67,6 @@ pub enum Error {
     /// Failed to remove value from map.
     #[error("failed to remove value from map")]
     MapRemove,
-    /// Failed to convert to type.
-    #[error("failed to convert to type")]
-    TryConvert,
 }
 
 impl From<Infallible> for Error {
@@ -79,6 +76,7 @@ impl From<Infallible> for Error {
 }
 
 /// Sentry levels for events and breadcrumbs.
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Level {
     /// Debug.
     Debug,
@@ -105,40 +103,50 @@ impl From<Level> for i32 {
 }
 
 /// The state of user consent.
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Consent {
     /// Unknown.
     Unknown,
-    /// Given.
-    Given,
     /// Revoked.
     Revoked,
+    /// Given.
+    Given,
 }
 
 impl From<sys::UserConsent> for Consent {
     fn from(level: sys::UserConsent) -> Self {
         match level {
             sys::UserConsent::Unknown => Self::Unknown,
-            sys::UserConsent::Given => Self::Given,
             sys::UserConsent::Revoked => Self::Revoked,
+            sys::UserConsent::Given => Self::Given,
         }
     }
 }
 
-/// Shuts down the sentry client and forces transports to flush out.
+/// Shuts down the Sentry client and forces transports to flush out.
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{Options, shutdown};
-/// # fn main() -> anyhow::Result<()> {
-/// {
-///     let options = Options::new();
-///     // call forget because we are leaving the context
-///     options.init()?.forget();
+/// # use anyhow::Result;
+/// # use sentry_contrib_native::{Options, shutdown};
+/// fn main() -> Result<()> {
+///     sentry_init()?;
+///
+///     // ...
+///     // your application code
+///     // ...
+///
+///     // call shutdown manually to make sure transports flush out
+///     shutdown();
+///     Ok(())
 /// }
 ///
-/// // call shutdown manually to make sure transports flush out
-/// shutdown();
-/// # Ok(()) }
+/// fn sentry_init() -> Result<()> {
+///     let options = Options::new();
+///     // call forget because we are leaving the context and we don't want to shut down the Sentry client yet
+///     options.init()?.forget();
+///     Ok(())
+/// }
 /// ```
 pub fn shutdown() {
     let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
@@ -147,7 +155,7 @@ pub fn shutdown() {
 
 /// Clears the internal module cache.
 ///
-/// For performance reasons, sentry will cache the list of loaded libraries when
+/// For performance reasons, Sentry will cache the list of loaded libraries when
 /// capturing events. This cache can get out-of-date when loading or unloading
 /// libraries at runtime. It is therefore recommended to call
 /// [`clear_modulecache`] when doing so, to make sure that the next call to
@@ -155,7 +163,7 @@ pub fn shutdown() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::clear_modulecache;
+/// # use sentry_contrib_native::clear_modulecache;
 /// # mod libloading {
 /// #     pub struct Library;
 /// #     impl Library {
@@ -177,7 +185,7 @@ pub fn clear_modulecache() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{user_consent_give, Options};
+/// # use sentry_contrib_native::{user_consent_give, Options};
 /// # fn main() -> anyhow::Result<()> {
 /// let mut options = Options::new();
 /// options.set_require_user_consent(true);
@@ -194,7 +202,7 @@ pub fn user_consent_give() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{user_consent_revoke, Options};
+/// # use sentry_contrib_native::{user_consent_revoke, Options};
 /// # fn main() -> anyhow::Result<()> {
 /// let mut options = Options::new();
 /// options.set_require_user_consent(true);
@@ -226,7 +234,7 @@ pub fn user_consent_get() -> Consent {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{remove_user, Options};
+/// # use sentry_contrib_native::{remove_user, Options};
 /// # fn main() -> anyhow::Result<()> {
 /// let options = Options::new();
 /// remove_user();
@@ -241,8 +249,8 @@ pub fn remove_user() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{set_tag, Event, Object, Value};
-/// let event = Event::new();
+/// # use sentry_contrib_native::{set_tag, Event, Object, Value};
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// set_tag("test_tag", "test");
 /// event.capture();
@@ -261,9 +269,9 @@ pub fn set_tag<S1: Into<SentryString>, S2: Into<SentryString>>(key: S1, value: S
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{set_tag, remove_tag, Event, Object, Value};
+/// # use sentry_contrib_native::{set_tag, remove_tag, Event, Object, Value};
 /// # fn main() -> anyhow::Result<()> {
-/// let event = Event::new();
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// set_tag("test_tag", "test");
 /// remove_tag("test_tag");
@@ -283,9 +291,9 @@ pub fn remove_tag<S: Into<SentryString>>(key: S) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{set_extra, Event, Object};
+/// # use sentry_contrib_native::{set_extra, Event, Object};
 /// set_extra("ExtraTest", true);
-/// let event = Event::new();
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// event.capture();
 /// ```
@@ -303,10 +311,10 @@ pub fn set_extra<S: Into<SentryString>, V: Into<Value>>(key: S, value: V) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{set_extra, remove_extra, Event, Object};
+/// # use sentry_contrib_native::{set_extra, remove_extra, Event, Object};
 /// set_extra("extra_test", true);
 /// remove_extra("extra_test");
-/// let event = Event::new();
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// event.capture();
 /// ```
@@ -323,8 +331,8 @@ pub fn remove_extra<S: Into<SentryString>>(key: S) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{Event, Object, set_context};
-/// let event = Event::new();
+/// # use sentry_contrib_native::{Event, Object, set_context};
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// set_context("test_context", true);
 /// event.capture();
@@ -343,8 +351,8 @@ pub fn set_context<S: Into<SentryString>, V: Into<Value>>(key: S, value: V) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{set_context, remove_context, Event, Object};
-/// let event = Event::new();
+/// # use sentry_contrib_native::{set_context, remove_context, Event, Object};
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// set_context("test_context", true);
 /// remove_context("test_context");
@@ -363,8 +371,8 @@ pub fn remove_context<S: Into<SentryString>>(key: S) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{set_fingerprint, Event, Object};
-/// let event = Event::new();
+/// # use sentry_contrib_native::{set_fingerprint, Event, Object};
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// set_fingerprint(&["test"]);
 /// event.capture();
@@ -382,8 +390,8 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<SentryString>>(fingerp
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{set_fingerprint, remove_fingerprint, Event, Object};
-/// let event = Event::new();
+/// # use sentry_contrib_native::{set_fingerprint, remove_fingerprint, Event, Object};
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// set_fingerprint(&["test"]);
 /// remove_fingerprint();
@@ -398,8 +406,8 @@ pub fn remove_fingerprint() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{set_transaction, Event, Object};
-/// let event = Event::new();
+/// # use sentry_contrib_native::{set_transaction, Event, Object};
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// set_transaction("test_transaction");
 /// event.capture();
@@ -417,10 +425,10 @@ pub fn set_transaction<S: Into<SentryString>>(transaction: S) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{remove_transaction, Event, Object};
+/// # use sentry_contrib_native::{remove_transaction, Event, Object};
 /// remove_transaction();
 ///
-/// let event = Event::new();
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// event.capture();
 /// ```
@@ -432,10 +440,10 @@ pub fn remove_transaction() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_native::{set_level, Event, Object, Value, Level};
+/// # use sentry_contrib_native::{set_level, Event, Object, Value, Level};
 /// # fn main() -> anyhow::Result<()> {
 /// set_level(Level::Debug);
-/// let event = Event::new();
+/// let mut event = Event::new();
 /// event.insert("test", true);
 /// event.capture();
 /// # Ok(()) }
@@ -446,36 +454,12 @@ pub fn set_level(level: Level) {
 }
 
 /// Starts a new session.
-///
-/// # Examples
-/// ```
-/// # use sentry_native::{Breadcrumb, Object, Value, start_session, end_session};
-/// # fn main() -> anyhow::Result<()> {
-/// start_session();
-/// let breadcrumb = Breadcrumb::new("test", "test");
-/// breadcrumb.insert("test", true);
-/// breadcrumb.add();
-/// end_session();
-/// # Ok(()) }
-/// ```
 pub fn start_session() {
     let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
     unsafe { sys::start_session() };
 }
 
 /// Ends a session.
-///
-/// # Examples
-/// ```
-/// # use sentry_native::{Breadcrumb, Object, Value, start_session, end_session};
-/// # fn main() -> anyhow::Result<()> {
-/// start_session();
-/// let breadcrumb = Breadcrumb::new("test", "test");
-/// breadcrumb.insert("test", true);
-/// breadcrumb.add();
-/// end_session();
-/// # Ok(()) }
-/// ```
 pub fn end_session() {
     let _lock = GLOBAL_LOCK.read().expect("global lock poisoned");
     unsafe { sys::end_session() };

@@ -3,11 +3,15 @@
     clippy::missing_docs_in_private_items,
     clippy::nursery,
     clippy::pedantic,
-    missing_docs,
-    rustdoc
+    missing_docs
 )]
 
-//! TODO
+//!
+//! - Warns if debug information isn't enabled.
+//! - Looks for `SENTRY_NATIVE_INSTALL`.
+//! - If `SENTRY_NATIVE_INSTALL` isn't found, compiles `sentry-native` for you.
+//! - Exports path to `crashpad_handler(.exe)` as `DEP_SENTRY_NATIVE_HANDLER`.
+//! - Links appropriate libraries.
 
 use anyhow::{bail, Context, Result};
 use std::{
@@ -32,7 +36,7 @@ fn main() -> Result<()> {
 
     if env::var("DEBUG")? == "false" {
         println!(
-            "cargo:warning=not compiling with debuginfo, sentry won't have source code access"
+            "cargo:warning=not compiling with debug information, Sentry won't have source code access"
         );
     }
 
@@ -40,40 +44,40 @@ fn main() -> Result<()> {
         build(&out_dir, &source, &install)?;
     }
 
-    println!("cargo:rustc-link-lib=sentry");
-    println!("cargo:rustc-link-lib=crashpad_client");
-    println!("cargo:rustc-link-lib=crashpad_util");
-    println!("cargo:rustc-link-lib=mini_chromium");
     println!("cargo:rustc-link-search={}", install.join("lib").display());
+    println!("cargo:rustc-link-lib=sentry");
+    println!("cargo:rustc-link-lib=mini_chromium");
 
-    #[cfg(windows)]
-    {
+    let target_os = env::var_os("CARGO_CFG_TARGET_OS").unwrap();
+
+    if target_os == "windows" {
         println!("cargo:rustc-link-lib=dbghelp");
         println!("cargo:rustc-link-lib=shlwapi");
         println!("cargo:rustc-link-lib=winhttp");
     }
 
-    #[cfg(windows)]
-    let handler = "crashpad_handler.exe";
-    #[cfg(not(windows))]
-    let handler = "crashpad_handler";
+    if target_os == "windows" || target_os == "macos" {
+        println!("cargo:rustc-link-lib=crashpad_client");
+        println!("cargo:rustc-link-lib=crashpad_util");
 
-    println!(
-        "cargo:HANDLER={}",
-        install.join("bin").join(handler).display()
-    );
+        let handler = if target_os == "windows" {
+            "crashpad_handler.exe"
+        } else {
+            "crashpad_handler"
+        };
+
+        println!(
+            "cargo:HANDLER={}",
+            install.join("bin").join(handler).display()
+        );
+    }
 
     Ok(())
 }
 
-/// Build `sentry_native` with CMAKE.
+/// Build `sentry_native` with CMake.
 fn build(out_dir: &Path, source: &Path, install: &Path) -> Result<()> {
-    if !Command::new("cmake")
-        .arg("--version")
-        .status()
-        .context("cmake command not found")?
-        .success()
-    {
+    if !Command::new("cmake").arg("--version").status()?.success() {
         bail!("cmake command not found");
     }
 
@@ -89,7 +93,7 @@ fn build(out_dir: &Path, source: &Path, install: &Path) -> Result<()> {
         .status()?
         .success()
     {
-        bail!("cmake configuration error");
+        bail!("CMake configuration error");
     }
 
     if !Command::new("cmake")

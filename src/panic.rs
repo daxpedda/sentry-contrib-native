@@ -4,14 +4,14 @@ use std::{convert::TryFrom, panic};
 /// Our Panichandler
 pub fn set_hook() {
     panic::set_hook(Box::new(|panic_info| {
-        let event = Event::new_message(
+        let mut event = Event::new_message(
             Level::Error,
             Some("rust panic".into()),
             &panic_info.to_string(),
         );
 
         if let Some(location) = panic_info.location() {
-            let extra = Map::new();
+            let mut extra = Map::new();
             extra.insert("file", location.file());
 
             if let Ok(line) = i32::try_from(location.line()) {

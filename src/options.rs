@@ -25,7 +25,7 @@ extern "C" fn event_function(
 ) -> sys::Value {
     if let Ok(event_function) = EVENT_FUNCTION.lock() {
         if let Some(event_function) = &*event_function {
-            let event_function = event_function(event.into());
+            let event_function = event_function(Value::from_raw(event));
             return event_function.take();
         }
     }
@@ -35,7 +35,7 @@ extern "C" fn event_function(
 
 pub static GLOBAL_LOCK: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
 
-/// The sentry client options.
+/// The Sentry client options.
 #[derive(Debug)]
 pub struct Options(
     Option<*mut sys::Options>,
@@ -60,11 +60,11 @@ impl Drop for Options {
 }
 
 impl Options {
-    /// Crates new sentry client options.
+    /// Crates new Sentry client options.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let options = Options::new();
     /// let _shutdown = options.init()?;
@@ -106,7 +106,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # use std::error::Error;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
@@ -132,7 +132,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_dsn("yourdsn.com");
@@ -161,7 +161,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_dsn("yourdsn.com");
@@ -176,7 +176,7 @@ impl Options {
         #[cfg(not(feature = "test"))]
         unsafe { sys::options_get_dsn(self.as_ref()) }
             .to_cstring()
-            .map(Into::into)
+            .map(SentryString::from_cstring)
     }
 
     /// Sets the sample rate, which should be a double between `0.0` and `1.0`.
@@ -189,7 +189,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_sample_rate(0.5);
@@ -210,7 +210,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_sample_rate(0.5);
@@ -227,7 +227,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_release("1.0");
@@ -246,7 +246,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_release("1.0");
@@ -258,14 +258,14 @@ impl Options {
     pub fn release(&self) -> Option<SentryString> {
         unsafe { sys::options_get_release(self.as_ref()) }
             .to_cstring()
-            .map(Into::into)
+            .map(SentryString::from_cstring)
     }
 
     /// Sets the environment.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_environment("production");
@@ -284,7 +284,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_environment("production");
@@ -296,14 +296,14 @@ impl Options {
     pub fn environment(&self) -> Option<SentryString> {
         unsafe { sys::options_get_environment(self.as_ref()) }
             .to_cstring()
-            .map(Into::into)
+            .map(SentryString::from_cstring)
     }
 
     /// Sets the distribution.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_distribution("release-pgo");
@@ -319,7 +319,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_distribution("release-pgo");
@@ -331,14 +331,14 @@ impl Options {
     pub fn distribution(&self) -> Option<SentryString> {
         unsafe { sys::options_get_dist(self.as_ref()) }
             .to_cstring()
-            .map(Into::into)
+            .map(SentryString::from_cstring)
     }
 
     /// Configures the http proxy.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_http_proxy("1.1.1.1");
@@ -357,7 +357,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_http_proxy("1.1.1.1");
@@ -369,7 +369,7 @@ impl Options {
     pub fn http_proxy(&self) -> Option<SentryString> {
         unsafe { sys::options_get_http_proxy(self.as_ref()) }
             .to_cstring()
-            .map(Into::into)
+            .map(SentryString::from_cstring)
     }
 
     /// Configures the path to a file containing ssl certificates for
@@ -377,7 +377,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_ca_certs("certs.pem");
@@ -397,7 +397,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_ca_certs("certs.pem");
@@ -409,14 +409,14 @@ impl Options {
     pub fn ca_certs(&self) -> Option<SentryString> {
         unsafe { sys::options_get_ca_certs(self.as_ref()) }
             .to_cstring()
-            .map(Into::into)
+            .map(SentryString::from_cstring)
     }
 
     /// Enables or disables debug printing mode.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_debug(true);
@@ -432,7 +432,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_debug(true);
@@ -457,7 +457,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_require_user_consent(true);
@@ -473,7 +473,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_require_user_consent(true);
@@ -493,7 +493,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.add_attachment("your_attachment", "server.log");
@@ -502,7 +502,7 @@ impl Options {
     /// ```
     pub fn add_attachment<S: Into<SentryString>, P: AsRef<Path>>(&mut self, name: S, path: P) {
         let name: CString = name.into().into();
-        let path = path.as_ref().to_vec();
+        let path = path.as_ref().to_os_vec();
 
         #[cfg(windows)]
         unsafe {
@@ -525,7 +525,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_handler_path("crashpad_handler");
@@ -539,7 +539,7 @@ impl Options {
     ) {
         #[cfg(feature = "test")]
         let path: &dyn AsRef<Path> = &PathBuf::from(env::var_os("HANDLER").unwrap());
-        let path = path.as_ref().to_vec();
+        let path = path.as_ref().to_os_vec();
 
         #[cfg(windows)]
         unsafe {
@@ -551,7 +551,7 @@ impl Options {
         };
     }
 
-    /// Sets the path to the sentry database directory.
+    /// Sets the path to the Sentry database directory.
     ///
     /// Sentry will use this path to persist user consent, sessions, and other
     /// artifacts in case of a crash. This will also be used by the crashpad
@@ -566,7 +566,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_database_path(".sentry-native2");
@@ -576,7 +576,7 @@ impl Options {
     pub fn set_database_path<P: AsRef<Path>>(&mut self, path: P) {
         #[cfg(feature = "test")]
         let path: &dyn AsRef<Path> = &PathBuf::from(env::var_os("OUT_DIR").unwrap()).join(path);
-        let path = path.as_ref().to_vec();
+        let path = path.as_ref().to_os_vec();
 
         #[cfg(windows)]
         unsafe {
@@ -597,7 +597,7 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_system_crash_reporter(true);
@@ -609,17 +609,17 @@ impl Options {
         unsafe { sys::options_set_system_crash_reporter_enabled(self.as_mut(), enabled) }
     }
 
-    /// Initializes the sentry SDK with the specified options.
+    /// Initializes the Sentry SDK with the specified options.
     ///
     /// # Errors
-    /// Fails with [`Error::Init`] if sentry couldn't initialize - should only
+    /// Fails with [`Error::Init`] if Sentry couldn't initialize - should only
     /// occur in these situations:
     /// - Fails to create database directory.
     /// - Fails to lock database directory.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::Options;
+    /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let options = Options::new();
     /// let _shutdown = options.init()?;
@@ -627,28 +627,49 @@ impl Options {
     /// ```
     pub fn init(self) -> Result<Shutdown, Error> {
         let options = self.take();
-        let mut lock = GLOBAL_LOCK.write().expect("global lock poisoned");
 
-        if *lock {
-            panic!("already initialized before!")
-        }
+        {
+            let mut lock = GLOBAL_LOCK.write().expect("global lock poisoned");
 
-        match unsafe { sys::init(options) } {
-            0 => {
-                *lock = true;
-                mem::drop(lock);
-                // workaround: send/set any form of data to make sure the error appears on
-                // sentry.io
-                crate::set_level(Level::Error);
-
-                Ok(Shutdown)
+            if *lock {
+                panic!("already initialized before!")
             }
-            _ => Err(Error::Init),
+
+            match unsafe { sys::init(options) } {
+                0 => {
+                    *lock = true;
+                    mem::drop(lock);
+                    // workaround: send/set any form of data to make sure the error appears on
+                    // Sentry
+                    crate::set_level(Level::Error);
+
+                    Ok(Shutdown)
+                }
+                _ => Err(Error::Init),
+            }
         }
     }
 }
 
-/// Automatically shuts down the sentry client on drop.
+/// Automatically shuts down the Sentry client on drop.
+///
+/// # Examples
+/// ```
+/// # use anyhow::Result;
+/// # use sentry_contrib_native::{Options, Shutdown};
+/// fn main() -> Result<()> {
+///     let options = Options::new();
+///     let _shutdown: Shutdown = options.init()?;
+///
+///     // ...
+///     // your application code
+///     // ...
+///
+///     Ok(())
+///     // Sentry client will automatically shutdown because `Shutdown` is leaving context
+/// }
+/// ```
+#[derive(Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Shutdown;
 
 impl Drop for Shutdown {
@@ -664,20 +685,52 @@ impl Shutdown {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{Options, shutdown};
-    /// # fn main() -> anyhow::Result<()> {
-    /// {
-    ///     let options = Options::new();
-    ///     // call forget because we are leaving the context
-    ///     options.init()?.forget();
+    /// # use anyhow::Result;
+    /// # use sentry_contrib_native::{Options, shutdown};
+    /// fn main() -> Result<()> {
+    ///     sentry_init()?;
+    ///
+    ///     // ...
+    ///     // your application code
+    ///     // ...
+    ///
+    ///     // call shutdown manually to make sure transports flush out
+    ///     shutdown();
+    ///     Ok(())
     /// }
     ///
-    /// // call shutdown manually to make sure transports flush out
-    /// shutdown();
-    /// # Ok(()) }
+    /// fn sentry_init() -> Result<()> {
+    ///     let options = Options::new();
+    ///     // call forget because we are leaving the context and we don't want to shut down the Sentry client yet
+    ///     options.init()?.forget();
+    ///     Ok(())
+    /// }
     /// ```
     pub fn forget(self) {
         mem::forget(self)
+    }
+
+    /// Manually shutdown.
+    ///
+    /// # Examples
+    /// ```
+    /// # use anyhow::Result;
+    /// # use sentry_contrib_native::Options;
+    /// fn main() -> Result<()> {
+    ///     let options = Options::new();
+    ///     let shutdown = options.init()?;
+    ///
+    ///     // ...
+    ///     // your application code
+    ///     // ...
+    ///
+    ///     // call shutdown manually to make sure transports flush out
+    ///     shutdown.shutdown();
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn shutdown(self) {
+        mem::drop(self)
     }
 }
 

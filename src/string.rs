@@ -1,13 +1,12 @@
 use crate::Error;
 use std::{
-    convert::TryFrom,
     ffi::{CStr, CString},
     fmt::Debug,
 };
 
-/// A sentry string value.
+/// A Sentry string value.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct SentryString(CString);
 
 impl Default for SentryString {
@@ -16,12 +15,24 @@ impl Default for SentryString {
     }
 }
 
+impl PartialEq<String> for SentryString {
+    fn eq(&self, other: &String) -> bool {
+        self.as_str() == Ok(other)
+    }
+}
+
+impl PartialEq<str> for SentryString {
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == Ok(other)
+    }
+}
+
 impl SentryString {
-    /// Creates a new sentry string value.
+    /// Creates a new Sentry string value.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::{SentryString};
+    /// # use sentry_contrib_native::{SentryString};
     /// # fn main() -> anyhow::Result<()> {
     /// let test = SentryString::new("test");
     /// assert_eq!("test", test.as_str()?);
@@ -31,6 +42,22 @@ impl SentryString {
         string.into()
     }
 
+    /// Creates a new Sentry string value from a [`CString`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::SentryString;
+    /// # use std::ffi::CString;
+    /// # fn main() -> anyhow::Result<()> {
+    /// let test = SentryString::from_cstring(CString::new("test")?);
+    /// assert_eq!("test", test.as_str()?);
+    /// # Ok(()) }
+    /// ```
+    #[must_use]
+    pub fn from_cstring(string: CString) -> Self {
+        Self(string)
+    }
+
     /// Yields a [`str`] slice.
     ///
     /// # Errors
@@ -38,7 +65,7 @@ impl SentryString {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_native::SentryString;
+    /// # use sentry_contrib_native::SentryString;
     /// # fn main() -> anyhow::Result<()> {
     /// let test = SentryString::new("test");
     /// assert_eq!("test", test.as_str()?);
@@ -55,46 +82,18 @@ impl SentryString {
     }
 }
 
-impl From<CString> for SentryString {
-    fn from(string: CString) -> Self {
-        Self(string)
+impl<S: AsRef<str>> From<S> for SentryString {
+    fn from(value: S) -> Self {
+        // replacing `\0` with `␀`
+        Self(
+            CString::new(value.as_ref().replace("\0", "\u{2400}"))
+                .expect("null character(s) failed to be replaced"),
+        )
     }
 }
 
 impl From<SentryString> for CString {
     fn from(string: SentryString) -> Self {
         string.0
-    }
-}
-
-impl From<&String> for SentryString {
-    fn from(value: &String) -> Self {
-        value.as_str().into()
-    }
-}
-
-impl From<&str> for SentryString {
-    fn from(value: &str) -> Self {
-        // replacing `\0` with `␀`
-        CString::new(value.replace("\0", "\u{2400}"))
-            .expect("null character(s) failed to be replaced")
-            .into()
-    }
-}
-
-impl From<&&str> for SentryString {
-    fn from(value: &&str) -> Self {
-        // replacing `\0` with `␀`
-        CString::new(value.replace("\0", "\u{2400}"))
-            .expect("null character(s) failed to be replaced")
-            .into()
-    }
-}
-
-impl TryFrom<SentryString> for String {
-    type Error = Error;
-
-    fn try_from(value: SentryString) -> Result<Self, Self::Error> {
-        value.0.into_string().map_err(Into::into)
     }
 }

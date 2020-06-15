@@ -1,10 +1,7 @@
-use crate::{Error, List, Map, Sealed, SentryString};
-use std::{
-    convert::TryFrom,
-    ffi::{CStr, CString},
-};
+use crate::{List, Map, Sealed, SentryString};
+use std::ffi::{CStr, CString};
 
-/// Represents a sentry protocol value.
+/// Represents a Sentry protocol value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     /// Null value.
@@ -30,24 +27,7 @@ impl Default for Value {
 }
 
 impl Value {
-    pub(crate) fn take(self) -> sys::Value {
-        match self {
-            Self::Null => unsafe { sys::value_new_null() },
-            Self::Bool(value) => unsafe { sys::value_new_bool(value.into()) },
-            Self::Int(value) => unsafe { sys::value_new_int32(value) },
-            Self::Double(value) => unsafe { sys::value_new_double(value) },
-            Self::String(value) => {
-                let string: CString = value.into();
-                unsafe { sys::value_new_string(string.as_ptr()) }
-            }
-            Self::List(list) => list.take(),
-            Self::Map(map) => map.take(),
-        }
-    }
-}
-
-impl From<sys::Value> for Value {
-    fn from(raw_value: sys::Value) -> Self {
+    pub(crate) fn from_raw(raw_value: sys::Value) -> Self {
         match unsafe { sys::value_get_type(raw_value) } {
             sys::ValueType::Null => {
                 unsafe { sys::value_decref(raw_value) };
@@ -73,16 +53,100 @@ impl From<sys::Value> for Value {
                 value
             }
             sys::ValueType::String => {
-                let value = Self::String(
-                    unsafe { CStr::from_ptr(sys::value_as_string(raw_value)) }
-                        .to_owned()
-                        .into(),
-                );
+                let value = Self::String(SentryString::from_cstring(
+                    unsafe { CStr::from_ptr(sys::value_as_string(raw_value)) }.to_owned(),
+                ));
                 unsafe { sys::value_decref(raw_value) };
                 value
             }
             sys::ValueType::List => Self::List(unsafe { List::from_raw(raw_value) }),
             sys::ValueType::Object => Self::Map(unsafe { Map::from_raw(raw_value) }),
+        }
+    }
+
+    pub(crate) fn take(self) -> sys::Value {
+        match self {
+            Self::Null => unsafe { sys::value_new_null() },
+            Self::Bool(value) => unsafe { sys::value_new_bool(value.into()) },
+            Self::Int(value) => unsafe { sys::value_new_int32(value) },
+            Self::Double(value) => unsafe { sys::value_new_double(value) },
+            Self::String(value) => {
+                let string: CString = value.into();
+                unsafe { sys::value_new_string(string.as_ptr()) }
+            }
+            Self::List(list) => list.take(),
+            Self::Map(map) => map.take(),
+        }
+    }
+
+    /// Returns [`Some`] if `self` is [`Value::Null`].
+    #[must_use]
+    pub fn as_null(&self) -> Option<()> {
+        if let Self::Null = self {
+            Some(())
+        } else {
+            None
+        }
+    }
+
+    /// Returns [`Some`] with the inner value if `self` is [`Value::Bool`].
+    #[must_use]
+    pub fn as_bool(&self) -> Option<bool> {
+        if let Self::Bool(value) = self {
+            Some(*value)
+        } else {
+            None
+        }
+    }
+
+    /// Returns [`Some`] with the inner value if `self` is [`Value::Int`].
+    #[must_use]
+    pub fn as_int(&self) -> Option<i32> {
+        if let Self::Int(value) = self {
+            Some(*value)
+        } else {
+            None
+        }
+    }
+
+    /// Returns [`Some`] with the inner value if `self` is [`Value::Double`].
+    #[must_use]
+    pub fn as_double(&self) -> Option<f64> {
+        if let Self::Double(value) = self {
+            Some(*value)
+        } else {
+            None
+        }
+    }
+
+    /// Returns [`Some`] with the inner value as a [`str`] if `self` is
+    /// [`Value::String`] and valid UTF-8.
+    #[must_use]
+    pub fn as_string(&self) -> Option<&str> {
+        if let Self::String(value) = self {
+            value.as_str().ok()
+        } else {
+            None
+        }
+    }
+
+    /// Returns [`Some`] with the inner value if `self` is [`Value::List`].
+    #[must_use]
+    pub fn as_list(&self) -> Option<&List> {
+        if let Self::List(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    /// Returns [`Some`] with the inner value if `self` is [`Value::Map`].
+    #[must_use]
+    pub fn as_map(&self) -> Option<&Map> {
+        if let Self::Map(value) = self {
+            Some(value)
+        } else {
+            None
         }
     }
 }
@@ -129,18 +193,6 @@ impl From<&str> for Value {
     }
 }
 
-impl From<&&str> for Value {
-    fn from(value: &&str) -> Self {
-        SentryString::new(value).into()
-    }
-}
-
-impl From<CString> for Value {
-    fn from(value: CString) -> Self {
-        SentryString::new(value).into()
-    }
-}
-
 impl From<List> for Value {
     fn from(value: List) -> Self {
         Self::List(value)
@@ -153,86 +205,8 @@ impl From<Map> for Value {
     }
 }
 
-impl TryFrom<Value> for () {
-    type Error = Error;
-
-    fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Null = value {
-            Ok(())
-        } else {
-            Err(Error::TryConvert)
-        }
-    }
-}
-
-impl TryFrom<Value> for bool {
-    type Error = Error;
-
-    fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Bool(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert)
-        }
-    }
-}
-
-impl TryFrom<Value> for i32 {
-    type Error = Error;
-
-    fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Int(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert)
-        }
-    }
-}
-
-impl TryFrom<Value> for f64 {
-    type Error = Error;
-
-    fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Double(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert)
-        }
-    }
-}
-
-impl TryFrom<Value> for SentryString {
-    type Error = Error;
-
-    fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::String(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert)
-        }
-    }
-}
-
-impl TryFrom<Value> for List {
-    type Error = Error;
-
-    fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::List(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert)
-        }
-    }
-}
-
-impl TryFrom<Value> for Map {
-    type Error = Error;
-
-    fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Map(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert)
-        }
+impl<V: Into<Value> + Copy> From<&V> for Value {
+    fn from(value: &V) -> Self {
+        (*value).into()
     }
 }

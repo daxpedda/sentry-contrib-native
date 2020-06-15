@@ -36,12 +36,12 @@ impl User {
     /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
     /// let mut user = User::new();
-    /// user.set_id(1);
+    /// user.set_id("1");
     /// user.set();
     /// # Ok(()) }
     /// ```
-    pub fn set_id(&mut self, id: i32) {
-        self.insert("id", id)
+    pub fn set_id(&mut self, id: impl Into<SentryString>) {
+        self.insert("id", id.into())
     }
 
     /// Sets the username of the user.
@@ -89,7 +89,7 @@ impl User {
     /// # Ok(()) }
     /// ```
     pub fn set_ip<IP: Into<SocketAddr>>(&mut self, ip: IP) {
-        self.insert("ip", &ip.into().to_string())
+        self.insert("ip", ip.into().to_string())
     }
 
     /// Sets the specified user.

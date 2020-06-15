@@ -12,12 +12,7 @@
 use std::{env, path::Path};
 
 fn main() {
-    let target_os = env::var_os("CARGO_CFG_TARGET_OS").unwrap();
-
-    if target_os == "windows" || target_os == "macos" {
-        println!(
-            "cargo:rustc-env=HANDLER={}",
-            AsRef::<Path>::as_ref(&env::var_os("DEP_SENTRY_NATIVE_HANDLER").unwrap()).display()
-        );
+    if let Ok(p) = env::var("DEP_SENTRY_NATIVE_HANDLER") {
+        println!("cargo:rustc-env=HANDLER={}", Path::new(&p).display(),);
     }
 }

@@ -119,6 +119,13 @@ fn build(out_dir: &Path, source: &Path, install: &Path) -> Result<()> {
         "SENTRY_BUILD_EXAMPLES=OFF",
     ]);
 
+    // Apparently cmake defaults to windows 32 bits? wtf
+    if env::var("CARGO_CFG_TARGET_OS").expect("target os not specified") == "windows"
+        && env::var("CARGO_CFG_TARGET_ARCH").expect("target arch not specified") == "x86_64"
+    {
+        cfg_cmd.args(&["-D", "CMAKE_GENERATOR_PLATFORM=x64"]);
+    }
+
     if cfg!(feature = "custom-transport") {
         cfg_cmd.args(&["-D", "SENTRY_TRANSPORT=none"]);
     }

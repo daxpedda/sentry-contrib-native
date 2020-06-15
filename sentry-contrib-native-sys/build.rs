@@ -46,9 +46,6 @@ fn main() -> Result<()> {
         build(&out_dir, &source, &install)?;
     }
 
-    println!("cargo:rustc-link-search={}", install.join("lib").display());
-    println!("cargo:rustc-link-lib=sentry");
-
     let lib_path = if target_os == "windows" {
         install.join("lib")
     } else {
@@ -56,6 +53,7 @@ fn main() -> Result<()> {
     };
 
     println!("cargo:rustc-link-search={}", lib_path.display());
+    println!("cargo:rustc-link-lib=sentry");
 
     match target_os.as_str() {
         crashpad if crashpad == "windows" || crashpad == "macos" => {
@@ -63,9 +61,7 @@ fn main() -> Result<()> {
             println!("cargo:rustc-link-lib=crashpad_util");
             println!("cargo:rustc-link-lib=mini_chromium");
 
-            let mut handler = String::from("crashpad_handler");
-
-            if crashpad == "windows" {
+            let handler = if crashpad == "windows" {
                 println!("cargo:rustc-link-lib=dbghelp");
                 println!("cargo:rustc-link-lib=shlwapi");
 
@@ -73,8 +69,10 @@ fn main() -> Result<()> {
                     println!("cargo:rustc-link-lib=winhttp");
                 }
 
-                handler.push_str(".exe");
-            }
+                "crashpad_handler.exe"
+            } else {
+                "crashpad_handler"
+            };
 
             println!(
                 "cargo:HANDLER={}",

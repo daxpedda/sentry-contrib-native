@@ -47,8 +47,8 @@ fn main() {
             );
 
             std::fs::copy(&handler, &bin_path).expect("failed to copy sentry crash handler");
-        } else {
-            println!("cargo:rustc-env=SENTRY_HANDLER={}", handler);
         }
+
+        println!("cargo:rustc-env=SENTRY_HANDLER={}", handler);
     }
 }

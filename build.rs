@@ -17,6 +17,7 @@ fn main() {
     }
 
     if let Ok(p) = env::var("DEP_SENTRY_NATIVE_HANDLER") {
-        println!("cargo:rustc-env=HANDLER={}", Path::new(&p).display(),);
+        println!("cargo:rustc-env=SENTRY_HANDLER={}", p);
+        println!("cargo:SENTRY_HANDLER={}", p);
     }
 }

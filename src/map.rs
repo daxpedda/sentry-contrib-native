@@ -68,8 +68,8 @@ mod test {
         object.insert("test1", ());
         assert_eq!(object.get("test1"), None);
 
-        object.insert(String::from("test2"), ());
-        assert_eq!(object.get(String::from("test2")), None);
+        object.insert(&String::from("test2"), ());
+        assert_eq!(object.get(&String::from("test2")), None);
 
         object.insert("test3", true);
         assert_eq!(object.get("test3"), Some(true.into()));
@@ -79,21 +79,21 @@ mod test {
         assert_eq!(object.get("test5"), Some(5.5.into()));
         object.insert("test7", "7");
         assert_eq!(object.get("test7"), Some("7".into()));
-        object.insert("test8", String::from("8"));
-        assert_eq!(object.get("test8"), Some((String::from("8")).into()));
+        object.insert("test8", &String::from("8"));
+        assert_eq!(object.get("test8"), Some(&(String::from("8")).into()));
 
         object.insert("test9", List::new());
         assert_eq!(object.get("test9"), Some(List::new().into()));
 
         object.insert("test10", Map::new());
-        assert_eq!(object.get(String::from("test10")), Some(Map::new().into()));
+        assert_eq!(object.get(&String::from("test10")), Some(Map::new().into()));
 
         object.remove("test3")?;
         assert_eq!(object.get("test3"), None);
         object.remove("test4")?;
         assert_eq!(object.get("test4"), None);
         object.remove("test5")?;
-        assert_eq!(object.get(String::from("test5")), None);
+        assert_eq!(object.get(&String::from("test5")), None);
 
         assert_eq!(object.len(), 6);
 

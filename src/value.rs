@@ -181,8 +181,8 @@ impl From<SentryString> for Value {
     }
 }
 
-impl From<String> for Value {
-    fn from(value: String) -> Self {
+impl From<&String> for Value {
+    fn from(value: &String) -> Self {
         SentryString::new(value).into()
     }
 }

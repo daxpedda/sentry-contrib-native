@@ -49,10 +49,11 @@ impl Event {
     /// event.insert("extra", extra);
     /// event.capture();
     /// ```
-    pub fn new_message<S>(level: Level, logger: Option<SentryString>, text: S) -> Self
-    where
-        S: Into<SentryString>,
-    {
+    pub fn new_message<S: Into<SentryString>>(
+        level: Level,
+        logger: Option<SentryString>,
+        text: S,
+    ) -> Self {
         let logger = logger.map_or(ptr::null(), |logger| logger.as_cstr().as_ptr());
         let text: CString = text.into().into();
 

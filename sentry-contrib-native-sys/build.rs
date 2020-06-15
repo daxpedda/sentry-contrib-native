@@ -13,24 +13,22 @@
 //! - Exports path to `crashpad_handler(.exe)` as `DEP_SENTRY_NATIVE_HANDLER`.
 //! - Links appropriate libraries.
 
-use anyhow::{bail, Context, Result};
+use anyhow::Result;
+use cmake::Config;
 use std::{
     env,
     path::{Path, PathBuf},
-    process::Command,
 };
 
 fn main() -> Result<()> {
-    let out_dir = PathBuf::from(env::var("OUT_DIR")?);
-    // Path to source.
+    // path to source.
     let source = PathBuf::from("sentry-native");
-    // Path to installation; either user-defined or path we will compile to.
-    let (installed, install) =
-        if let Some(install) = env::var("SENTRY_NATIVE_INSTALL").ok().map(PathBuf::from) {
-            (true, install)
-        } else {
-            (false, out_dir.join("install"))
-        };
+    // path to installation
+    let install = if let Some(install) = env::var_os("SENTRY_NATIVE_INSTALL").map(PathBuf::from) {
+        install
+    } else {
+        build(&source)?
+    };
 
     println!("cargo:rerun-if-env-changed=SENTRY_NATIVE_INSTALL");
 
@@ -40,22 +38,13 @@ fn main() -> Result<()> {
         );
     }
 
-    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("target os not specified");
-
-    if !installed {
-        build(&out_dir, &source, &install)?;
-    }
-
-    let lib_path = if target_os == "windows" {
-        install.join("lib")
-    } else {
-        install.join("lib64")
-    };
-
-    println!("cargo:rustc-link-search={}", lib_path.display());
+    println!("cargo:rustc-link-search={}", install.join("lib").display());
     println!("cargo:rustc-link-lib=sentry");
 
-    match target_os.as_str() {
+    match env::var("CARGO_CFG_TARGET_OS")
+        .expect("target OS not specified")
+        .as_str()
+    {
         crashpad if crashpad == "windows" || crashpad == "macos" => {
             println!("cargo:rustc-link-lib=crashpad_client");
             println!("cargo:rustc-link-lib=crashpad_util");
@@ -65,7 +54,7 @@ fn main() -> Result<()> {
                 println!("cargo:rustc-link-lib=dbghelp");
                 println!("cargo:rustc-link-lib=shlwapi");
 
-                if cfg!(not(feature = "custom-transport")) {
+                if cfg!(feature = "default-transport") {
                     println!("cargo:rustc-link-lib=winhttp");
                 }
 
@@ -80,7 +69,7 @@ fn main() -> Result<()> {
             );
         }
         "linux" => {
-            if cfg!(not(feature = "custom-transport")) {
+            if cfg!(feature = "default-transport") {
                 println!("cargo:rustc-link-lib=curl");
             }
 
@@ -93,74 +82,21 @@ fn main() -> Result<()> {
 }
 
 /// Build `sentry_native` with CMake.
-fn build(out_dir: &Path, source: &Path, install: &Path) -> Result<()> {
-    if !Command::new("cmake").arg("--version").status()?.success() {
-        bail!("cmake command not found");
-    }
+fn build(source: &Path) -> Result<PathBuf> {
+    let mut cmake_config = Config::new(source);
+    cmake_config
+        .define("BUILD_SHARED_LIBS", "OFF")
+        .define("SENTRY_BUILD_TESTS", "OFF")
+        .define("SENTRY_BUILD_EXAMPLES", "OFF")
+        .profile("RelWithDebInfo");
 
-    let build = out_dir
-        .join("build")
-        .to_str()
-        .context("failed to parse path")?
-        .to_owned();
-
-    let mut cfg_cmd = Command::new("cmake");
-    // Build static libraries
-    cfg_cmd.args(&[
-        "-B",
-        &build,
-        "-D",
-        "BUILD_SHARED_LIBS=OFF",
-        "-D",
-        "SENTRY_BUILD_TESTS=OFF",
-        "-D",
-        "SENTRY_BUILD_EXAMPLES=OFF",
-    ]);
-
-    // Apparently cmake defaults to windows 32 bits? wtf
-    if env::var("CARGO_CFG_TARGET_OS").expect("target os not specified") == "windows"
-        && env::var("CARGO_CFG_TARGET_ARCH").expect("target arch not specified") == "x86_64"
-    {
-        cfg_cmd.args(&["-D", "CMAKE_GENERATOR_PLATFORM=x64"]);
-    }
-
-    if cfg!(feature = "custom-transport") {
-        cfg_cmd.args(&["-D", "SENTRY_TRANSPORT=none"]);
+    if cfg!(not(feature = "default-transport")) {
+        cmake_config.define("SENTRY_TRANSPORT", "none");
     }
 
     if cfg!(target_feature = "crt-static") {
-        cfg_cmd.args(&["-D", "SENTRY_BUILD_RUNTIMESTATIC=ON"]);
+        cmake_config.define("SENTRY_BUILD_RUNTIMESTATIC", "ON");
     }
 
-    if !cfg_cmd.current_dir(source).status()?.success() {
-        bail!("CMake configuration error");
-    }
-
-    if !Command::new("cmake")
-        .current_dir(source)
-        .args(&[
-            "--build",
-            &build,
-            "--parallel",
-            "--config",
-            "RelWithDebInfo",
-        ])
-        .status()?
-        .success()
-    {
-        bail!("build error");
-    }
-
-    if !Command::new("cmake")
-        .current_dir(source)
-        .args(&["--install", &build, "--prefix"])
-        .arg(install)
-        .args(&["--config", "RelWithDebInfo"])
-        .status()?
-        .success()
-    {
-        bail!("install error");
-    }
-
-    Ok(())
+    Ok(cmake_config.build())
 }

@@ -82,11 +82,17 @@ impl SentryString {
     }
 }
 
-impl<S: AsRef<str>> From<S> for SentryString {
-    fn from(value: S) -> Self {
+impl From<&String> for SentryString {
+    fn from(value: &String) -> Self {
+        value.as_str().into()
+    }
+}
+
+impl From<&str> for SentryString {
+    fn from(value: &str) -> Self {
         // replacing `\0` with `␀`
         Self(
-            CString::new(value.as_ref().replace("\0", "\u{2400}"))
+            CString::new(value.replace("\0", "\u{2400}"))
                 .expect("null character(s) failed to be replaced"),
         )
     }

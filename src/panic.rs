@@ -7,7 +7,7 @@ pub fn set_hook() {
         let mut event = Event::new_message(
             Level::Error,
             Some("rust panic".into()),
-            panic_info.to_string(),
+            &panic_info.to_string(),
         );
 
         if let Some(location) = panic_info.location() {

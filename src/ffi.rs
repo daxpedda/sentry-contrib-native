@@ -13,8 +13,9 @@ use std::{
 /// Cross-platform return type for [`CPath::to_os_vec`].
 #[cfg(windows)]
 type COsString = u16;
+/// Cross-platform return type for [`CPath::to_os_vec`].
 #[cfg(not(windows))]
-type COsString = u8;
+type COsString = i8;
 
 /// Trait for converting [`Path`] to `Vec<COsString>`.
 pub trait CPath {
@@ -30,20 +31,25 @@ impl CPath for Path {
         #[cfg(windows)]
         let null_string = OsStr::new("\u{2400}").encode_wide();
         #[cfg(not(windows))]
-        let null_string = OsStr::new("\u{2400}").as_bytes();
+        let null_string = OsStr::new("\u{2400}")
+            .as_bytes()
+            .iter()
+            .map(|ch| unsafe { &*(ch as *const _ as *const _) });
 
         #[cfg(windows)]
         let path = self.as_os_str().encode_wide();
         #[cfg(not(windows))]
-        let path = self.as_os_str().as_bytes().iter().copied();
+        let path = self
+            .as_os_str()
+            .as_bytes()
+            .iter()
+            .map(|ch| unsafe { &*(ch as *const _ as *const _) })
+            .copied();
         let mut clean_string = Vec::new();
 
         for ch in path {
             if ch == 0 {
-                #[cfg(windows)]
                 clean_string.extend(null_string.clone());
-                #[cfg(not(windows))]
-                clean_string.extend(null_string);
             } else {
                 clean_string.push(ch);
             }
@@ -103,7 +109,13 @@ mod test {
             }
             #[cfg(not(windows))]
             {
-                OsString::from_vec(cpath)
+                OsString::from_vec(
+                    cpath
+                        .iter()
+                        .map(|ch| unsafe { &*(ch as *const _ as *const _) })
+                        .copied()
+                        .collect(),
+                )
             }
         }
 

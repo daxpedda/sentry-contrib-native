@@ -89,7 +89,7 @@ impl User {
     /// # Ok(()) }
     /// ```
     pub fn set_ip<IP: Into<SocketAddr>>(&mut self, ip: IP) {
-        self.insert("ip", ip.into().to_string())
+        self.insert("ip", &ip.into().to_string())
     }
 
     /// Sets the specified user.

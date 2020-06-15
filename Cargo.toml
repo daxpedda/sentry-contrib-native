@@ -10,7 +10,7 @@ members = ["sentry-contrib-native-sys"]
 [dependencies]
 once_cell = "1"
 rmpv = "0.4"
-sys = { package = "sentry-contrib-native-sys", path = "sentry-contrib-native-sys" }
+sys = { package = "sentry-contrib-native-sys", path = "sentry-contrib-native-sys", default-features = false }
 thiserror = "1"
 
 [dev-dependencies]
@@ -20,7 +20,7 @@ rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-ma
 ] }
 
 [features]
+default = ["default-transport"]
+default-transport = ["sys/default-transport"]
 nightly = []
 test = []
-custom-transport = ["sys/custom-transport"]
-copy-handler = []

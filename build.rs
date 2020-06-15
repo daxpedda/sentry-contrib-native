@@ -12,6 +12,10 @@
 use std::{env, path::Path};
 
 fn main() {
+    for (k, v) in env::vars() {
+        println!("{} = {}", k, v);
+    }
+
     if let Ok(p) = env::var("DEP_SENTRY_NATIVE_HANDLER") {
         println!("cargo:rustc-env=HANDLER={}", Path::new(&p).display(),);
     }

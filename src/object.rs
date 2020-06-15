@@ -177,7 +177,7 @@ pub trait Object: Sealed {
 
     /// Workaround for https://github.com/getsentry/sentry-native/issues/235
     fn add_stacktrace(&self, len: usize) {
-        let v = self.unwrap();
+        let v = self.as_raw();
 
         unsafe { sys::value_add_stacktrace(v, len) };
     }

@@ -268,7 +268,7 @@ fn list() {
 
     list.push("test1");
     assert_eq!(list.get(4), Some("test1".into()));
-    list.push(&String::from("test2"));
+    list.push(String::from("test2"));
     assert_eq!(list.get(5), Some("test2".into()));
 
     list.push(List::new());

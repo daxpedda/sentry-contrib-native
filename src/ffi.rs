@@ -96,7 +96,15 @@ mod test {
         fn convert(string: &str) -> OsString {
             let path: &Path = OsStr::new(string).as_ref();
             let cpath = path.to_os_vec();
-            OsString::from_wide(&cpath)
+
+            #[cfg(windows)]
+            {
+                OsString::from_wide(&cpath)
+            }
+            #[cfg(not(windows))]
+            {
+                OsString::from_vec(cpath)
+            }
         }
 
         assert_eq!("abcdefgh\0", convert("abcdefgh"));

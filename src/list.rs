@@ -101,7 +101,7 @@ impl List {
         Self(Some(unsafe { sys::value_new_list() }))
     }
 
-    /// Crates [`List`] from [`sys::Value`].
+    /// Creates a [`List`] from [`sys::Value`].
     ///
     /// # Safety
     /// This doesn't check if [`sys::Value`] really is a [`List`].
@@ -120,7 +120,7 @@ impl List {
         self.0.take().expect("use after free")
     }
 
-    /// Converts a [`List`] to a [`Vec`].
+    /// Converts the [`List`] to a [`Vec`].
     #[must_use]
     pub fn to_vec(&self) -> Vec<Value> {
         let mut list = Vec::new();
@@ -136,7 +136,7 @@ impl List {
         list
     }
 
-    /// Appends a [`value`] to the [`List`].
+    /// Appends a [`Value`] to the [`List`].
     ///
     /// # Panics
     /// Panics if Sentry failed to allocate memory.
@@ -151,7 +151,7 @@ impl List {
         }
     }
 
-    /// Returns the length of the list.
+    /// Returns the length of the [`List`].
     #[must_use]
     pub fn len(&self) -> usize {
         let list = self.as_ref();
@@ -165,7 +165,7 @@ impl List {
         self.len() == 0
     }
 
-    /// Looks up a value in a list by index.
+    /// Looks up a value in the [`List`] at position `index`.
     ///
     /// # Examples
     /// ```
@@ -234,7 +234,7 @@ impl List {
 
 #[test]
 #[allow(clippy::cognitive_complexity)]
-fn list() {
+fn list() -> anyhow::Result<()> {
     use crate::Map;
 
     let mut list = List::new();
@@ -254,6 +254,7 @@ fn list() {
     }
 
     let mut list = List::new();
+
     list.push(());
     assert_eq!(list.get(0), None);
 
@@ -317,6 +318,11 @@ fn list() {
         assert_eq!(list.clone(), List::from_iter(new_list));
     }
 
+    list.remove(3)?;
+    assert_eq!(list.len(), 16);
+
     let list = List::from_iter(&[(), (), ()]);
     assert_eq!(list.len(), 3);
+
+    Ok(())
 }

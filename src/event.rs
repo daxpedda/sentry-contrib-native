@@ -80,9 +80,9 @@ impl Event {
             sys::event_value_add_stacktrace(event, ptr::null_mut(), len);
 
             let stacktrace_key = b"stacktrace\0".as_ptr() as *const i8;
-
-            let threads = sys::value_get_by_key(event, b"threads\0".as_ptr() as *const i8);
-            let threads_values = sys::value_get_by_key(threads, b"values".as_ptr() as *const i8);
+            let threads_key = b"threads\0".as_ptr() as *const i8;
+            let threads = sys::value_get_by_key(event, threads_key);
+            let threads_values = sys::value_get_by_key(threads, b"values\0".as_ptr() as *const i8);
             let thread = sys::value_get_by_index(threads_values, 0);
             let stacktrace = sys::value_get_by_key(thread, stacktrace_key);
 

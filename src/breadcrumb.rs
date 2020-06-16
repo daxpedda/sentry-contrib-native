@@ -28,8 +28,12 @@ impl Breadcrumb {
     /// Creates a new Sentry breadcrumb.
     #[must_use]
     pub fn new(r#type: Option<SentryString>, message: Option<SentryString>) -> Self {
-        let type_ = r#type.map_or(ptr::null(), |type_| CString::from(type_).as_ptr());
-        let message = message.map_or(ptr::null(), |type_| CString::from(type_).as_ptr());
+        let type_ = r#type
+            .as_ref()
+            .map_or(ptr::null(), |ty| ty.as_cstr().as_ptr());
+        let message = message
+            .as_ref()
+            .map_or(ptr::null(), |msg| msg.as_cstr().as_ptr());
 
         Self(Some(unsafe { sys::value_new_breadcrumb(type_, message) }))
     }

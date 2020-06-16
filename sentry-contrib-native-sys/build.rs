@@ -38,7 +38,19 @@ fn main() -> Result<()> {
         );
     }
 
-    println!("cargo:rustc-link-search={}", install.join("lib").display());
+    // We need to check if there is a `lib64` instead of a `lib` dir, non-Debian
+    // based distros will use that directory instead for 64-bit arches
+    // See: https://cmake.org/cmake/help/v3.0/module/GNUInstallDirs.html
+    let lib_dir = if install.join("lib64").exists() {
+        "lib64"
+    } else {
+        "lib"
+    };
+
+    println!(
+        "cargo:rustc-link-search={}",
+        install.join(lib_dir).display()
+    );
     println!("cargo:rustc-link-lib=sentry");
 
     match env::var("CARGO_CFG_TARGET_OS")

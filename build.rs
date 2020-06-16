@@ -18,7 +18,7 @@ use std::{
 
 fn main() {
     if let Ok(handler) = env::var("DEP_SENTRY_NATIVE_HANDLER") {
-        println!("cargo:rustc-env=SENTRY_HANDLER={}", handler);
+        println!("cargo:rustc-env=HANDLER={}", handler);
 
         let out_dir: PathBuf = env::var_os("OUT_DIR").expect("out dir not set").into();
 

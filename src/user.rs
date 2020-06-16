@@ -20,7 +20,7 @@ impl User {
     /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
     /// let mut user = User::new();
-    /// user.set_id(1);
+    /// user.set_id("1");
     /// user.set();
     /// # Ok(()) }
     /// ```
@@ -40,7 +40,7 @@ impl User {
     /// user.set();
     /// # Ok(()) }
     /// ```
-    pub fn set_id(&mut self, id: impl Into<SentryString>) {
+    pub fn set_id<S: Into<SentryString>>(&mut self, id: S) {
         self.insert("id", id.into())
     }
 
@@ -51,7 +51,7 @@ impl User {
     /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
     /// let mut user = User::new();
-    /// user.set_id(1);
+    /// user.set_id("1");
     /// user.set_username("test");
     /// user.set();
     /// # Ok(()) }
@@ -67,7 +67,7 @@ impl User {
     /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
     /// let mut user = User::new();
-    /// user.set_id(1);
+    /// user.set_id("1");
     /// user.set_email("example@test.org");
     /// user.set();
     /// # Ok(()) }
@@ -83,7 +83,7 @@ impl User {
     /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
     /// let mut user = User::new();
-    /// user.set_id(1);
+    /// user.set_id("1");
     /// user.set_ip(([1, 1, 1, 1], 443));
     /// user.set();
     /// # Ok(()) }
@@ -99,7 +99,7 @@ impl User {
     /// # use sentry_contrib_native::{User, Object, Value};
     /// # fn main() -> anyhow::Result<()> {
     /// let mut user = User::new();
-    /// user.set_id(1);
+    /// user.set_id("1");
     /// user.set();
     /// # Ok(()) }
     /// ```

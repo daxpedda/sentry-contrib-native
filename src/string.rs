@@ -98,6 +98,12 @@ impl From<&str> for SentryString {
     }
 }
 
+impl From<&&str> for SentryString {
+    fn from(value: &&str) -> Self {
+        (*value).into()
+    }
+}
+
 impl From<SentryString> for CString {
     fn from(string: SentryString) -> Self {
         string.0

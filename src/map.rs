@@ -80,7 +80,7 @@ mod test {
         object.insert("test7", "7");
         assert_eq!(object.get("test7"), Some("7".into()));
         object.insert("test8", &String::from("8"));
-        assert_eq!(object.get("test8"), Some(&(String::from("8")).into()));
+        assert_eq!(object.get("test8"), Some((&String::from("8")).into()));
 
         object.insert("test9", List::new());
         assert_eq!(object.get("test9"), Some(List::new().into()));

@@ -38,18 +38,13 @@ fn main() -> Result<()> {
         );
     }
 
-    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("target OS not specified");
-
-    match target_os.as_str() {
-        "macos" => println!("cargo:rustc-link-lib=dylib=libc++"),
-        "linux" => println!("cargo:rustc-link-lib=dylib=stdc++"),
-        _ => (),
-    }
-
     println!("cargo:rustc-link-search={}", install.join("lib").display());
     println!("cargo:rustc-link-lib=sentry");
 
-    match target_os.as_str() {
+    match env::var("CARGO_CFG_TARGET_OS")
+        .expect("target OS not specified")
+        .as_str()
+    {
         crashpad if crashpad == "windows" || crashpad == "macos" => {
             println!("cargo:rustc-link-lib=crashpad_client");
             println!("cargo:rustc-link-lib=crashpad_util");
@@ -65,6 +60,14 @@ fn main() -> Result<()> {
 
                 "crashpad_handler.exe"
             } else {
+                println!("cargo:rustc-link-lib=framework=Foundation");
+
+                if cfg!(feature = "default-transport") {
+                    println!("cargo:rustc-link-lib=curl");
+                }
+
+                println!("cargo:rustc-link-lib=dylib=c++");
+
                 "crashpad_handler"
             };
 
@@ -79,6 +82,8 @@ fn main() -> Result<()> {
             if cfg!(feature = "default-transport") {
                 println!("cargo:rustc-link-lib=curl");
             }
+
+            println!("cargo:rustc-link-lib=dylib=stdc++");
         }
         other => unimplemented!("target platform {} not implemented", other),
     }

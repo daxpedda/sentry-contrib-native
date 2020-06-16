@@ -69,6 +69,35 @@ impl Event {
         unsafe { sys::event_value_add_stacktrace(event, ptr::null_mut(), len) };
     }
 
+    /// Adds an exception to the [`Event`] along with a stacktrace. As a workaround
+    /// for https://github.com/getsentry/sentry-native/issues/235, the stacktrace
+    /// is moved to the exception object so that it shows up correctly in Sentry
+    pub fn add_exception(&mut self, exception: Exception, len: usize) {
+        let event = self.as_raw();
+
+        unsafe {
+            // Attach the stacktrace, which will be at "threads.values[0]"
+            sys::event_value_add_stacktrace(event, ptr::null_mut(), len);
+
+            let stacktrace_key = b"stacktrace\0".as_ptr() as *const i8;
+
+            let threads = sys::value_get_by_key(event, b"threads\0".as_ptr() as *const i8);
+            let threads_values = sys::value_get_by_key(threads, b"values".as_ptr() as *const i8);
+            let thread = sys::value_get_by_index(threads_values, 0);
+            let stacktrace = sys::value_get_by_key(thread, stacktrace_key);
+
+            sys::value_incref(stacktrace);
+            sys::value_set_by_key(exception.as_raw(), stacktrace_key, stacktrace);
+            sys::value_decref(stacktrace);
+
+            sys::value_set_by_key(
+                event,
+                b"exception\0".as_ptr() as *const i8,
+                exception.take(),
+            );
+        }
+    }
+
     /// Sends the [`Event`].
     #[allow(clippy::must_use_candidate)]
     pub fn capture(self) -> Uuid {
@@ -167,6 +196,27 @@ impl From<[c_char; 16]> for Uuid {
         Self::from_bytes(value)
     }
 }
+
+pub struct Exception(Option<sys::Value>);
+
+impl Exception {
+    pub fn new(r#type: impl Into<SentryString>, value: impl Into<SentryString>) -> Self {
+        use crate::Object;
+        let mut m = crate::Map::new();
+        m.insert("type", r#type.into());
+        m.insert("value", value.into());
+
+        Self(Some(m.take()))
+    }
+}
+
+impl Default for Exception {
+    fn default() -> Self {
+        Self(Some(unsafe { sys::value_new_object() }))
+    }
+}
+
+derive_object!(Exception);
 
 #[test]
 fn event() {

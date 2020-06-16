@@ -537,8 +537,9 @@ impl Options {
         #[cfg(not(feature = "test"))] path: P,
         #[cfg(feature = "test")] _path: P,
     ) {
-        #[cfg(feature = "test")]
-        let path: &dyn AsRef<Path> = &PathBuf::from(env::var_os("HANDLER").unwrap());
+        #[cfg(all(feature = "test", any(windows, target_os = "macos")))]
+        let path: &dyn AsRef<Path> =
+            &PathBuf::from(env::var_os("HANDLER").expect("failed to find crashpad handler"));
         let path = path.as_ref().to_os_vec();
 
         #[cfg(windows)]

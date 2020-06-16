@@ -534,8 +534,8 @@ impl Options {
     /// ```
     pub fn set_handler_path<P: AsRef<Path>>(
         &mut self,
-        #[cfg(not(feature = "test"))] path: P,
-        #[cfg(feature = "test")] _path: P,
+        #[cfg(not(all(feature = "test", any(windows, target_os = "macos"))))] path: P,
+        #[cfg(all(feature = "test", any(windows, target_os = "macos")))] _path: P,
     ) {
         #[cfg(all(feature = "test", any(windows, target_os = "macos")))]
         let path: &dyn AsRef<Path> =

@@ -1,6 +1,6 @@
 //! Sentry event implementation.
 
-use crate::{Level, Sealed, SentryString, GLOBAL_LOCK};
+use crate::{Level, Map, Object, Sealed, SentryString, Value, GLOBAL_LOCK};
 use std::{
     cmp::Ordering,
     ffi::{CStr, CString},
@@ -54,7 +54,9 @@ impl Event {
         logger: Option<SentryString>,
         text: S,
     ) -> Self {
-        let logger = logger.map_or(ptr::null(), |logger| logger.as_cstr().as_ptr());
+        let logger = logger
+            .as_ref()
+            .map_or(ptr::null(), |logger| logger.as_cstr().as_ptr());
         let text: CString = text.into().into();
 
         Self(Some(unsafe {
@@ -205,27 +207,6 @@ impl From<[c_char; 16]> for Uuid {
         Self::from_bytes(value)
     }
 }
-
-pub struct Exception(Option<sys::Value>);
-
-impl Exception {
-    pub fn new(r#type: impl Into<SentryString>, value: impl Into<SentryString>) -> Self {
-        use crate::Object;
-        let mut m = crate::Map::new();
-        m.insert("type", r#type.into());
-        m.insert("value", value.into());
-
-        Self(Some(m.take()))
-    }
-}
-
-impl Default for Exception {
-    fn default() -> Self {
-        Self(Some(unsafe { sys::value_new_object() }))
-    }
-}
-
-derive_object!(Exception);
 
 #[test]
 fn event() {

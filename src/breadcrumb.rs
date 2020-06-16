@@ -1,7 +1,7 @@
 //! Sentry breadcrumb implementation.
 
 use crate::{Sealed, SentryString, GLOBAL_LOCK};
-use std::{ffi::CString, ptr};
+use std::ptr;
 
 /// A Sentry breadcrumb.
 ///

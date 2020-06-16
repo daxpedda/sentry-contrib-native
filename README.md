@@ -71,7 +71,7 @@ fn main() {
 
 On MacOS and Windows the Crashpad handler executable has to be shipped with the application, for convenience the Crashpad handler executable will be copied to Cargo's default binary output folder, so using `cargo run` works without any additional setup or configuration.
 
-If you need to export the Crashpad handler executable programmatically to a specific output path, a "convenient" environment variable is provided to help with that: `DEP_SENTRY_NATIVE_HANDLER`.
+If you need to export the Crashpad handler executable programmatically to a specific output path, a "convenient" environment variable is provided to help with that: `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
 
 Here is an example `build.rs`.
 
@@ -84,7 +84,7 @@ fn main() {
     let target_os = env::var_os("CARGO_CFG_TARGET_OS").unwrap();
 
     if target_os == "macos" || target_os == "windows" {
-        let handler = env::var_os("DEP_SENTRY_NATIVE_HANDLER").unwrap();
+        let handler = env::var_os("DEP_SENTRY_NATIVE_CRASHPAD_HANDLER").unwrap();
         let executable = if target_os == "macos" {
             "crashpad_handler"
         } else if target_os == "windows" {
@@ -114,7 +114,7 @@ See [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native
 
 ## Deployment
 
-When deploying a binary for MacOS or Windows, it has to be shipped together with the `crashpad_handler(.exe)` executable. A way to programmatically export it using `build.rs` is provided through the `DEP_SENTRY_NATIVE_HANDLER`.
+When deploying a binary for MacOS or Windows, it has to be shipped together with the `crashpad_handler(.exe)` executable. A way to programmatically export it using `build.rs` is provided through the `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
 
 See the [Usage section](#usage) for an example.
 

@@ -115,7 +115,9 @@ impl Display for Uuid {
         write!(
             f,
             "{}",
-            unsafe { CStr::from_ptr(string.as_ptr()) }.to_str().unwrap()
+            unsafe { CStr::from_ptr(string.as_ptr()) }
+                .to_str()
+                .expect("UUID contained invalid UTF-8")
         )
     }
 }

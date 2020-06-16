@@ -43,7 +43,7 @@ fn main() {
             .parent()
             .and_then(Path::parent)
             .and_then(Path::parent)
-            .unwrap();
+            .expect("failed to find default binary output path");
 
         let handler = PathBuf::from(handler);
         let bin_path = bin_dir.join(

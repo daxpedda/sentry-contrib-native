@@ -26,7 +26,7 @@ mod user;
 mod value;
 
 pub use breadcrumb::Breadcrumb;
-pub use event::{Event, Uuid};
+pub use event::{Event, Exception, Uuid};
 pub use list::List;
 pub use map::Map;
 pub use object::Object;

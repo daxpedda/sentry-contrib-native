@@ -69,7 +69,9 @@ fn main() {
 }
 ```
 
-On MacOS and Windows the Crashpad handler executable has to be shipped with your application, a "convenient" environment variable is provided to help with that: `DEP_SENTRY_NATIVE_HANDLER`.
+On MacOS and Windows the Crashpad handler executable has to be shipped with the application, for convenience the Crashpad handler executable will be copied to Cargo's default binary output folder, so using `cargo run` works without any additional setup or configuration.
+
+If you need to export the Crashpad handler executable programmatically to a specific output path, a "convenient" environment variable is provided to help with that: `DEP_SENTRY_NATIVE_HANDLER`.
 
 Here is an example `build.rs`.
 
@@ -98,7 +100,7 @@ fn main() {
 
 ## Build
 
-This crate relies on [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys) which in turn builds [Sentry's Native SDK](https://github.com/getsentry/sentry-native) for you. This requires [CMake](https://cmake.org) or alternatively you can provide a pre-installed version with the `SENTRY_NATIVE_INSTALL` environment variable.
+This crate relies on [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys) which in turn builds [Sentry's Native SDK](https://github.com/getsentry/sentry-native). This requires [CMake](https://cmake.org) or alternatively a pre-installed version can be provided with the `SENTRY_NATIVE_INSTALL` environment variable.
 
 Additionally on any non-Windows platform the development version of `curl` is required.
 
@@ -106,12 +108,13 @@ See [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native
 
 ## Crate features
 
+- **default-transport** - **Enabled by default**, will use `winhttp` for Windows and `curl` everywhere else as the default transport.
 - **test** - Corrects testing for documentation tests.
 - **nightly** - Enables full documentation through [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html).
 
 ## Deployment
 
-When deploying your binary for MacOS or Windows, you have to ship it together with the `crashpad_handler(.exe)` executable. A way to programmatically export it using `build.rs` is provided through the `DEP_SENTRY_NATIVE_HANDLER`.
+When deploying a binary for MacOS or Windows, it has to be shipped together with the `crashpad_handler(.exe)` executable. A way to programmatically export it using `build.rs` is provided through the `DEP_SENTRY_NATIVE_HANDLER`.
 
 See the [Usage section](#usage) for an example.
 
@@ -123,7 +126,7 @@ See the [Usage section](#usage) for an example.
 
 Currently, nightly is needed for full documentation: `cargo doc --features nightly`
 
-If you are not using nightly, use `cargo doc` as usual.
+If nightly isn't available, use `cargo doc` as usual.
 
 ## Tests
 

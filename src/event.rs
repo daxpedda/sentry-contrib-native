@@ -69,33 +69,42 @@ impl Event {
         unsafe { sys::event_value_add_stacktrace(event, ptr::null_mut(), len) };
     }
 
-    /// Adds an exception to the [`Event`] along with a stacktrace. As a workaround
-    /// for https://github.com/getsentry/sentry-native/issues/235, the stacktrace
-    /// is moved to the exception object so that it shows up correctly in Sentry
-    pub fn add_exception(&mut self, exception: Exception, len: usize) {
-        let event = self.as_raw();
+    /// Adds an exception to the [`Event`] along with a stacktrace. As a
+    /// workaround for <https://github.com/getsentry/sentry-native/issues/235>,
+    /// the stacktrace is moved to the `exception` object so that it shows up
+    /// correctly in Sentry.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Event, Level, Map, Object};
+    /// # use std::iter::FromIterator;
+    /// let mut event = Event::new();
+    /// let exception = Map::from_iter(&[
+    ///     ("type", "test exception"),
+    ///     ("value", "test exception value"),
+    /// ]);
+    /// event.add_exception(exception, 0);
+    /// event.capture();
+    /// ```
+    pub fn add_exception(&mut self, mut exception: Map, len: usize) {
+        self.value_add_stacktrace(len);
 
-        unsafe {
-            // Attach the stacktrace, which will be at "threads.values[0]"
-            sys::event_value_add_stacktrace(event, ptr::null_mut(), len);
+        if let Some(Value::Map(threads)) = self.get("threads") {
+            if let Some(Value::List(threads_values)) = threads.get("values") {
+                if let Some(Value::Map(thread)) = threads_values.get(0) {
+                    if let Some(Value::Map(stacktrace)) = thread.get("stacktrace") {
+                        exception.insert("stacktrace", stacktrace);
 
-            let stacktrace_key = b"stacktrace\0".as_ptr() as *const i8;
-            let threads_key = b"threads\0".as_ptr() as *const i8;
-            let threads = sys::value_get_by_key(event, threads_key);
-            let threads_values = sys::value_get_by_key(threads, b"values\0".as_ptr() as *const i8);
-            let thread = sys::value_get_by_index(threads_values, 0);
-            let stacktrace = sys::value_get_by_key(thread, stacktrace_key);
-
-            sys::value_incref(stacktrace);
-            sys::value_set_by_key(exception.as_raw(), stacktrace_key, stacktrace);
-            sys::value_decref(stacktrace);
-
-            sys::value_set_by_key(
-                event,
-                b"exception\0".as_ptr() as *const i8,
-                exception.take(),
-            );
+                        if self.remove("threads").is_ok() {
+                            self.insert("exception", exception);
+                            return;
+                        }
+                    }
+                }
+            }
         }
+
+        panic!("failed to move stacktrace");
     }
 
     /// Sends the [`Event`].

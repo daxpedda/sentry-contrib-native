@@ -27,6 +27,14 @@ impl Default for Value {
 }
 
 impl Value {
+    /// Creates a new Sentry value.
+    ///
+    /// # Panics
+    /// This will panic if any string contains `0` bytes.
+    pub fn new<V: Into<Self>>(value: V) -> Self {
+        value.into()
+    }
+
     pub(crate) fn from_raw(raw_value: sys::Value) -> Self {
         match unsafe { sys::value_get_type(raw_value) } {
             sys::ValueType::Null => {
@@ -181,8 +189,8 @@ impl From<SentryString> for Value {
     }
 }
 
-impl From<&String> for Value {
-    fn from(value: &String) -> Self {
+impl From<String> for Value {
+    fn from(value: String) -> Self {
         SentryString::new(value).into()
     }
 }

@@ -10,7 +10,8 @@
 //! - Warns if debug information isn't enabled.
 //! - Looks for `SENTRY_NATIVE_INSTALL`.
 //! - If `SENTRY_NATIVE_INSTALL` isn't found, compiles `sentry-native` for you.
-//! - Exports path to `crashpad_handler(.exe)` as `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
+//! - Exports path to `crashpad_handler(.exe)` as
+//!   `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
 //! - Links appropriate libraries.
 
 use anyhow::Result;

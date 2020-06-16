@@ -1,13 +1,13 @@
 //! FFI helper types to communicate with `sentry-native`.
 
 #[cfg(not(windows))]
-use std::os::unix::ffi::OsStrExt;
+use std::os::unix::ffi::OsStringExt;
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
 use std::{
-    ffi::{CStr, CString, OsStr},
+    ffi::{CStr, CString},
     os::raw::c_char,
-    path::Path,
+    path::PathBuf,
 };
 
 /// Cross-platform return type for [`CPath::to_os_vec`].
@@ -15,49 +15,36 @@ use std::{
 type COsString = u16;
 /// Cross-platform return type for [`CPath::to_os_vec`].
 #[cfg(not(windows))]
-type COsString = i8;
+type COsString = c_char;
 
-/// Trait for converting [`Path`] to `Vec<COsString>`.
+/// Trait for converting [`PathBuf`] to `Vec<COsString>`.
 pub trait CPath {
     /// Re-encodes `self` into a C and OS compatible `Vec<COsString>`.
     ///
-    /// This will replace any `0` bytes with `␀`.
-    fn to_os_vec(&self) -> Vec<COsString>;
+    /// # Panics
+    /// This will panic if any `0` bytes are found.
+    fn to_os_vec(self) -> Vec<COsString>;
 }
 
-impl CPath for Path {
-    fn to_os_vec(&self) -> Vec<COsString> {
-        // ␀
+impl CPath for PathBuf {
+    fn to_os_vec(self) -> Vec<COsString> {
         #[cfg(windows)]
-        let null_string = OsStr::new("\u{2400}").encode_wide();
+        let mut path: Vec<_> = self.into_os_string().encode_wide().collect();
         #[cfg(not(windows))]
-        let null_string = OsStr::new("\u{2400}")
-            .as_bytes()
-            .iter()
-            .map(|ch| unsafe { &*(ch as *const _ as *const _) });
+        let mut path: Vec<_> = self
+            .into_os_string()
+            .into_vec()
+            .into_iter()
+            .map(|ch| ch as _)
+            .collect();
 
-        #[cfg(windows)]
-        let path = self.as_os_str().encode_wide();
-        #[cfg(not(windows))]
-        let path = self
-            .as_os_str()
-            .as_bytes()
-            .iter()
-            .map(|ch| unsafe { &*(ch as *const _ as *const _) })
-            .copied();
-        let mut clean_string = Vec::new();
-
-        for ch in path {
-            if ch == 0 {
-                clean_string.extend(null_string.clone());
-            } else {
-                clean_string.push(ch);
-            }
+        if path.contains(&0) {
+            panic!("found 0 byte in string")
         }
 
-        clean_string.push(0);
+        path.push(0);
 
-        clean_string
+        path
     }
 }
 
@@ -91,71 +78,35 @@ mod test {
     #[cfg(windows)]
     use std::os::windows::ffi::OsStringExt;
     use std::{
-        ffi::{CStr, CString, OsStr, OsString},
+        ffi::{CStr, CString, OsString},
         os::raw::c_char,
-        path::Path,
+        path::PathBuf,
         ptr,
     };
 
+    fn convert(string: &str) -> OsString {
+        let path = PathBuf::from(string.to_owned()).to_os_vec();
+
+        #[cfg(windows)]
+        {
+            OsString::from_wide(&path[..])
+        }
+        #[cfg(not(windows))]
+        {
+            OsString::from_vec(path.into_iter().map(|ch| ch as _).collect())
+        }
+    }
+
     #[test]
     fn cpath() {
-        fn convert(string: &str) -> OsString {
-            let path: &Path = OsStr::new(string).as_ref();
-            let cpath = path.to_os_vec();
-
-            #[cfg(windows)]
-            {
-                OsString::from_wide(&cpath)
-            }
-            #[cfg(not(windows))]
-            {
-                OsString::from_vec(
-                    cpath
-                        .iter()
-                        .map(|ch| unsafe { &*(ch as *const _ as *const _) })
-                        .copied()
-                        .collect(),
-                )
-            }
-        }
-
         assert_eq!("abcdefgh\0", convert("abcdefgh"));
         assert_eq!("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0", convert("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️"));
+    }
 
-        assert_eq!("␀\0", convert("\0"));
-        assert_eq!("␀␀\0", convert("\0\0"));
-        assert_eq!("␀\0", convert("␀"));
-        assert_eq!("␀␀\0", convert("␀␀"));
-
-        assert_eq!("abcd␀efgh\0", convert("abcd\0efgh"));
-        assert_eq!("abcd␀␀efgh\0", convert("abcd\0\0efgh"));
-        assert_eq!("abc🤦‍♂️␀🤦‍♂️fgh\0", convert("abc🤦‍♂️\0🤦‍♂️fgh"));
-        assert_eq!("abc🤦‍♂️␀␀🤦‍♂️fgh\0", convert("abc🤦‍♂️\0\0🤦‍♂️fgh"));
-
-        assert_eq!("␀abcdefgh\0", convert("\0abcdefgh"));
-        assert_eq!("␀␀abcdefgh\0", convert("\0\0abcdefgh"));
-        assert_eq!("␀🤦‍♂️bcdefgh\0", convert("\0🤦‍♂️bcdefgh"));
-        assert_eq!("␀␀🤦‍♂️bcdefgh\0", convert("\0\0🤦‍♂️bcdefgh"));
-
-        assert_eq!("abcdefgh␀\0", convert("abcdefgh\0"));
-        assert_eq!("abcdefgh␀␀\0", convert("abcdefgh\0\0"));
-        assert_eq!("abcdefg🤦‍♂️␀\0", convert("abcdefg🤦‍♂️\0"));
-        assert_eq!("abcdefg🤦‍♂️␀␀\0", convert("abcdefg🤦‍♂️\0\0"));
-
-        assert_eq!("␀a␀\0", convert("\0a\0"));
-        assert_eq!("␀␀a␀␀\0", convert("\0\0a\0\0"));
-        assert_eq!("␀🤦‍♂️␀\0", convert("\0🤦‍♂️\0"));
-        assert_eq!("␀␀🤦‍♂️␀␀\0", convert("\0\0🤦‍♂️\0\0"));
-
-        assert_eq!("a␀a␀\0", convert("a\0a\0"));
-        assert_eq!("a␀␀a␀␀\0", convert("a\0\0a\0\0"));
-        assert_eq!("🤦‍♂️␀🤦‍♂️␀\0", convert("🤦‍♂️\0🤦‍♂️\0"));
-        assert_eq!("🤦‍♂️␀␀🤦‍♂️␀␀\0", convert("🤦‍♂️\0\0🤦‍♂️\0\0"));
-
-        assert_eq!("␀a␀a\0", convert("\0a\0a"));
-        assert_eq!("␀␀a␀␀a\0", convert("\0\0a\0\0a"));
-        assert_eq!("␀🤦‍♂️␀🤦‍♂️\0", convert("\0🤦‍♂️\0🤦‍♂️"));
-        assert_eq!("␀␀🤦‍♂️␀␀🤦‍♂️\0", convert("\0\0🤦‍♂️\0\0🤦‍♂️"));
+    #[test]
+    #[should_panic]
+    fn cpath_invalid() {
+        convert("\0");
     }
 
     #[test]

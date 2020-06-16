@@ -26,6 +26,7 @@ derive_object!(Breadcrumb);
 
 impl Breadcrumb {
     /// Creates a new Sentry breadcrumb.
+    #[allow(clippy::needless_pass_by_value)]
     #[must_use]
     pub fn new(r#type: Option<SentryString>, message: Option<SentryString>) -> Self {
         let type_ = r#type

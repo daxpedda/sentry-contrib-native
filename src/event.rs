@@ -49,6 +49,7 @@ impl Event {
     /// event.insert("extra", extra);
     /// event.capture();
     /// ```
+    #[allow(clippy::needless_pass_by_value)]
     pub fn new_message<S: Into<SentryString>>(
         level: Level,
         logger: Option<SentryString>,

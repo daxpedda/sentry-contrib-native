@@ -329,8 +329,8 @@ fn object() -> anyhow::Result<()> {
     object.insert("test1", ());
     assert_eq!(object.get("test1"), None);
 
-    object.insert(&String::from("test2"), ());
-    assert_eq!(object.get(&String::from("test2")), None);
+    object.insert(String::from("test2"), ());
+    assert_eq!(object.get(String::from("test2")), None);
 
     object.insert("test3", true);
     assert_eq!(object.get("test3"), Some(true.into()));
@@ -343,14 +343,14 @@ fn object() -> anyhow::Result<()> {
 
     object.insert("test6", "6");
     assert_eq!(object.get("test6"), Some("6".into()));
-    object.insert("test7", &String::from("7"));
-    assert_eq!(object.get("test7"), Some((&String::from("7")).into()));
+    object.insert("test7", String::from("7"));
+    assert_eq!(object.get("test7"), Some((String::from("7")).into()));
 
     object.insert("test8", List::new());
     assert_eq!(object.get("test8"), Some(List::new().into()));
 
     object.insert("test9", Map::new());
-    assert_eq!(object.get(&String::from("test9")), Some(Map::new().into()));
+    assert_eq!(object.get(String::from("test9")), Some(Map::new().into()));
 
     object.extend(&[("test10", "some"), ("test11", "test"), ("test12", "data")]);
     assert_eq!(object.get("test10"), Some("some".into()));

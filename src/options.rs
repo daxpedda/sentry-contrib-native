@@ -4,12 +4,12 @@ use crate::{
 };
 use once_cell::sync::Lazy;
 #[cfg(feature = "test")]
-use std::{env, path::PathBuf};
+use std::env;
 use std::{
     ffi::CString,
     mem,
     os::raw::c_void,
-    path::Path,
+    path::PathBuf,
     ptr,
     sync::{Mutex, RwLock},
 };
@@ -144,7 +144,7 @@ impl Options {
         let dsn: CString = {
             self.1 = Some(dsn.into());
             SentryString::from(
-                &env::var("SENTRY_DSN")
+                env::var("SENTRY_DSN")
                     .expect("tests require a valid `SENTRY_DSN` environment variable"),
             )
             .into()
@@ -500,9 +500,9 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn add_attachment<S: Into<SentryString>, P: AsRef<Path>>(&mut self, name: S, path: P) {
+    pub fn add_attachment<S: Into<SentryString>, P: Into<PathBuf>>(&mut self, name: S, path: P) {
         let name: CString = name.into().into();
-        let path = path.as_ref().to_os_vec();
+        let path = path.into().to_os_vec();
 
         #[cfg(windows)]
         unsafe {
@@ -532,15 +532,22 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_handler_path<P: AsRef<Path>>(
+    #[cfg_attr(
+        all(feature = "test", any(windows, target_os = "macos")),
+        allow(clippy::needless_pass_by_value)
+    )]
+    pub fn set_handler_path<P: Into<PathBuf>>(
         &mut self,
         #[cfg(not(all(feature = "test", any(windows, target_os = "macos"))))] path: P,
         #[cfg(all(feature = "test", any(windows, target_os = "macos")))] _path: P,
     ) {
         #[cfg(all(feature = "test", any(windows, target_os = "macos")))]
-        let path: &dyn AsRef<Path> =
-            &PathBuf::from(env::var_os("CRASHPAD_HANDLER").expect("failed to find crashpad handler"));
-        let path = path.as_ref().to_os_vec();
+        let path = PathBuf::from(
+            env::var_os("CRASHPAD_HANDLER").expect("failed to find crashpad handler"),
+        )
+        .to_os_vec();
+        #[cfg(not(all(feature = "test", any(windows, target_os = "macos"))))]
+        let path = path.into().to_os_vec();
 
         #[cfg(windows)]
         unsafe {
@@ -574,10 +581,13 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_database_path<P: AsRef<Path>>(&mut self, path: P) {
+    pub fn set_database_path<P: Into<PathBuf>>(&mut self, path: P) {
         #[cfg(feature = "test")]
-        let path: &dyn AsRef<Path> = &PathBuf::from(env::var_os("OUT_DIR").unwrap()).join(path);
-        let path = path.as_ref().to_os_vec();
+        let path = PathBuf::from(env::var_os("OUT_DIR").unwrap())
+            .join(path.into())
+            .to_os_vec();
+        #[cfg(not(feature = "test"))]
+        let path = path.into().to_os_vec();
 
         #[cfg(windows)]
         unsafe {

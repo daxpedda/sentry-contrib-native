@@ -30,6 +30,9 @@ impl PartialEq<str> for SentryString {
 impl SentryString {
     /// Creates a new Sentry string value.
     ///
+    /// # Panics
+    /// This will panic if any `0` bytes are found.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{SentryString};
@@ -82,25 +85,9 @@ impl SentryString {
     }
 }
 
-impl From<&String> for SentryString {
-    fn from(value: &String) -> Self {
-        value.as_str().into()
-    }
-}
-
-impl From<&str> for SentryString {
-    fn from(value: &str) -> Self {
-        // replacing `\0` with `␀`
-        Self(
-            CString::new(value.replace("\0", "\u{2400}"))
-                .expect("null character(s) failed to be replaced"),
-        )
-    }
-}
-
-impl From<&&str> for SentryString {
-    fn from(value: &&str) -> Self {
-        (*value).into()
+impl<S: ToString> From<S> for SentryString {
+    fn from(value: S) -> Self {
+        Self(CString::new(value.to_string()).expect("null character(s) failed to be replaced"))
     }
 }
 

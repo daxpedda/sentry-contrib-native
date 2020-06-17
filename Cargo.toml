@@ -8,10 +8,12 @@ edition = "2018"
 members = ["sentry-contrib-native-sys"]
 
 [dependencies]
+http = { version = "0.2", optional = true }
 once_cell = "1"
 rmpv = "0.4"
 sys = { package = "sentry-contrib-native-sys", path = "sentry-contrib-native-sys", default-features = false }
 thiserror = "1"
+url = { version = "2.1", optional = true }
 vsprintf = { git = "https://github.com/daxpedda/vsprintf", branch = "fix-windows" }
 
 [dev-dependencies]
@@ -23,5 +25,6 @@ rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-ma
 [features]
 default = ["default-transport"]
 default-transport = ["sys/default-transport"]
+custom-transport = ["http", "url"]
 nightly = []
 test = []

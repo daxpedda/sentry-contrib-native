@@ -52,7 +52,7 @@ use std::ptr;
 
 fn main() {
     // set up panic handler
-    sentry::set_hook();
+    sentry::set_hook(None);
     // start Sentry
     let mut options = Options::new();
     options.set_dsn("your-sentry-dsn.com");
@@ -98,18 +98,24 @@ fn main() {
 }
 ```
 
+If you are using `panic = abort` make sure to let the panic handler call [`shutdown`] to flush remaining transport before aborting the application.
+
+```rust
+std::panic::set_hook(Box::new(|_| sentry_contrib_native::shutdown()));
+```
+
 ## Build
 
 This crate relies on [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys) which in turn builds [Sentry's Native SDK](https://github.com/getsentry/sentry-native). This requires [CMake](https://cmake.org) or alternatively a pre-installed version can be provided with the `SENTRY_NATIVE_INSTALL` environment variable.
 
-Additionally on any non-Windows platform the development version of `curl` is required.
+Additionally on any other platform then Window, the development version of `curl` is required.
 
 See [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys) for more details.
 
 ## Crate features
 
-- **default-transport** - **Enabled by default**, will use `winhttp` for Windows and `curl` everywhere else as the default transport.
-- **test** - Corrects testing for documentation tests.
+- **default-transport** - **Enabled by default**, will use `winhttp` on Windows and `curl` everywhere else as the default transport.
+- **test** - Corrects testing for documentation tests and examples.
 - **nightly** - Enables full documentation through [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html).
 
 ## Deployment

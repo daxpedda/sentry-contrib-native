@@ -1,3 +1,5 @@
+//! Sentry options implementation.
+
 use crate::{
     ffi::{CPath, CToR},
     Error, SentryString, Value,

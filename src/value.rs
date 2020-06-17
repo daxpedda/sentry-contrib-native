@@ -1,3 +1,5 @@
+//! Sentry value implementation.
+
 use crate::{List, Map, Sealed, SentryString};
 use std::ffi::{CStr, CString};
 
@@ -35,6 +37,7 @@ impl Value {
         value.into()
     }
 
+    /// Creates a [`Value`] from [`sys::Value`].
     pub(crate) fn from_raw(raw_value: sys::Value) -> Self {
         match unsafe { sys::value_get_type(raw_value) } {
             sys::ValueType::Null => {
@@ -72,6 +75,8 @@ impl Value {
         }
     }
 
+    /// Yields [`sys::Value`], [`Value`] is consumed and caller is responsible
+    /// for deallocating [`sys::Value`].
     pub(crate) fn take(self) -> sys::Value {
         match self {
             Self::Null => unsafe { sys::value_new_null() },

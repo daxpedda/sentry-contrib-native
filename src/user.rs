@@ -1,3 +1,5 @@
+//! Sentry user implementation.
+
 use crate::{Object, Sealed, SentryString, GLOBAL_LOCK};
 use std::net::SocketAddr;
 

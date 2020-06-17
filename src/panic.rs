@@ -1,3 +1,5 @@
+//! Sentry supported panic handler.
+
 use crate::{Event, Level, Map, Object};
 use std::{
     convert::TryFrom,

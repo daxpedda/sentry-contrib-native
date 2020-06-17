@@ -326,3 +326,68 @@ fn list() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn sync() -> anyhow::Result<()> {
+    use std::{
+        convert::{TryFrom, TryInto},
+        sync::{Arc, Mutex},
+        thread,
+    };
+
+    let list = List::new();
+
+    let list = {
+        let mut handles = vec![];
+        let list = Arc::new(Mutex::new(list));
+
+        for index in 0..100 {
+            let list = Arc::clone(&list);
+
+            handles.push(thread::spawn(move || {
+                list.lock()
+                    .unwrap()
+                    .insert(index, i32::try_from(index).unwrap());
+            }));
+        }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        Arc::try_unwrap(list).unwrap().into_inner()?
+    };
+
+    {
+        let mut handles = vec![];
+        let list = Arc::new(list);
+
+        for index in 0..100 {
+            let list = Arc::clone(&list);
+
+            handles.push(thread::spawn(move || {
+                assert_eq!(list.get(index), Some(Value::Int(index.try_into().unwrap())));
+            }));
+        }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+    }
+
+    Ok(())
+}
+
+#[test]
+fn send() {
+    use std::thread;
+
+    let mut list = List::new();
+    list.push("test");
+
+    thread::spawn(move || {
+        assert_eq!(list.get(0), Some(Value::String("test".into())));
+    })
+    .join()
+    .unwrap();
+}

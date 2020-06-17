@@ -405,3 +405,65 @@ fn object() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn sync() -> anyhow::Result<()> {
+    use std::{
+        sync::{Arc, Mutex},
+        thread,
+    };
+
+    let object = Map::new();
+
+    let object = {
+        let mut handles = vec![];
+        let object = Arc::new(Mutex::new(object));
+
+        for index in 0..100 {
+            let object = Arc::clone(&object);
+
+            handles.push(thread::spawn(move || {
+                object.lock().unwrap().insert(index.to_string(), index);
+            }));
+        }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        Arc::try_unwrap(object).unwrap().into_inner()?
+    };
+
+    {
+        let mut handles = vec![];
+        let object = Arc::new(object);
+
+        for index in 0..100 {
+            let object = Arc::clone(&object);
+
+            handles.push(thread::spawn(move || {
+                assert_eq!(object.get(index.to_string()), Some(Value::Int(index)));
+            }));
+        }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+    }
+
+    Ok(())
+}
+
+#[test]
+fn send() {
+    use std::thread;
+
+    let mut object = Map::new();
+    object.insert("test", "test");
+
+    thread::spawn(move || {
+        assert_eq!(object.get("test"), Some(Value::String("test".into())));
+    })
+    .join()
+    .unwrap();
+}

@@ -39,7 +39,8 @@ impl Breadcrumb {
         Self(Some(unsafe { sys::value_new_breadcrumb(type_, message) }))
     }
 
-    /// Adds the [`Breadcrumb`] to be sent in case of an [`Event::capture`].
+    /// Adds the [`Breadcrumb`] to be sent in case of an
+    /// [`Event::capture`](crate::Event::capture).
     pub fn add(self) {
         let breadcrumb = self.take();
 

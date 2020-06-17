@@ -104,7 +104,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-/// Build `sentry_native` with CMake.
+/// Build `sentry_native` with `CMake`.
 fn build(source: &Path) -> Result<PathBuf> {
     let mut cmake_config = Config::new(source);
     cmake_config

@@ -97,12 +97,33 @@ pub enum UserConsent {
     Revoked = 0,
 }
 
+/// This represents an interface for user-defined transports.
+#[repr(C)]
+pub struct Transport([u8; 0]);
+
+/// A Sentry Envelope.
+///
+/// The Envelope is an abstract type which represents a payload being sent to
+/// sentry. It can contain one or more items, typically an Event.
+/// See <https://develop.sentry.dev/sdk/envelopes/>
+#[repr(C)]
+pub struct Envelope([u8; 0]);
+
 /// Type of the callback for modifying events.
 pub type EventFunction =
     extern "C" fn(event: Value, hint: *mut c_void, closure: *mut c_void) -> Value;
 
 /// Type of the callback for logging debug events.
 pub type LoggerFunction = extern "C" fn(level: i32, message: *const c_char, args: VaList);
+
+/// Type of callback for sending envelopes to a Sentry service
+pub type SendEnvelopeFunction = extern "C" fn(envelope: *mut Envelope, state: *mut c_void);
+
+/// Type of the callback for starting up a custom transport
+pub type StartupFunction = extern "C" fn(options: *const Options, state: *mut c_void);
+
+/// Type of the callback for shutting down a custom transport
+pub type ShutdownFunction = extern "C" fn(timeout: u64, state: *mut c_void) -> bool;
 
 extern "C" {
     /// Releases memory allocated from the underlying allocator.
@@ -269,6 +290,50 @@ extern "C" {
     #[link_name = "sentry_uuid_as_string"]
     pub fn uuid_as_string(uuid: *const Uuid, str: *mut c_char);
 
+    /// Frees an envelope.
+    #[link_name = "sentry_envelope_free"]
+    pub fn envelope_free(envelope: *mut Envelope);
+
+    /// Serializes the envelope.
+    ///
+    /// The return value needs to be freed with `sentry_string_free()`.
+    #[link_name = "sentry_envelope_serialize"]
+    pub fn envelope_serialize(envelope: *const Envelope, size: &mut usize) -> *const c_char;
+
+    /// Creates a new transport with an initial `send_func`.
+    #[link_name = "sentry_transport_new"]
+    pub fn transport_new(send_fn: SendEnvelopeFunction) -> *mut Transport;
+
+    /// Sets the transport `state`.
+    ///
+    /// If the state is owned by the transport and needs to be freed, use
+    /// `transport_set_free_func` to set an appropriate hook.
+    #[link_name = "sentry_transport_set_state"]
+    pub fn transport_set_state(transport: *mut Transport, state: *mut c_void);
+
+    /// Sets the transport hook to free the transport `state`.
+    #[link_name = "sentry_transport_set_free_func"]
+    pub fn transport_set_free_func(
+        transport: *mut Transport,
+        free_fn: extern "C" fn(state: *mut c_void),
+    );
+
+    /// Sets the transport startup hook.
+    #[link_name = "sentry_transport_set_startup_func"]
+    pub fn transport_set_startup_hook(transport: *mut Transport, startup_fn: StartupFunction);
+
+    /// Sets the transport shutdown hook.
+    ///
+    /// This hook will receive a millisecond-resolution timeout; it should return
+    /// `true` in case all the pending envelopes have been sent within the timeout,
+    /// or `false` if the timeout was hit.
+    #[link_name = "sentry_transport_set_shutdown_func"]
+    pub fn transport_set_shutdown_func(transport: *mut Transport, shutdown_fn: ShutdownFunction);
+
+    /// Generic way to free a transport.
+    #[link_name = "sentry_transport_free"]
+    pub fn transport_free(transport: *mut Transport);
+
     /// Creates a new options struct.
     /// Can be freed with `sentry_options_free`.
     #[link_name = "sentry_options_new"]
@@ -277,6 +342,10 @@ extern "C" {
     /// Deallocates previously allocated Sentry options.
     #[link_name = "sentry_options_free"]
     pub fn options_free(opts: *mut Options);
+
+    /// Sets a transport.
+    #[link_name = "sentry_options_set_transport"]
+    pub fn options_set_transport(opts: *mut Options, transport: *mut Transport);
 
     /// Sets the before send callback.
     #[link_name = "sentry_options_set_before_send"]

@@ -138,6 +138,11 @@ impl Options {
         self.raw.expect("use after free")
     }
 
+    #[cfg(feature = "custom-transport")]
+    pub fn set_transport(&mut self, transport: Box<Transport>) {
+        unsafe {}
+    }
+
     /// Sets the before send callback.
     ///
     /// # Examples

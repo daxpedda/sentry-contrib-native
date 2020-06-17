@@ -19,6 +19,8 @@ mod event;
 mod ffi;
 mod options;
 mod panic;
+#[cfg(feature = "custom-transport")]
+mod transport;
 mod user;
 mod value;
 

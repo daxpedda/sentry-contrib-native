@@ -98,7 +98,7 @@ fn main() {
 }
 ```
 
-If you are using `panic = abort` make sure to let the panic handler call [`shutdown`] to flush remaining transport before aborting the application.
+If you are using `panic = abort` make sure to let the panic handler call `shutdown` to flush remaining transport before aborting the application.
 
 ```rust
 std::panic::set_hook(Box::new(|_| sentry_contrib_native::shutdown()));

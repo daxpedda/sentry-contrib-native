@@ -2,45 +2,60 @@ use crate::{
     ffi::{CPath, CToR},
     Error, SentryString, Value,
 };
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 #[cfg(feature = "test")]
 use std::env;
 use std::{
     ffi::CString,
+    fmt::{Debug, Formatter, Result as FmtResult},
     mem,
     os::raw::c_void,
     path::PathBuf,
     ptr,
-    sync::{Mutex, RwLock},
+    sync::RwLock,
 };
 
-type EventFunction = fn(Value) -> Value;
+/// Re-usable type to store function for [`Options::set_before_send`].
+type BeforeSend = Box<dyn Fn(Value) -> Value + 'static + Send + Sync>;
 
-static EVENT_FUNCTION: Lazy<Mutex<Option<EventFunction>>> = Lazy::new(|| Mutex::new(None));
+/// Store function to use for [`Options::set_before_send`] globally because we
+/// need to access it inside a `extern "C"` function.
+static BEFORE_SEND: OnceCell<BeforeSend> = OnceCell::new();
 
-extern "C" fn event_function(
+/// Function to give [`Options::set_before_send`] which in turn calls user
+/// defined one.
+extern "C" fn before_send(
     event: sys::Value,
     _hint: *mut c_void,
     _closure: *mut c_void,
 ) -> sys::Value {
-    if let Ok(event_function) = EVENT_FUNCTION.lock() {
-        if let Some(event_function) = &*event_function {
-            let event_function = event_function(Value::from_raw(event));
-            return event_function.take();
-        }
+    if let Some(before_send) = BEFORE_SEND.get() {
+        before_send(Value::from_raw(event)).take()
+    } else {
+        event
     }
-
-    event
 }
 
+/// Global lock for two purposes:
+/// - Prevent [`Options::init`] from being called twice.
+/// - Fix some use-after-free bugs in `sentry-native` that can happen when
+///   shutdown is called while other functions are still accessing global
+///   options. Hopefully this will be fixed upstream in the future, see
+///   <https://github.com/getsentry/sentry-native/issues/280>.
 pub static GLOBAL_LOCK: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
 
 /// The Sentry client options.
-#[derive(Debug)]
-pub struct Options(
-    Option<*mut sys::Options>,
-    #[cfg(feature = "test")] Option<SentryString>,
-);
+pub struct Options {
+    /// Raw Sentry options.
+    raw: Option<*mut sys::Options>,
+    /// Storing a fake database path to make documentation tests and examples
+    /// work without polluting the file system.
+    #[cfg(feature = "test")]
+    database_path: Option<SentryString>,
+    /// Store function for [`Options::set_before_send`] here temporarily. This
+    /// way we can use [`OnceCell`] instead of a [`Mutex`](std::sync::Mutex).
+    before_send: Option<BeforeSend>,
+}
 
 unsafe impl Send for Options {}
 unsafe impl Sync for Options {}
@@ -51,9 +66,15 @@ impl Default for Options {
     }
 }
 
+impl Debug for Options {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
+        fmt.debug_struct("Options").field("raw", &self.raw).finish()
+    }
+}
+
 impl Drop for Options {
     fn drop(&mut self) {
-        if let Some(option) = self.0.take() {
+        if let Some(option) = self.raw.take() {
             unsafe { sys::options_free(option) };
         }
     }
@@ -73,11 +94,12 @@ impl Options {
     #[must_use]
     pub fn new() -> Self {
         #[cfg_attr(not(feature = "test"), allow(unused_mut))]
-        let mut options = Self(
-            Some(unsafe { sys::options_new() }),
+        let mut options = Self {
+            raw: Some(unsafe { sys::options_new() }),
             #[cfg(feature = "test")]
-            None,
-        );
+            database_path: None,
+            before_send: None,
+        };
 
         #[cfg(feature = "test")]
         {
@@ -90,16 +112,23 @@ impl Options {
         options
     }
 
+    /// Yields a pointer to [`sys::Options`], ownership is retained.
     fn as_ref(&self) -> *const sys::Options {
-        self.0.expect("use after free")
+        self.raw.expect("use after free")
     }
 
+    /// Yields a mutable pointer to [`sys::Options`], ownership is retained.
     fn as_mut(&mut self) -> *mut sys::Options {
-        self.0.expect("use after free")
+        self.raw.expect("use after free")
     }
 
-    fn take(mut self) -> *mut sys::Options {
-        self.0.take().expect("use after free")
+    /// Yields a pointer to [`sys::Options`], [`Options`] is consumed and caller
+    /// is responsible for deallocating [`sys::Options`].
+    fn take(mut self) -> (*mut sys::Options, Option<BeforeSend>) {
+        (
+            self.raw.take().expect("use after free"),
+            self.before_send.take(),
+        )
     }
 
     /// Sets the before send callback.
@@ -111,21 +140,16 @@ impl Options {
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_before_send(|value| {
-    ///     // do something with the value
+    ///     // do something with the value and then return it
     ///     value
     /// });
     /// options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_before_send(&mut self, fun: EventFunction) {
-        {
-            let mut event_function = EVENT_FUNCTION.lock().expect("`Mutex` poisoned somehow");
-            *event_function = Some(fun);
-        }
+    pub fn set_before_send<F: Fn(Value) -> Value + 'static + Send + Sync>(&mut self, fun: F) {
+        self.before_send = Some(Box::new(fun));
 
-        unsafe {
-            sys::options_set_before_send(self.as_mut(), Some(event_function), ptr::null_mut())
-        };
+        unsafe { sys::options_set_before_send(self.as_mut(), Some(before_send), ptr::null_mut()) }
     }
 
     /// Sets the DSN.
@@ -142,7 +166,7 @@ impl Options {
     pub fn set_dsn<S: Into<SentryString>>(&mut self, dsn: S) {
         #[cfg(feature = "test")]
         let dsn: CString = {
-            self.1 = Some(dsn.into());
+            self.database_path = Some(dsn.into());
             SentryString::from(
                 env::var("SENTRY_DSN")
                     .expect("tests require a valid `SENTRY_DSN` environment variable"),
@@ -172,7 +196,7 @@ impl Options {
     #[must_use]
     pub fn dsn(&self) -> Option<SentryString> {
         #[cfg(feature = "test")]
-        return self.1.clone();
+        return self.database_path.clone();
         #[cfg(not(feature = "test"))]
         unsafe { sys::options_get_dsn(self.as_ref()) }
             .to_cstring()
@@ -620,7 +644,9 @@ impl Options {
         unsafe { sys::options_set_system_crash_reporter_enabled(self.as_mut(), enabled) }
     }
 
-    /// Initializes the Sentry SDK with the specified options.
+    /// Initializes the Sentry SDK with the specified options. Make sure to
+    /// capture the resulting [`Shutdown`], this makes sure to automatically
+    /// call [`shutdown`](crate::shutdown) when it drops.
     ///
     /// # Errors
     /// Fails with [`Error::Init`] if Sentry couldn't initialize - should only
@@ -637,7 +663,7 @@ impl Options {
     /// # Ok(()) }
     /// ```
     pub fn init(self) -> Result<Shutdown, Error> {
-        let options = self.take();
+        let (options, before_send) = self.take();
 
         {
             let mut lock = GLOBAL_LOCK.write().expect("global lock poisoned");
@@ -649,6 +675,14 @@ impl Options {
             match unsafe { sys::init(options) } {
                 0 => {
                     *lock = true;
+
+                    if let Some(before_send) = before_send {
+                        BEFORE_SEND
+                            .set(before_send)
+                            .ok()
+                            .expect("`BEFORE_SEND` was filled once before");
+                    }
+
                     Ok(Shutdown)
                 }
                 _ => Err(Error::Init),

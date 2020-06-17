@@ -80,6 +80,14 @@ impl Drop for Options {
     }
 }
 
+impl PartialEq for Options {
+    fn eq(&self, _: &Self) -> bool {
+        false
+    }
+}
+
+impl Eq for Options {}
+
 impl Options {
     /// Crates new Sentry client options.
     ///
@@ -120,15 +128,6 @@ impl Options {
     /// Yields a mutable pointer to [`sys::Options`], ownership is retained.
     fn as_mut(&mut self) -> *mut sys::Options {
         self.raw.expect("use after free")
-    }
-
-    /// Yields a pointer to [`sys::Options`], [`Options`] is consumed and caller
-    /// is responsible for deallocating [`sys::Options`].
-    fn take(mut self) -> (*mut sys::Options, Option<BeforeSend>) {
-        (
-            self.raw.take().expect("use after free"),
-            self.before_send.take(),
-        )
     }
 
     /// Sets the before send callback.
@@ -662,31 +661,29 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn init(self) -> Result<Shutdown, Error> {
-        let (options, before_send) = self.take();
+    pub fn init(mut self) -> Result<Shutdown, Error> {
+        let mut lock = GLOBAL_LOCK.write().expect("global lock poisoned");
 
-        {
-            let mut lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+        if *lock {
+            panic!("already initialized before!")
+        }
 
-            if *lock {
-                panic!("already initialized before!")
-            }
+        match unsafe { sys::init(self.raw.unwrap()) } {
+            0 => {
+                *lock = true;
+                // init has taken ownership now
+                self.raw.take().expect("use after free");
 
-            match unsafe { sys::init(options) } {
-                0 => {
-                    *lock = true;
-
-                    if let Some(before_send) = before_send {
-                        BEFORE_SEND
-                            .set(before_send)
-                            .ok()
-                            .expect("`BEFORE_SEND` was filled once before");
-                    }
-
-                    Ok(Shutdown)
+                if let Some(before_send) = self.before_send.take() {
+                    BEFORE_SEND
+                        .set(before_send)
+                        .ok()
+                        .expect("`BEFORE_SEND` was filled once before");
                 }
-                _ => Err(Error::Init),
+
+                Ok(Shutdown)
             }
+            _ => Err(Error::Init(self)),
         }
     }
 }

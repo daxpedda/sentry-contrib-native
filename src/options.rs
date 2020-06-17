@@ -1,6 +1,6 @@
 use crate::{
     ffi::{CPath, CToR},
-    Error, Level, SentryString, Value,
+    Error, SentryString, Value,
 };
 use once_cell::sync::Lazy;
 #[cfg(feature = "test")]
@@ -649,11 +649,6 @@ impl Options {
             match unsafe { sys::init(options) } {
                 0 => {
                     *lock = true;
-                    mem::drop(lock);
-                    // workaround: send/set any form of data to make sure the error appears on
-                    // Sentry
-                    crate::set_level(Level::Error);
-
                     Ok(Shutdown)
                 }
                 _ => Err(Error::Init),

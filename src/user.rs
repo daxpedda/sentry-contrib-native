@@ -1,6 +1,6 @@
 //! Sentry user implementation.
 
-use crate::{Object, Sealed, SentryString, GLOBAL_LOCK};
+use crate::{Object, Sealed, GLOBAL_LOCK};
 use std::net::SocketAddr;
 
 /// A Sentry user.
@@ -42,7 +42,7 @@ impl User {
     /// user.set();
     /// # Ok(()) }
     /// ```
-    pub fn set_id<S: Into<SentryString>>(&mut self, id: S) {
+    pub fn set_id<S: Into<String>>(&mut self, id: S) {
         self.insert("id", id.into())
     }
 
@@ -58,7 +58,7 @@ impl User {
     /// user.set();
     /// # Ok(()) }
     /// ```
-    pub fn set_username<S: Into<SentryString>>(&mut self, username: S) {
+    pub fn set_username<S: Into<String>>(&mut self, username: S) {
         self.insert("username", username.into())
     }
 
@@ -74,7 +74,7 @@ impl User {
     /// user.set();
     /// # Ok(()) }
     /// ```
-    pub fn set_email<S: Into<SentryString>>(&mut self, email: S) {
+    pub fn set_email<S: Into<String>>(&mut self, email: S) {
         self.insert("email", email.into())
     }
 

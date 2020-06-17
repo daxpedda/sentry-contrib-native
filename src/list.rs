@@ -139,7 +139,8 @@ impl List {
     /// Appends a [`Value`] to the [`List`].
     ///
     /// # Panics
-    /// Panics if Sentry failed to allocate memory.
+    /// - Panics if Sentry failed to allocate memory.
+    /// - Panics if `value` is a [`Value::String`] and contains null bytes.
     pub fn push<V: Into<Value>>(&mut self, value: V) {
         let list = self.as_ref();
 
@@ -178,7 +179,7 @@ impl List {
     pub fn get(&self, index: usize) -> Option<Value> {
         let list = self.as_ref();
 
-        match Value::from_raw(unsafe { sys::value_get_by_index_owned(list, index) }) {
+        match unsafe { Value::from_raw(sys::value_get_by_index_owned(list, index)) } {
             Value::Null => None,
             value => Some(value),
         }
@@ -187,7 +188,8 @@ impl List {
     /// Inserts a [`Value`] into the [`List`] at position `index`.
     ///
     /// # Panics
-    /// Panics if Sentry failed to allocate memory.
+    /// - Panics if Sentry failed to allocate memory.
+    /// - Panics if `value` is a [`Value::String`] and contains null bytes.
     ///
     /// # Examples
     /// ```

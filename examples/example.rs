@@ -1,15 +1,11 @@
 use anyhow::Result;
-//use rmpv::decode;
-//use sentry_contrib_native::{Object, Map};
+use sentry::{Event, Map};
+use sentry_contrib_native as sentry;
 
 fn main() -> Result<()> {
-    /*let object = Map::new();
-    object.insert("asd", "ssss")?;
-    object.insert("asd2", true)?;
-    object.insert("asd3", 5)?;
-
-    let value = decode::read_value(&mut object.value_to_msgpack().as_slice())?;
-    println!("{}", value);*/
+    let mut event = Event::new();
+    event.add_exception(Map::new(), 0);
+    println!("{:#?}", event);
 
     Ok(())
 }

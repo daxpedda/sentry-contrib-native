@@ -1,14 +1,10 @@
 //! Sentry options implementation.
 
-use crate::{
-    ffi::{CPath, CToR},
-    Error, SentryString, Value,
-};
+use crate::{CPath, CToR, Error, RToC, Value};
 use once_cell::sync::{Lazy, OnceCell};
 #[cfg(feature = "test")]
-use std::env;
+use std::{env, ffi::CString};
 use std::{
-    ffi::CString,
     fmt::{Debug, Formatter, Result as FmtResult},
     mem,
     os::raw::c_void,
@@ -32,7 +28,7 @@ extern "C" fn before_send(
     _closure: *mut c_void,
 ) -> sys::Value {
     if let Some(before_send) = BEFORE_SEND.get() {
-        before_send(Value::from_raw(event)).take()
+        before_send(unsafe { Value::from_raw(event) }).take()
     } else {
         event
     }
@@ -53,7 +49,7 @@ pub struct Options {
     /// Storing a fake database path to make documentation tests and examples
     /// work without polluting the file system.
     #[cfg(feature = "test")]
-    database_path: Option<SentryString>,
+    database_path: Option<CString>,
     /// Store function for [`Options::set_before_send`] here temporarily. This
     /// way we can use [`OnceCell`] instead of a [`Mutex`](std::sync::Mutex).
     before_send: Option<BeforeSend>,
@@ -87,8 +83,6 @@ impl PartialEq for Options {
         false
     }
 }
-
-impl Eq for Options {}
 
 impl Options {
     /// Crates new Sentry client options.
@@ -155,6 +149,9 @@ impl Options {
 
     /// Sets the DSN.
     ///
+    /// # Panics
+    /// Panics if `dsn` contains any null bytes.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -164,44 +161,42 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_dsn<S: Into<SentryString>>(&mut self, dsn: S) {
+    pub fn set_dsn<S: Into<String>>(&mut self, dsn: S) {
         #[cfg(feature = "test")]
-        let dsn: CString = {
-            self.database_path = Some(dsn.into());
-            SentryString::from(
-                env::var("SENTRY_DSN")
-                    .expect("tests require a valid `SENTRY_DSN` environment variable"),
-            )
-            .into()
+        let dsn = {
+            self.database_path = Some(dsn.into().into_cstring());
+            env::var("SENTRY_DSN")
+                .expect("tests require a valid `SENTRY_DSN` environment variable")
+                .into_cstring()
         };
         #[cfg(not(feature = "test"))]
-        let dsn: CString = dsn.into().into();
+        let dsn = dsn.into().to_cstring();
         unsafe { sys::options_set_dsn(self.as_mut(), dsn.as_ptr()) };
     }
 
     /// Gets the DSN.
     ///
-    /// # Errors
-    /// Fails with [`Error::StrUtf8`] if dsn contains invalid UTF-8.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_dsn("yourdsn.com");
-    /// assert_eq!("yourdsn.com", options.dsn().unwrap().as_str()?);
+    /// assert_eq!(Some("yourdsn.com"), options.dsn());
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
     #[must_use]
-    pub fn dsn(&self) -> Option<SentryString> {
+    pub fn dsn(&self) -> Option<&str> {
         #[cfg(feature = "test")]
-        return self.database_path.clone();
+        return self
+            .database_path
+            .as_ref()
+            .map(|database_path| database_path.to_str().expect("invalid UTF-8"));
         #[cfg(not(feature = "test"))]
-        unsafe { sys::options_get_dsn(self.as_ref()) }
-            .to_cstring()
-            .map(SentryString::from_cstring)
+        unsafe {
+            sys::options_get_dsn(self.as_ref()).as_str()
+        }
     }
 
     /// Sets the sample rate, which should be a double between `0.0` and `1.0`.
@@ -250,6 +245,9 @@ impl Options {
 
     /// Sets the release.
     ///
+    /// # Panics
+    /// Panics if `release` contains any null bytes.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -259,34 +257,32 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_release<S: Into<SentryString>>(&mut self, release: S) {
-        let release: CString = release.into().into();
+    pub fn set_release<S: Into<String>>(&mut self, release: S) {
+        let release = release.into().into_cstring();
         unsafe { sys::options_set_release(self.as_mut(), release.as_ptr()) };
     }
 
     /// Gets the release.
     ///
-    /// # Errors
-    /// Fails with [`Error::StrUtf8`] if release contains invalid UTF-8.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_release("1.0");
-    /// assert_eq!(Ok("1.0"), options.release().unwrap().as_str());
+    /// assert_eq!(Some("1.0"), options.release());
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
     #[must_use]
-    pub fn release(&self) -> Option<SentryString> {
-        unsafe { sys::options_get_release(self.as_ref()) }
-            .to_cstring()
-            .map(SentryString::from_cstring)
+    pub fn release(&self) -> Option<&str> {
+        unsafe { sys::options_get_release(self.as_ref()).as_str() }
     }
 
     /// Sets the environment.
+    ///
+    /// # Panics
+    /// Panics if `environment` contains any null bytes.
     ///
     /// # Examples
     /// ```
@@ -297,34 +293,32 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_environment<S: Into<SentryString>>(&mut self, environment: S) {
-        let environment: CString = environment.into().into();
+    pub fn set_environment<S: Into<String>>(&mut self, environment: S) {
+        let environment = environment.into().into_cstring();
         unsafe { sys::options_set_environment(self.as_mut(), environment.as_ptr()) };
     }
 
     /// Gets the environment.
     ///
-    /// # Errors
-    /// Fails with [`Error::StrUtf8`] if environment contains invalid UTF-8.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_environment("production");
-    /// assert_eq!(Ok("production"), options.environment().unwrap().as_str());
+    /// assert_eq!(Some("production"), options.environment());
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
     #[must_use]
-    pub fn environment(&self) -> Option<SentryString> {
-        unsafe { sys::options_get_environment(self.as_ref()) }
-            .to_cstring()
-            .map(SentryString::from_cstring)
+    pub fn environment(&self) -> Option<&str> {
+        unsafe { sys::options_get_environment(self.as_ref()).as_str() }
     }
 
     /// Sets the distribution.
+    ///
+    /// # Panics
+    /// Panics if `distribution` contains any null bytes.
     ///
     /// # Examples
     /// ```
@@ -335,8 +329,8 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_distribution<S: Into<SentryString>>(&mut self, distribution: S) {
-        let dist: CString = distribution.into().into();
+    pub fn set_distribution<S: Into<String>>(&mut self, distribution: S) {
+        let dist = distribution.into().into_cstring();
         unsafe { sys::options_set_dist(self.as_mut(), dist.as_ptr()) };
     }
 
@@ -348,18 +342,19 @@ impl Options {
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_distribution("release-pgo");
-    /// assert_eq!(Ok("release-pgo"), options.distribution().unwrap().as_str());
+    /// assert_eq!(Some("release-pgo"), options.distribution());
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
     #[must_use]
-    pub fn distribution(&self) -> Option<SentryString> {
-        unsafe { sys::options_get_dist(self.as_ref()) }
-            .to_cstring()
-            .map(SentryString::from_cstring)
+    pub fn distribution(&self) -> Option<&str> {
+        unsafe { sys::options_get_dist(self.as_ref()).as_str() }
     }
 
     /// Configures the http proxy.
+    ///
+    /// # Panics
+    /// Panics if `proxy` contains any null bytes.
     ///
     /// # Examples
     /// ```
@@ -370,36 +365,34 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_http_proxy<S: Into<SentryString>>(&mut self, proxy: S) {
-        let proxy: CString = proxy.into().into();
+    pub fn set_http_proxy<S: Into<String>>(&mut self, proxy: S) {
+        let proxy = proxy.into().into_cstring();
         unsafe { sys::options_set_http_proxy(self.as_mut(), proxy.as_ptr()) };
     }
 
     /// Returns the configured http proxy.
     ///
-    /// # Errors
-    /// Fails with [`Error::StrUtf8`] if the http proxy contains invalid UTF-8.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_http_proxy("1.1.1.1");
-    /// assert_eq!(Ok("1.1.1.1"), options.http_proxy().unwrap().as_str());
+    /// assert_eq!(Some("1.1.1.1"), options.http_proxy());
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
     #[must_use]
-    pub fn http_proxy(&self) -> Option<SentryString> {
-        unsafe { sys::options_get_http_proxy(self.as_ref()) }
-            .to_cstring()
-            .map(SentryString::from_cstring)
+    pub fn http_proxy(&self) -> Option<&str> {
+        unsafe { sys::options_get_http_proxy(self.as_ref()).as_str() }
     }
 
     /// Configures the path to a file containing ssl certificates for
     /// verification.
     ///
+    /// # Panics
+    /// Panics if `path` contains any null bytes.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -409,32 +402,26 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_ca_certs<S: Into<SentryString>>(&mut self, path: S) {
-        let path: CString = path.into().into();
+    pub fn set_ca_certs<S: Into<String>>(&mut self, path: S) {
+        let path = path.into().into_cstring();
         unsafe { sys::options_set_ca_certs(self.as_mut(), path.as_ptr()) };
     }
 
     /// Returns the configured path for ca certificates.
     ///
-    /// # Errors
-    /// Fails with [`Error::StrUtf8`] if the certificate path contains invalid
-    /// UTF-8.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_ca_certs("certs.pem");
-    /// assert_eq!(Ok("certs.pem"), options.ca_certs().unwrap().as_str());
+    /// assert_eq!(Some("certs.pem"), options.ca_certs());
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
     #[must_use]
-    pub fn ca_certs(&self) -> Option<SentryString> {
-        unsafe { sys::options_get_ca_certs(self.as_ref()) }
-            .to_cstring()
-            .map(SentryString::from_cstring)
+    pub fn ca_certs(&self) -> Option<&str> {
+        unsafe { sys::options_get_ca_certs(self.as_ref()).as_str() }
     }
 
     /// Enables or disables debug printing mode.
@@ -516,6 +503,10 @@ impl Options {
 
     /// Adds a new attachment to be sent along.
     ///
+    /// # Panics
+    /// - Panics if `name` contains any null bytes.
+    /// - Panics if `path` contains any null bytes.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -525,9 +516,9 @@ impl Options {
     /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn add_attachment<S: Into<SentryString>, P: Into<PathBuf>>(&mut self, name: S, path: P) {
-        let name: CString = name.into().into();
-        let path = path.into().to_os_vec();
+    pub fn add_attachment<S: Into<String>, P: Into<PathBuf>>(&mut self, name: S, path: P) {
+        let name = name.into().into_cstring();
+        let path = path.into().into_os_vec();
 
         #[cfg(windows)]
         unsafe {
@@ -547,6 +538,9 @@ impl Options {
     ///
     /// It is recommended that library users set an explicit handler path,
     /// depending on the directory/executable structure of their app.
+    ///
+    /// # Panics
+    /// Panics if `path` contains any null bytes.
     ///
     /// # Examples
     /// ```
@@ -570,7 +564,7 @@ impl Options {
         let path = PathBuf::from(
             env::var_os("CRASHPAD_HANDLER").expect("failed to find crashpad handler"),
         )
-        .to_os_vec();
+        .into_os_vec();
         #[cfg(not(all(feature = "test", any(windows, target_os = "macos"))))]
         let path = path.into().to_os_vec();
 
@@ -597,6 +591,9 @@ impl Options {
     /// It is recommended that library users set an explicit absolute path,
     /// depending on their apps runtime directory.
     ///
+    /// # Panics
+    /// Panics if `path` contains any null bytes.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -610,7 +607,7 @@ impl Options {
         #[cfg(feature = "test")]
         let path = PathBuf::from(env::var_os("OUT_DIR").unwrap())
             .join(path.into())
-            .to_os_vec();
+            .into_os_vec();
         #[cfg(not(feature = "test"))]
         let path = path.into().to_os_vec();
 

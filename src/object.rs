@@ -1,9 +1,9 @@
 //! Sentry object implementation, represents common functionality between
 //! [`Map`](crate::Map), [`Breadcrumb`](crate::Breadcrumb),
 //! [`Event`](crate::Event), and [`User`](crate::User).
-use crate::{Error, List, Map, SentryString, Value};
+use crate::{Error, List, Map, RToC, Value};
 use rmpv::{decode, Value as MpValue};
-use std::{convert::TryInto, ffi::CString, iter::FromIterator, slice};
+use std::{convert::TryInto, iter::FromIterator, slice};
 
 /// Private trait methods of [`Object`].
 pub trait Sealed {
@@ -40,11 +40,13 @@ pub trait Object: Sealed {
     /// Inserts a key-value pair into the [`Object`].
     ///
     /// # Panics
-    /// Panics if Sentry failed to allocate memory.
-    fn insert<S: Into<SentryString>, V: Into<Value>>(&mut self, key: S, value: V) {
+    /// - Panics if Sentry failed to allocate memory.
+    /// - Panics if `key` contains any null bytes.
+    /// - Panics if `value` is a [`Value::String`] and contains null bytes.
+    fn insert<S: Into<String>, V: Into<Value>>(&mut self, key: S, value: V) {
         let object = self.as_raw();
 
-        let key: CString = key.into().into();
+        let key = key.into().into_cstring();
         let value = value.into();
 
         match unsafe { sys::value_set_by_key(object, key.as_ptr(), value.take()) } {
@@ -58,6 +60,9 @@ pub trait Object: Sealed {
     /// # Errors
     /// Fails with [`Error::MapRemove`] if index wasn't found.
     ///
+    /// # Panics
+    /// Panics if `key` contains any null bytes.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{Map, Object};
@@ -68,10 +73,10 @@ pub trait Object: Sealed {
     /// assert_eq!(None, object.get("test"));
     /// # Ok(()) }
     /// ```
-    fn remove<S: Into<SentryString>>(&mut self, key: S) -> Result<(), Error> {
+    fn remove<S: Into<String>>(&mut self, key: S) -> Result<(), Error> {
         let object = self.as_raw();
 
-        let key: CString = key.into().into();
+        let key = key.into().into_cstring();
 
         match unsafe { sys::value_remove_by_key(object, key.as_ptr()) } {
             0 => Ok(()),
@@ -81,6 +86,9 @@ pub trait Object: Sealed {
 
     /// Looks up a value in the [`Object`] with a key.
     ///
+    /// # Panics
+    /// Panics if `key` contains any null bytes.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{Map, Object, Value};
@@ -88,12 +96,12 @@ pub trait Object: Sealed {
     /// object.insert("test", true);
     /// assert_eq!(Some(Value::Bool(true)), object.get("test"));
     /// ```
-    fn get<S: Into<SentryString>>(&self, key: S) -> Option<Value> {
+    fn get<S: Into<String>>(&self, key: S) -> Option<Value> {
         let object = self.as_raw();
 
-        let key: CString = key.into().into();
+        let key = key.into().into_cstring();
 
-        match Value::from_raw(unsafe { sys::value_get_by_key_owned(object, key.as_ptr()) }) {
+        match unsafe { Value::from_raw(sys::value_get_by_key_owned(object, key.as_ptr())) } {
             Value::Null => None,
             value => Some(value),
         }
@@ -127,15 +135,13 @@ pub trait Object: Sealed {
     }
 
     /// Converts the [`Object`] to a [`Vec`].
-    fn to_vec(&self) -> Vec<(SentryString, Value)> {
+    fn to_vec(&self) -> Vec<(String, Value)> {
         let map_mp = self.to_msgpack();
         let mut map = Vec::new();
 
         for (key, value) in map_mp {
             let key = if let MpValue::String(key) = key {
-                SentryString::from_cstring(
-                    CString::new(key.into_bytes()).expect("message pack decoding failed"),
-                )
+                key.into_str().expect("message pack decoding failed")
             } else {
                 unreachable!("message pack decoding failed")
             };
@@ -189,10 +195,7 @@ macro_rules! derive_object {
 
                 for (key, _) in map {
                     let key = if let rmpv::Value::String(key) = key {
-                        crate::SentryString::from_cstring(
-                            std::ffi::CString::new(key.into_bytes())
-                                .expect("message pack decoding failed"),
-                        )
+                        key.into_str().expect("message pack decoding failed")
                     } else {
                         unreachable!("message pack decoding failed")
                     };
@@ -212,9 +215,7 @@ macro_rules! derive_object {
             }
         }
 
-        impl<S: Into<crate::SentryString>, V: Into<crate::Value>> std::iter::FromIterator<(S, V)>
-            for $type
-        {
+        impl<S: Into<String>, V: Into<crate::Value>> std::iter::FromIterator<(S, V)> for $type {
             fn from_iter<I: std::iter::IntoIterator<Item = (S, V)>>(map: I) -> Self {
                 use crate::Object;
 
@@ -228,9 +229,8 @@ macro_rules! derive_object {
             }
         }
 
-        impl<'a, S: 'a, V: 'a> std::iter::FromIterator<&'a (S, V)> for $type
+        impl<'a, S: 'a + ToString, V: 'a> std::iter::FromIterator<&'a (S, V)> for $type
         where
-            crate::SentryString: From<&'a S>,
             crate::Value: From<&'a V>,
         {
             fn from_iter<I: std::iter::IntoIterator<Item = &'a (S, V)>>(map: I) -> Self {
@@ -239,14 +239,14 @@ macro_rules! derive_object {
                 let mut object = Self::default();
 
                 for (key, value) in map {
-                    object.insert(key, value);
+                    object.insert(key.to_string(), value);
                 }
 
                 object
             }
         }
 
-        impl<S: Into<crate::SentryString>, V: Into<crate::Value>> Extend<(S, V)> for $type {
+        impl<S: Into<String>, V: Into<crate::Value>> Extend<(S, V)> for $type {
             fn extend<T: std::iter::IntoIterator<Item = (S, V)>>(&mut self, iter: T) {
                 use crate::Object;
 
@@ -256,16 +256,15 @@ macro_rules! derive_object {
             }
         }
 
-        impl<'a, S: 'a, V: 'a> Extend<&'a (S, V)> for $type
+        impl<'a, S: 'a + ToString, V: 'a> Extend<&'a (S, V)> for $type
         where
-            crate::SentryString: From<&'a S>,
             crate::Value: From<&'a V>,
         {
             fn extend<T: std::iter::IntoIterator<Item = &'a (S, V)>>(&mut self, iter: T) {
                 use crate::Object;
 
                 for (key, value) in iter {
-                    self.insert(key, value);
+                    self.insert(key.to_string(), value);
                 }
             }
         }
@@ -284,15 +283,13 @@ fn mp_to_sentry(mp_value: MpValue) -> Value {
                 .expect("message pack decoding failed"),
         ),
         MpValue::F64(value) => Value::Double(value),
-        MpValue::String(value) => Value::String(SentryString::from_cstring(
-            CString::new(value.into_bytes()).expect("message pack decoding failed"),
-        )),
+        MpValue::String(value) => {
+            Value::String(value.into_str().expect("message pack decoding failed"))
+        }
         MpValue::Array(value) => List::from_iter(value.into_iter().map(mp_to_sentry)).into(),
         MpValue::Map(value) => Value::Map(Map::from_iter(value.into_iter().map(|(key, value)| {
             let key = if let MpValue::String(key) = key {
-                SentryString::from_cstring(
-                    CString::new(key.into_bytes()).expect("message pack decoding failed"),
-                )
+                key.into_str().expect("message pack decoding failed")
             } else {
                 unreachable!("message pack decoding failed")
             };
@@ -369,7 +366,7 @@ fn object() -> anyhow::Result<()> {
 
     assert_eq!(object.len(), 18);
 
-    let new_object: Vec<(SentryString, Value)> = vec![
+    let new_object: Vec<(String, Value)> = vec![
         ("test1".into(), ().into()),
         ("test2".into(), ().into()),
         ("test3".into(), true.into()),

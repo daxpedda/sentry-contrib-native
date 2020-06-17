@@ -21,12 +21,12 @@ mod list;
 mod map;
 mod options;
 mod panic;
-mod string;
 mod user;
 mod value;
 
 pub use breadcrumb::Breadcrumb;
 pub use event::{Event, Uuid};
+use ffi::{CPath, CToR, RToC};
 pub use list::List;
 pub use map::Map;
 pub use object::Object;
@@ -34,27 +34,14 @@ use object::Sealed;
 use options::GLOBAL_LOCK;
 pub use options::{Options, Shutdown};
 pub use panic::set_hook;
-use std::{
-    convert::Infallible,
-    ffi::{CString, IntoStringError},
-    os::raw::c_char,
-    ptr,
-    str::Utf8Error,
-};
-pub use string::SentryString;
+use std::{convert::Infallible, os::raw::c_char, ptr};
 use thiserror::Error;
 pub use user::User;
 pub use value::Value;
 
 /// Sentry errors.
-#[derive(Debug, Error, Eq, PartialEq)]
+#[derive(Debug, Error, PartialEq)]
 pub enum Error {
-    /// String contains invalid UTF-8.
-    #[error("string contains invalid UTF-8")]
-    StringUtf8(#[from] IntoStringError),
-    /// String contains invalid UTF-8.
-    #[error("string contains invalid UTF-8")]
-    StrUtf8(#[from] Utf8Error),
     /// Sample rate outside of allowed range.
     #[error("sample rate outside of allowed range")]
     SampleRateRange,
@@ -67,6 +54,9 @@ pub enum Error {
     /// Failed to remove value from map.
     #[error("failed to remove value from map")]
     MapRemove,
+    /// Failed to convert to type.
+    #[error("failed to convert to type")]
+    TryConvert(Value),
 }
 
 impl From<Infallible> for Error {
@@ -247,6 +237,9 @@ pub fn remove_user() {
 
 /// Sets a tag.
 ///
+/// # Panics
+/// Panics if `key` or `value` contain any null bytes.
+///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{set_tag, Event, Object, Value};
@@ -255,9 +248,9 @@ pub fn remove_user() {
 /// set_tag("test_tag", "test");
 /// event.capture();
 /// ```
-pub fn set_tag<S1: Into<SentryString>, S2: Into<SentryString>>(key: S1, value: S2) {
-    let key: CString = key.into().into();
-    let value: CString = value.into().into();
+pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
+    let key = key.into().into_cstring();
+    let value = value.into().into_cstring();
 
     {
         let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
@@ -266,6 +259,9 @@ pub fn set_tag<S1: Into<SentryString>, S2: Into<SentryString>>(key: S1, value: S
 }
 
 /// Removes the tag with the specified key.
+///
+/// # Panics
+/// Panics if `key` contains any null bytes.
 ///
 /// # Examples
 /// ```
@@ -278,8 +274,8 @@ pub fn set_tag<S1: Into<SentryString>, S2: Into<SentryString>>(key: S1, value: S
 /// event.capture();
 /// # Ok(()) }
 /// ```
-pub fn remove_tag<S: Into<SentryString>>(key: S) {
-    let key: CString = key.into().into();
+pub fn remove_tag<S: Into<String>>(key: S) {
+    let key = key.into().into_cstring();
 
     {
         let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
@@ -289,6 +285,10 @@ pub fn remove_tag<S: Into<SentryString>>(key: S) {
 
 /// Sets extra information.
 ///
+/// # Panics
+/// - Panics if `key` contains any null bytes.
+/// - Panics if `value` is a [`Value::String`] and contains null bytes.
+///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{set_extra, Event, Object};
@@ -297,8 +297,8 @@ pub fn remove_tag<S: Into<SentryString>>(key: S) {
 /// event.insert("test", true);
 /// event.capture();
 /// ```
-pub fn set_extra<S: Into<SentryString>, V: Into<Value>>(key: S, value: V) {
-    let key: CString = key.into().into();
+pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
+    let key = key.into().into_cstring();
     let value = value.into().take();
 
     {
@@ -309,6 +309,9 @@ pub fn set_extra<S: Into<SentryString>, V: Into<Value>>(key: S, value: V) {
 
 /// Removes the extra with the specified key.
 ///
+/// # Panics
+/// Panics if `key` contains any null bytes.
+///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{set_extra, remove_extra, Event, Object};
@@ -318,8 +321,8 @@ pub fn set_extra<S: Into<SentryString>, V: Into<Value>>(key: S, value: V) {
 /// event.insert("test", true);
 /// event.capture();
 /// ```
-pub fn remove_extra<S: Into<SentryString>>(key: S) {
-    let key: CString = key.into().into();
+pub fn remove_extra<S: Into<String>>(key: S) {
+    let key = key.into().into_cstring();
 
     {
         let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
@@ -329,6 +332,10 @@ pub fn remove_extra<S: Into<SentryString>>(key: S) {
 
 /// Sets a context object.
 ///
+/// # Panics
+/// - Panics if `key` contains any null bytes.
+/// - Panics if `value` is a [`Value::String`] and contains null bytes.
+///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{Event, Object, set_context};
@@ -337,8 +344,8 @@ pub fn remove_extra<S: Into<SentryString>>(key: S) {
 /// set_context("test_context", true);
 /// event.capture();
 /// ```
-pub fn set_context<S: Into<SentryString>, V: Into<Value>>(key: S, value: V) {
-    let key: CString = key.into().into();
+pub fn set_context<S: Into<String>, V: Into<Value>>(key: S, value: V) {
+    let key = key.into().into_cstring();
     let value = value.into().take();
 
     {
@@ -349,6 +356,9 @@ pub fn set_context<S: Into<SentryString>, V: Into<Value>>(key: S, value: V) {
 
 /// Removes the context object with the specified key.
 ///
+/// # Panics
+/// Panics if `key` contains any null bytes.
+///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{set_context, remove_context, Event, Object};
@@ -358,8 +368,8 @@ pub fn set_context<S: Into<SentryString>, V: Into<Value>>(key: S, value: V) {
 /// remove_context("test_context");
 /// event.capture();
 /// ```
-pub fn remove_context<S: Into<SentryString>>(key: S) {
-    let key: CString = key.into().into();
+pub fn remove_context<S: Into<String>>(key: S) {
+    let key = key.into().into_cstring();
 
     {
         let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
@@ -369,19 +379,22 @@ pub fn remove_context<S: Into<SentryString>>(key: S) {
 
 /// Sets the event fingerprint.
 ///
+/// # Panics
+/// Panics if [`String`]s in `fingerprints` contain any null bytes.
+///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{set_fingerprint, Event, Object};
 /// let mut event = Event::new();
 /// event.insert("test", true);
-/// set_fingerprint(&["test"]);
+/// set_fingerprint(vec!["test"]);
 /// event.capture();
 /// ```
-pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<SentryString>>(fingerprints: I) {
+pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(fingerprints: I) {
     let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
 
     for fingerprint in fingerprints {
-        let fingerprint: CString = fingerprint.into().into();
+        let fingerprint = fingerprint.into().into_cstring();
         unsafe { sys::set_fingerprint(fingerprint.as_ptr(), ptr::null::<c_char>()) };
     }
 }
@@ -393,7 +406,7 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<SentryString>>(fingerp
 /// # use sentry_contrib_native::{set_fingerprint, remove_fingerprint, Event, Object};
 /// let mut event = Event::new();
 /// event.insert("test", true);
-/// set_fingerprint(&["test"]);
+/// set_fingerprint(vec!["test"]);
 /// remove_fingerprint();
 /// event.capture();
 /// ```
@@ -404,6 +417,9 @@ pub fn remove_fingerprint() {
 
 /// Sets the transaction.
 ///
+/// # Panics
+/// Panics if `transaction` contains any null bytes.
+///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{set_transaction, Event, Object};
@@ -412,8 +428,8 @@ pub fn remove_fingerprint() {
 /// set_transaction("test_transaction");
 /// event.capture();
 /// ```
-pub fn set_transaction<S: Into<SentryString>>(transaction: S) {
-    let transaction: CString = transaction.into().into();
+pub fn set_transaction<S: Into<String>>(transaction: S) {
+    let transaction = transaction.into().into_cstring();
 
     {
         let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");

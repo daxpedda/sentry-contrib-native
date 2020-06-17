@@ -1,7 +1,7 @@
 //! Sentry value implementation.
 
-use crate::{List, Map, Sealed, SentryString};
-use std::ffi::{CStr, CString};
+use crate::{CToR, Error, List, Map, RToC, Sealed};
+use std::convert::TryFrom;
 
 /// Represents a Sentry protocol value.
 #[derive(Debug, Clone, PartialEq)]
@@ -15,7 +15,7 @@ pub enum Value {
     /// Double.
     Double(f64),
     /// String.
-    String(SentryString),
+    String(String),
     /// List.
     List(List),
     /// Map.
@@ -32,13 +32,18 @@ impl Value {
     /// Creates a new Sentry value.
     ///
     /// # Panics
-    /// This will panic if any string contains `0` bytes.
+    /// Panics if `value` is a [`Value::String`] and contains null bytes.
     pub fn new<V: Into<Self>>(value: V) -> Self {
         value.into()
     }
 
-    /// Creates a [`Value`] from [`sys::Value`].
-    pub(crate) fn from_raw(raw_value: sys::Value) -> Self {
+    /// Creates a [`Value`] from [`sys::Value`]. This will deallocate the given
+    /// `raw_value` or take ownership of it.
+    ///
+    /// # Panics
+    /// Panics if `raw_value` is a [`Value::String`] and contains invalid UTF-8.
+    #[allow(unused_unsafe)]
+    pub(crate) unsafe fn from_raw(raw_value: sys::Value) -> Self {
         match unsafe { sys::value_get_type(raw_value) } {
             sys::ValueType::Null => {
                 unsafe { sys::value_decref(raw_value) };
@@ -64,9 +69,11 @@ impl Value {
                 value
             }
             sys::ValueType::String => {
-                let value = Self::String(SentryString::from_cstring(
-                    unsafe { CStr::from_ptr(sys::value_as_string(raw_value)) }.to_owned(),
-                ));
+                let value = Self::String(
+                    unsafe { sys::value_as_string(raw_value).as_str() }
+                        .expect("invalid pointer")
+                        .to_owned(),
+                );
                 unsafe { sys::value_decref(raw_value) };
                 value
             }
@@ -77,6 +84,10 @@ impl Value {
 
     /// Yields [`sys::Value`], [`Value`] is consumed and caller is responsible
     /// for deallocating [`sys::Value`].
+    ///
+    /// # Panics
+    /// Panics if `raw_value` is a [`Value::String`] and contains any null
+    /// bytes.
     pub(crate) fn take(self) -> sys::Value {
         match self {
             Self::Null => unsafe { sys::value_new_null() },
@@ -84,7 +95,7 @@ impl Value {
             Self::Int(value) => unsafe { sys::value_new_int32(value) },
             Self::Double(value) => unsafe { sys::value_new_double(value) },
             Self::String(value) => {
-                let string: CString = value.into();
+                let string = value.into_cstring();
                 unsafe { sys::value_new_string(string.as_ptr()) }
             }
             Self::List(list) => list.take(),
@@ -132,12 +143,11 @@ impl Value {
         }
     }
 
-    /// Returns [`Some`] with the inner value as a [`str`] if `self` is
-    /// [`Value::String`] and valid UTF-8.
+    /// Returns [`Some`] with the inner value if `self` is [`Value::String`].
     #[must_use]
-    pub fn as_string(&self) -> Option<&str> {
+    pub fn as_str(&self) -> Option<&str> {
         if let Self::String(value) = self {
-            value.as_str().ok()
+            Some(value)
         } else {
             None
         }
@@ -188,21 +198,20 @@ impl From<f64> for Value {
     }
 }
 
-impl From<SentryString> for Value {
-    fn from(value: SentryString) -> Self {
-        Self::String(value)
-    }
-}
-
+#[allow(clippy::fallible_impl_from)]
 impl From<String> for Value {
     fn from(value: String) -> Self {
-        SentryString::new(value).into()
+        if value.contains('\0') {
+            panic!("found null byte")
+        }
+
+        Self::String(value)
     }
 }
 
 impl From<&str> for Value {
     fn from(value: &str) -> Self {
-        SentryString::new(value).into()
+        value.to_owned().into()
     }
 }
 
@@ -221,5 +230,89 @@ impl From<Map> for Value {
 impl<V: Into<Value> + Copy> From<&V> for Value {
     fn from(value: &V) -> Self {
         (*value).into()
+    }
+}
+
+impl TryFrom<Value> for () {
+    type Error = Error;
+
+    fn try_from(value: Value) -> Result<Self, Error> {
+        if let Value::Null = value {
+            Ok(())
+        } else {
+            Err(Error::TryConvert(value))
+        }
+    }
+}
+
+impl TryFrom<Value> for bool {
+    type Error = Error;
+
+    fn try_from(value: Value) -> Result<Self, Error> {
+        if let Value::Bool(value) = value {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(value))
+        }
+    }
+}
+
+impl TryFrom<Value> for i32 {
+    type Error = Error;
+
+    fn try_from(value: Value) -> Result<Self, Error> {
+        if let Value::Int(value) = value {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(value))
+        }
+    }
+}
+
+impl TryFrom<Value> for f64 {
+    type Error = Error;
+
+    fn try_from(value: Value) -> Result<Self, Error> {
+        if let Value::Double(value) = value {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(value))
+        }
+    }
+}
+
+impl TryFrom<Value> for String {
+    type Error = Error;
+
+    fn try_from(value: Value) -> Result<Self, Error> {
+        if let Value::String(value) = value {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(value))
+        }
+    }
+}
+
+impl TryFrom<Value> for List {
+    type Error = Error;
+
+    fn try_from(value: Value) -> Result<Self, Error> {
+        if let Value::List(value) = value {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(value))
+        }
+    }
+}
+
+impl TryFrom<Value> for Map {
+    type Error = Error;
+
+    fn try_from(value: Value) -> Result<Self, Error> {
+        if let Value::Map(value) = value {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(value))
+        }
     }
 }

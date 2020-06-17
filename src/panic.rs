@@ -57,7 +57,7 @@ pub fn set_hook(hook: Option<Box<dyn Fn(&PanicInfo) + Sync + Send + 'static>>) {
             event.insert("extra", extra);
         }
 
-        event.value_add_stacktrace(0);
+        event.add_stacktrace(0);
         event.capture();
 
         if let Some(hook) = &hook {

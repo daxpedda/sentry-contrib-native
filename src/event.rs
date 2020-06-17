@@ -1,9 +1,8 @@
 //! Sentry event implementation.
 
-use crate::{Level, Map, Object, Sealed, SentryString, Value, GLOBAL_LOCK};
+use crate::{CToR, Level, Map, Object, RToC, Sealed, Value, GLOBAL_LOCK};
 use std::{
     cmp::Ordering,
-    ffi::{CStr, CString},
     fmt::{Display, Formatter, Result},
     hash::{Hash, Hasher},
     os::raw::c_char,
@@ -40,6 +39,9 @@ impl Event {
 
     /// Creates a new Sentry message event.
     ///
+    /// # Panics
+    /// Panics if `logger` or `text` contain any null bytes.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{Event, Level, Map, Object};
@@ -50,15 +52,12 @@ impl Event {
     /// event.capture();
     /// ```
     #[allow(clippy::needless_pass_by_value)]
-    pub fn new_message<S: Into<SentryString>>(
-        level: Level,
-        logger: Option<SentryString>,
-        text: S,
-    ) -> Self {
+    pub fn new_message<S: Into<String>>(level: Level, logger: Option<String>, text: S) -> Self {
+        let logger = logger.map(RToC::into_cstring);
         let logger = logger
             .as_ref()
-            .map_or(ptr::null(), |logger| logger.as_cstr().as_ptr());
-        let text: CString = text.into().into();
+            .map_or(ptr::null(), |logger| logger.as_ptr());
+        let text = text.into().into_cstring();
 
         Self(Some(unsafe {
             sys::value_new_message_event(level.into(), logger, text.as_ptr())
@@ -66,7 +65,7 @@ impl Event {
     }
 
     /// Adds a stacktrace to the [`Event`].
-    pub fn value_add_stacktrace(&mut self, len: usize) {
+    pub fn add_stacktrace(&mut self, len: usize) {
         let event = self.as_raw();
 
         unsafe { sys::event_value_add_stacktrace(event, ptr::null_mut(), len) };
@@ -90,7 +89,7 @@ impl Event {
     /// event.capture();
     /// ```
     pub fn add_exception(&mut self, mut exception: Map, len: usize) {
-        self.value_add_stacktrace(len);
+        self.add_stacktrace(len);
 
         if let Some(Value::Map(threads)) = self.get("threads") {
             if let Some(Value::List(threads_values)) = threads.get("values") {
@@ -156,9 +155,7 @@ impl Display for Uuid {
         write!(
             f,
             "{}",
-            unsafe { CStr::from_ptr(string.as_ptr()) }
-                .to_str()
-                .expect("UUID contained invalid UTF-8")
+            unsafe { string.as_ptr().as_str() }.expect("invalid pointer")
         )
     }
 }
@@ -210,18 +207,66 @@ impl From<[c_char; 16]> for Uuid {
 }
 
 #[test]
-fn event() {
+fn event() -> anyhow::Result<()> {
+    use crate::List;
+    use std::convert::TryInto;
+
     Event::new().capture();
-    Event::new_message(Level::Debug, None, "test").capture();
-    Event::new_message(Level::Debug, Some("test".into()), "test").capture();
+
+    let event = Event::new_message(Level::Debug, None, "test");
+    assert_eq!(Some("debug"), event.get("level").unwrap().as_str());
+    assert_eq!(None, event.get("logger"));
+    assert_eq!(
+        Some("test"),
+        event
+            .get("message")
+            .unwrap()
+            .as_map()
+            .unwrap()
+            .get("formatted")
+            .unwrap()
+            .as_str()
+    );
+    event.capture();
+
+    let event = Event::new_message(Level::Debug, Some("test".into()), "test");
+    assert_eq!(Some("debug"), event.get("level").unwrap().as_str());
+    assert_eq!(Some("test"), event.get("logger").unwrap().as_str());
+    assert_eq!(
+        Some("test"),
+        event
+            .get("message")
+            .unwrap()
+            .as_map()
+            .unwrap()
+            .get("formatted")
+            .unwrap()
+            .as_str()
+    );
+    event.capture();
 
     let mut event = Event::new();
-    event.value_add_stacktrace(0);
+    event.add_stacktrace(0);
     event.capture();
 
     let mut event = Event::new_message(Level::Debug, None, "test");
-    event.value_add_stacktrace(0);
+    event.add_stacktrace(0);
     event.capture();
+
+    let mut event = Event::new();
+    let mut exception = Map::new();
+    exception.insert("type", "test");
+    exception.insert("value", "test");
+    event.add_exception(exception, 0);
+
+    let exception: Map = event.get("exception").unwrap().try_into()?;
+    let stacktrace: Map = exception.get("stacktrace").unwrap().try_into()?;
+    let frames: List = stacktrace.get("frames").unwrap().try_into()?;
+    assert_ne!(None, frames.get(0).unwrap().as_map());
+
+    event.capture();
+
+    Ok(())
 }
 
 #[test]

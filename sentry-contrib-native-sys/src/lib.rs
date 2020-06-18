@@ -129,6 +129,7 @@ pub struct Transport([u8; 0]);
 /// sentry. It can contain one or more items, typically an Event.
 /// See <https://develop.sentry.dev/sdk/envelopes/>
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct Envelope([u8; 0]);
 
 /// Type of the callback for modifying events.

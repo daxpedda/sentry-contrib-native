@@ -31,7 +31,7 @@ pub use list::List;
 pub use map::Map;
 pub use object::Object;
 use object::Sealed;
-use options::GLOBAL_LOCK;
+use options::{global_read, global_write};
 pub use options::{Options, Shutdown};
 pub use panic::set_hook;
 use std::{convert::Infallible, os::raw::c_char, ptr};
@@ -139,7 +139,7 @@ impl From<sys::UserConsent> for Consent {
 /// }
 /// ```
 pub fn shutdown() {
-    let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+    let _lock = global_write();
     unsafe { sys::shutdown() };
 }
 
@@ -253,7 +253,7 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
     let value = value.into().into_cstring();
 
     {
-        let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+        let _lock = global_write();
         unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
     }
 }
@@ -278,7 +278,7 @@ pub fn remove_tag<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
     {
-        let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+        let _lock = global_write();
         unsafe { sys::remove_tag(key.as_ptr()) }
     }
 }
@@ -302,7 +302,7 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let value = value.into().take();
 
     {
-        let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+        let _lock = global_write();
         unsafe { sys::set_extra(key.as_ptr(), value) };
     }
 }
@@ -325,7 +325,7 @@ pub fn remove_extra<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
     {
-        let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+        let _lock = global_write();
         unsafe { sys::remove_extra(key.as_ptr()) };
     }
 }
@@ -349,7 +349,7 @@ pub fn set_context<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let value = value.into().take();
 
     {
-        let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+        let _lock = global_write();
         unsafe { sys::set_context(key.as_ptr(), value) }
     }
 }
@@ -372,7 +372,7 @@ pub fn remove_context<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
     {
-        let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+        let _lock = global_write();
         unsafe { sys::remove_context(key.as_ptr()) };
     }
 }
@@ -391,7 +391,7 @@ pub fn remove_context<S: Into<String>>(key: S) {
 /// event.capture();
 /// ```
 pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(fingerprints: I) {
-    let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+    let _lock = global_write();
 
     for fingerprint in fingerprints {
         let fingerprint = fingerprint.into().into_cstring();
@@ -411,7 +411,7 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(fingerprints:
 /// event.capture();
 /// ```
 pub fn remove_fingerprint() {
-    let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+    let _lock = global_write();
     unsafe { sys::remove_fingerprint() };
 }
 
@@ -432,7 +432,7 @@ pub fn set_transaction<S: Into<String>>(transaction: S) {
     let transaction = transaction.into().into_cstring();
 
     {
-        let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+        let _lock = global_write();
         unsafe { sys::set_transaction(transaction.as_ptr()) };
     }
 }
@@ -465,18 +465,18 @@ pub fn remove_transaction() {
 /// # Ok(()) }
 /// ```
 pub fn set_level(level: Level) {
-    let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+    let _lock = global_write();
     unsafe { sys::set_level(level.into()) }
 }
 
 /// Starts a new session.
 pub fn start_session() {
-    let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+    let _lock = global_write();
     unsafe { sys::start_session() };
 }
 
 /// Ends a session.
 pub fn end_session() {
-    let _lock = GLOBAL_LOCK.read().expect("global lock poisoned");
+    let _lock = global_read();
     unsafe { sys::end_session() };
 }

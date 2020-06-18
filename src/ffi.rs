@@ -10,16 +10,16 @@ use std::{
     path::PathBuf,
 };
 
-/// Cross-platform return type for [`CPath::to_os_vec`].
+/// Cross-platform return type for [`CPath::into_os_vec`].
 #[cfg(windows)]
 type COsString = u16;
-/// Cross-platform return type for [`CPath::to_os_vec`].
+/// Cross-platform return type for [`CPath::into_os_vec`].
 #[cfg(not(windows))]
 type COsString = c_char;
 
 /// Trait for converting [`PathBuf`] to `Vec<COsString>`.
 pub trait CPath {
-    /// Re-encodes `self` into a C and OS compatible `Vec<COsString>`.
+    /// Re-encodes `self` into an OS compatible `Vec<COsString>`.
     ///
     /// # Panics
     /// Panics if `self` contains any null bytes.
@@ -76,7 +76,7 @@ impl CToR for *const c_char {
     }
 }
 
-/// Trait for converting [`str`] to [`CStr`].
+/// Trait for converting [`str`] to [`CString`].
 pub trait RToC {
     /// Re-encodes `self` into a [`CString`].
     ///
@@ -160,12 +160,10 @@ mod ctor {
         assert_eq!(None, unsafe { ptr::null::<c_char>().as_str() });
     }
 
-    #[test]
-    #[should_panic]
-    fn invalid() {
+    invalid!(invalid, {
         let string = CString::new(vec![0xfe, 0xfe, 0xff, 0xff]).unwrap();
         unsafe { string.as_ptr().as_str() };
-    }
+    });
 }
 
 #[cfg(test)]

@@ -10,7 +10,7 @@ use std::{
     os::raw::c_void,
     path::PathBuf,
     ptr,
-    sync::RwLock,
+    sync::{RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
 /// Re-usable type to store function for [`Options::set_before_send`].
@@ -40,7 +40,17 @@ extern "C" fn before_send(
 ///   shutdown is called while other functions are still accessing global
 ///   options. Hopefully this will be fixed upstream in the future, see
 ///   <https://github.com/getsentry/sentry-native/issues/280>.
-pub static GLOBAL_LOCK: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
+static GLOBAL_LOCK: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
+
+/// Convenience function to get a read lock on `GLOBAL_LOCK`.
+pub fn global_read() -> RwLockReadGuard<'static, bool> {
+    GLOBAL_LOCK.read().expect("global lock poisoned")
+}
+
+/// Convenience function to get a write lock on `GLOBAL_LOCK`.
+pub fn global_write() -> RwLockWriteGuard<'static, bool> {
+    GLOBAL_LOCK.write().expect("global lock poisoned")
+}
 
 /// The Sentry client options.
 pub struct Options {
@@ -661,7 +671,7 @@ impl Options {
     /// # Ok(()) }
     /// ```
     pub fn init(mut self) -> Result<Shutdown, Error> {
-        let mut lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+        let mut lock = global_write();
 
         if *lock {
             panic!("already initialized before!")

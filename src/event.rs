@@ -1,6 +1,6 @@
 //! Sentry event implementation.
 
-use crate::{CToR, Level, Map, Object, RToC, Sealed, Value, GLOBAL_LOCK};
+use crate::{global_read, CToR, Level, Map, Object, RToC, Sealed, Value};
 use std::{
     cmp::Ordering,
     fmt::{Display, Formatter, Result},
@@ -16,7 +16,7 @@ use std::{
 /// # use sentry_contrib_native::{Event, Map, Object};
 /// # use std::iter::FromIterator;
 /// let mut event = Event::new();
-/// let extra = Map::from_iter(vec![("some extra data", "test data")]);
+/// let extra = Map::from_iter(&[("some extra data", "test data")]);
 /// event.insert("extra", extra);
 /// event.capture();
 /// ```
@@ -47,7 +47,7 @@ impl Event {
     /// # use sentry_contrib_native::{Event, Level, Map, Object};
     /// # use std::iter::FromIterator;
     /// let mut event = Event::new_message(Level::Debug, Some("test logger".into()), "test");
-    /// let extra = Map::from_iter(vec![("some extra data", "test data")]);
+    /// let extra = Map::from_iter(&[("some extra data", "test data")]);
     /// event.insert("extra", extra);
     /// event.capture();
     /// ```
@@ -115,7 +115,7 @@ impl Event {
         let event = self.take();
 
         {
-            let _lock = GLOBAL_LOCK.read().expect("global lock poisoned");
+            let _lock = global_read();
             Uuid(unsafe { sys::capture_event(event) })
         }
     }
@@ -125,11 +125,9 @@ impl Event {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Event, Object};
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// let uuid = event.capture();
-/// println!("event sent has UUID {}", uuid);
+/// # use sentry_contrib_native::Event;
+/// let uuid = Event::new().capture();
+/// println!("event sent has UUID \"{}\"", uuid);
 /// ```
 #[derive(Debug, Copy, Clone)]
 pub struct Uuid(sys::Uuid);
@@ -195,7 +193,7 @@ impl Uuid {
 
     /// Returns the bytes of the [`Uuid`].
     #[must_use]
-    pub const fn as_bytes(&self) -> [c_char; 16] {
+    pub const fn as_bytes(self) -> [c_char; 16] {
         self.0.bytes
     }
 }
@@ -203,6 +201,12 @@ impl Uuid {
 impl From<[c_char; 16]> for Uuid {
     fn from(value: [c_char; 16]) -> Self {
         Self::from_bytes(value)
+    }
+}
+
+impl From<Uuid> for [c_char; 16] {
+    fn from(value: Uuid) -> Self {
+        value.as_bytes()
     }
 }
 
@@ -255,11 +259,13 @@ fn event() -> anyhow::Result<()> {
 
     let mut event = Event::new();
     let mut exception = Map::new();
-    exception.insert("type", "test");
-    exception.insert("value", "test");
+    exception.insert("type", "test type");
+    exception.insert("value", "test value");
     event.add_exception(exception, 0);
 
     let exception: Map = event.get("exception").unwrap().try_into()?;
+    assert_eq!(Some("test type"), exception.get("type").unwrap().as_str());
+    assert_eq!(Some("test value"), exception.get("value").unwrap().as_str());
     let stacktrace: Map = exception.get("stacktrace").unwrap().try_into()?;
     let frames: List = stacktrace.get("frames").unwrap().try_into()?;
     assert_ne!(None, frames.get(0).unwrap().as_map());

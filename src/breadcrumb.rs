@@ -1,6 +1,6 @@
 //! Sentry breadcrumb implementation.
 
-use crate::{RToC, Sealed, GLOBAL_LOCK};
+use crate::{global_write, RToC, Sealed};
 use std::ptr;
 
 /// A Sentry breadcrumb.
@@ -10,7 +10,7 @@ use std::ptr;
 /// # use sentry_contrib_native::{Breadcrumb, Map, Object};
 /// # use std::iter::FromIterator;
 /// let mut breadcrumb = Breadcrumb::new(None, Some("test message".into()));
-/// let data = Map::from_iter(vec![("some extra data", "test data")]);
+/// let data = Map::from_iter(&[("some extra data", "test data")]);
 /// breadcrumb.insert("data", data);
 /// breadcrumb.add();
 /// ```
@@ -48,7 +48,7 @@ impl Breadcrumb {
         let breadcrumb = self.take();
 
         {
-            let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+            let _lock = global_write();
             unsafe {
                 sys::add_breadcrumb(breadcrumb);
             }

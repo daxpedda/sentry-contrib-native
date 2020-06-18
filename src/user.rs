@@ -1,6 +1,6 @@
 //! Sentry user implementation.
 
-use crate::{Object, Sealed, GLOBAL_LOCK};
+use crate::{global_write, Object, Sealed};
 use std::net::SocketAddr;
 
 /// A Sentry user.
@@ -109,7 +109,7 @@ impl User {
         let user = self.take();
 
         {
-            let _lock = GLOBAL_LOCK.write().expect("global lock poisoned");
+            let _lock = global_write();
             unsafe { sys::set_user(user) };
         }
     }

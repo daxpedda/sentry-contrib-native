@@ -338,7 +338,7 @@ extern "C" {
     #[link_name = "sentry_transport_set_free_func"]
     pub fn transport_set_free_func(
         transport: *mut Transport,
-        free_fn: extern "C" fn(state: *mut c_void),
+        free_func: Option<extern "C" fn(state: *mut c_void)>,
     );
 
     /// Sets the transport startup hook.

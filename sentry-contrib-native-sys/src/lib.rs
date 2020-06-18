@@ -98,6 +98,28 @@ pub enum UserConsent {
 }
 
 /// This represents an interface for user-defined transports.
+///
+/// Transports are responsible for sending envelopes to sentry and are the last
+/// step in the event pipeline. A transport has the following hooks, all of which
+/// take the user provided `state` as last parameter. The transport state needs
+/// to be set with `sentry_transport_set_state` and typically holds handles and
+/// other information that can be reused across requests.
+///
+/// * `send_func`: This function will take ownership of an envelope, and is
+///   responsible for freeing it via `sentry_envelope_free`.
+/// * `startup_func`: This hook will be called by sentry and instructs the
+///   transport to initialize itself.
+/// * `shutdown_func`: Instructs the transport to flush its queue and shut down.
+///   This hook receives a millisecond-resolution `timeout` parameter and should
+///   return `true` when the transport was flushed and shut down successfully.
+///   In case of `false`, sentry will log an error, but continue with freeing the
+///   transport.
+/// * `free_func`: Frees the transports `state`. This hook might be called even
+///   though `shudown_func` returned `false` previously.
+///
+/// The transport interface might be extended in the future with hooks to flush
+/// its internal queue without shutting down, and to dump its internal queue to
+/// disk in case of a hard crash.
 #[repr(C)]
 pub struct Transport([u8; 0]);
 

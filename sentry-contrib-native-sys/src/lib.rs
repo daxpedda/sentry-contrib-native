@@ -121,6 +121,7 @@ pub enum UserConsent {
 /// its internal queue without shutting down, and to dump its internal queue to
 /// disk in case of a hard crash.
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct Transport([u8; 0]);
 
 /// A Sentry Envelope.

@@ -27,6 +27,8 @@ mod value;
 pub use breadcrumb::Breadcrumb;
 pub use event::{Event, Interface, Uuid};
 use ffi::{CPath, CToR, RToC};
+#[cfg(feature = "custom-transport")]
+pub use http;
 use object::{Map, Object};
 use options::{global_read, global_write, BEFORE_SEND};
 pub use options::{BeforeSend, Options, Shutdown};
@@ -38,6 +40,8 @@ use std::{
     ptr,
 };
 use thiserror::Error;
+#[cfg(feature = "custom-transport")]
+pub use transport::{SentryRequest, Transport, Transporter};
 pub use user::User;
 pub use value::Value;
 

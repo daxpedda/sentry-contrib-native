@@ -352,7 +352,7 @@ extern "C" {
     /// `true` in case all the pending envelopes have been sent within the timeout,
     /// or `false` if the timeout was hit.
     #[link_name = "sentry_transport_set_shutdown_func"]
-    pub fn transport_set_shutdown_func(transport: *mut Transport, shutdown_fn: ShutdownFunction);
+    pub fn transport_set_shutdown_func(transport: *mut Transport, shutdown_func: Option<ShutdownFunction>);
 
     /// Generic way to free a transport.
     #[link_name = "sentry_transport_free"]

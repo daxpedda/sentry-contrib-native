@@ -344,7 +344,7 @@ extern "C" {
 
     /// Sets the transport startup hook.
     #[link_name = "sentry_transport_set_startup_func"]
-    pub fn transport_set_startup_hook(transport: *mut Transport, startup_fn: StartupFunction);
+    pub fn transport_set_startup_func(transport: *mut Transport, startup_func: Option<StartupFunction>);
 
     /// Sets the transport shutdown hook.
     ///

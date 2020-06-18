@@ -57,6 +57,9 @@ pub enum Error {
     /// Failed to convert to type.
     #[error("failed to convert to type")]
     TryConvert(Value),
+    /// List of fingerprints is too long.
+    #[error("list of fingerprints is too long")]
+    Fingerprints,
 }
 
 impl From<Infallible> for Error {
@@ -175,13 +178,14 @@ pub fn clear_modulecache() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{user_consent_give, Options};
+/// # use sentry_contrib_native::{Consent, user_consent_get, user_consent_give, Options};
 /// # fn main() -> anyhow::Result<()> {
 /// let mut options = Options::new();
 /// options.set_require_user_consent(true);
 /// let _shutdown = options.init()?;
 ///
 /// user_consent_give();
+/// assert_eq!(Consent::Given, user_consent_get());
 /// # Ok(()) }
 /// ```
 pub fn user_consent_give() {
@@ -192,13 +196,14 @@ pub fn user_consent_give() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{user_consent_revoke, Options};
+/// # use sentry_contrib_native::{Consent, user_consent_get, user_consent_revoke, Options};
 /// # fn main() -> anyhow::Result<()> {
 /// let mut options = Options::new();
 /// options.set_require_user_consent(true);
 /// let _shutdown = options.init()?;
 ///
 /// user_consent_revoke();
+/// assert_eq!(Consent::Revoked, user_consent_get());
 /// # Ok(()) }
 /// ```
 pub fn user_consent_revoke() {
@@ -208,13 +213,37 @@ pub fn user_consent_revoke() {
 /// Resets the user consent (back to unknown).
 ///
 /// # Examples
-/// TODO
+/// ```
+/// # use sentry_contrib_native::{Consent, user_consent_get, user_consent_give, user_consent_reset, Options};
+/// # fn main() -> anyhow::Result<()> {
+/// let mut options = Options::new();
+/// options.set_require_user_consent(true);
+/// let _shutdown = options.init()?;
+///
+/// user_consent_give();
+/// assert_eq!(Consent::Given, user_consent_get());
+/// user_consent_reset();
+/// assert_eq!(Consent::Unknown, user_consent_get());
+/// # Ok(()) }
+/// ```
 pub fn user_consent_reset() {
     unsafe { sys::user_consent_reset() };
 }
 
 /// Checks the current state of user consent.
-/// TODO
+///
+/// # Examples
+/// ```
+/// # use sentry_contrib_native::{Consent, user_consent_get, user_consent_give, Options};
+/// # fn main() -> anyhow::Result<()> {
+/// let mut options = Options::new();
+/// options.set_require_user_consent(true);
+/// let _shutdown = options.init()?;
+///
+/// user_consent_give();
+/// assert_eq!(Consent::Given, user_consent_get());
+/// # Ok(()) }
+/// ```
 #[must_use]
 pub fn user_consent_get() -> Consent {
     unsafe { sys::user_consent_get() }.into()
@@ -224,12 +253,12 @@ pub fn user_consent_get() -> Consent {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{remove_user, Options};
-/// # fn main() -> anyhow::Result<()> {
-/// let options = Options::new();
+/// # use sentry_contrib_native::{Options, remove_user, User};
+/// let mut user = User::new();
+/// user.set_id("1");
+/// user.set();
+///
 /// remove_user();
-/// let _shutdown = options.init()?;
-/// # Ok(()) }
 /// ```
 pub fn remove_user() {
     unsafe { sys::remove_user() };
@@ -242,11 +271,8 @@ pub fn remove_user() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{set_tag, Event, Object, Value};
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// set_tag("test_tag", "test");
-/// event.capture();
+/// # use sentry_contrib_native::set_tag;
+/// set_tag("test tag", "test");
 /// ```
 pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
     let key = key.into().into_cstring();
@@ -258,21 +284,16 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
     }
 }
 
-/// Removes the tag with the specified key.
+/// Removes the tag with the specified `key`.
 ///
 /// # Panics
 /// Panics if `key` contains any null bytes.
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{set_tag, remove_tag, Event, Object, Value};
-/// # fn main() -> anyhow::Result<()> {
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// set_tag("test_tag", "test");
-/// remove_tag("test_tag");
-/// event.capture();
-/// # Ok(()) }
+/// # use sentry_contrib_native::{remove_tag, set_tag};
+/// set_tag("test tag", "test");
+/// remove_tag("test tag");
 /// ```
 pub fn remove_tag<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
@@ -291,11 +312,8 @@ pub fn remove_tag<S: Into<String>>(key: S) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{set_extra, Event, Object};
-/// set_extra("ExtraTest", true);
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// event.capture();
+/// # use sentry_contrib_native::set_extra;
+/// set_extra("extra stuff", "stuff");
 /// ```
 pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
@@ -307,19 +325,16 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     }
 }
 
-/// Removes the extra with the specified key.
+/// Removes the extra with the specified `key`.
 ///
 /// # Panics
 /// Panics if `key` contains any null bytes.
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{set_extra, remove_extra, Event, Object};
-/// set_extra("extra_test", true);
-/// remove_extra("extra_test");
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// event.capture();
+/// # use sentry_contrib_native::{remove_extra, set_extra};
+/// set_extra("extra stuff", "stuff");
+/// remove_extra("extra stuff");
 /// ```
 pub fn remove_extra<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
@@ -338,11 +353,8 @@ pub fn remove_extra<S: Into<String>>(key: S) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Event, Object, set_context};
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// set_context("test_context", true);
-/// event.capture();
+/// # use sentry_contrib_native::set_context;
+/// set_context("test context", "context x");
 /// ```
 pub fn set_context<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
@@ -361,12 +373,9 @@ pub fn set_context<S: Into<String>, V: Into<Value>>(key: S, value: V) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{set_context, remove_context, Event, Object};
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// set_context("test_context", true);
-/// remove_context("test_context");
-/// event.capture();
+/// # use sentry_contrib_native::{remove_context, set_context};
+/// set_context("test context", "context x");
+/// remove_context("test context");
 /// ```
 pub fn remove_context<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
@@ -382,20 +391,77 @@ pub fn remove_context<S: Into<String>>(key: S) {
 /// # Panics
 /// Panics if [`String`]s in `fingerprints` contain any null bytes.
 ///
+/// # Errors
+/// Fails with [`Error::Fingerprints`] if `fingerprints` is longer then 32;
+///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{set_fingerprint, Event, Object};
-/// let mut event = Event::new();
-/// event.insert("test", true);
+/// # use sentry_contrib_native::set_fingerprint;
 /// set_fingerprint(vec!["test"]);
-/// event.capture();
 /// ```
-pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(fingerprints: I) {
-    let _lock = global_write();
+pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(
+    fingerprints: I,
+) -> Result<(), Error> {
+    let fingerprints: Vec<_> = fingerprints
+        .into_iter()
+        .map(Into::into)
+        .map(RToC::into_cstring)
+        .collect();
 
-    for fingerprint in fingerprints {
-        let fingerprint = fingerprint.into().into_cstring();
-        unsafe { sys::set_fingerprint(fingerprint.as_ptr(), ptr::null::<c_char>()) };
+    if fingerprints.len() > 32 {
+        Err(Error::Fingerprints)
+    } else if fingerprints.is_empty() {
+        Ok(())
+    } else {
+        let mut raw_fingerprints = [ptr::null(); 32];
+
+        for (fingerprint, raw_fingerprint) in fingerprints.iter().zip(raw_fingerprints.iter_mut()) {
+            *raw_fingerprint = fingerprint.as_ptr();
+        }
+
+        {
+            let _lock = global_write();
+
+            unsafe {
+                sys::set_fingerprint(
+                    raw_fingerprints[0],
+                    raw_fingerprints[1],
+                    raw_fingerprints[2],
+                    raw_fingerprints[3],
+                    raw_fingerprints[4],
+                    raw_fingerprints[5],
+                    raw_fingerprints[6],
+                    raw_fingerprints[7],
+                    raw_fingerprints[8],
+                    raw_fingerprints[9],
+                    raw_fingerprints[10],
+                    raw_fingerprints[11],
+                    raw_fingerprints[12],
+                    raw_fingerprints[13],
+                    raw_fingerprints[14],
+                    raw_fingerprints[15],
+                    raw_fingerprints[16],
+                    raw_fingerprints[17],
+                    raw_fingerprints[18],
+                    raw_fingerprints[19],
+                    raw_fingerprints[20],
+                    raw_fingerprints[21],
+                    raw_fingerprints[22],
+                    raw_fingerprints[23],
+                    raw_fingerprints[24],
+                    raw_fingerprints[25],
+                    raw_fingerprints[26],
+                    raw_fingerprints[27],
+                    raw_fingerprints[28],
+                    raw_fingerprints[29],
+                    raw_fingerprints[30],
+                    raw_fingerprints[31],
+                    ptr::null::<c_char>(),
+                )
+            };
+        }
+
+        Ok(())
     }
 }
 
@@ -403,12 +469,9 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(fingerprints:
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{set_fingerprint, remove_fingerprint, Event, Object};
-/// let mut event = Event::new();
-/// event.insert("test", true);
+/// # use sentry_contrib_native::{set_fingerprint, remove_fingerprint};
 /// set_fingerprint(vec!["test"]);
 /// remove_fingerprint();
-/// event.capture();
 /// ```
 pub fn remove_fingerprint() {
     let _lock = global_write();
@@ -422,11 +485,8 @@ pub fn remove_fingerprint() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{set_transaction, Event, Object};
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// set_transaction("test_transaction");
-/// event.capture();
+/// # use sentry_contrib_native::set_transaction;
+/// set_transaction("test transaction");
 /// ```
 pub fn set_transaction<S: Into<String>>(transaction: S) {
     let transaction = transaction.into().into_cstring();
@@ -441,12 +501,9 @@ pub fn set_transaction<S: Into<String>>(transaction: S) {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{remove_transaction, Event, Object};
+/// # use sentry_contrib_native::{remove_transaction, set_transaction};
+/// set_transaction("test transaction");
 /// remove_transaction();
-///
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// event.capture();
 /// ```
 pub fn remove_transaction() {
     unsafe { sys::remove_transaction() };
@@ -456,13 +513,8 @@ pub fn remove_transaction() {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{set_level, Event, Object, Value, Level};
-/// # fn main() -> anyhow::Result<()> {
+/// # use sentry_contrib_native::{Level, set_level};
 /// set_level(Level::Debug);
-/// let mut event = Event::new();
-/// event.insert("test", true);
-/// event.capture();
-/// # Ok(()) }
 /// ```
 pub fn set_level(level: Level) {
     let _lock = global_write();
@@ -470,12 +522,18 @@ pub fn set_level(level: Level) {
 }
 
 /// Starts a new session.
+///
+/// # Examples
+/// TODO
 pub fn start_session() {
     let _lock = global_write();
     unsafe { sys::start_session() };
 }
 
 /// Ends a session.
+///
+/// # Examples
+/// TODO
 pub fn end_session() {
     let _lock = global_read();
     unsafe { sys::end_session() };

@@ -32,6 +32,16 @@ derive_object!(Event);
 
 impl Event {
     /// Creates a new Sentry event.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Event, Map, Object};
+    /// # use std::iter::FromIterator;
+    /// let mut event = Event::new();
+    /// let extra = Map::from_iter(&[("some extra data", "test data")]);
+    /// event.insert("extra", extra);
+    /// event.capture();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self(Some(unsafe { sys::value_new_event() }))
@@ -51,7 +61,6 @@ impl Event {
     /// event.insert("extra", extra);
     /// event.capture();
     /// ```
-    #[allow(clippy::needless_pass_by_value)]
     pub fn new_message<S: Into<String>>(level: Level, logger: Option<String>, text: S) -> Self {
         let logger = logger.map(RToC::into_cstring);
         let logger = logger
@@ -65,6 +74,15 @@ impl Event {
     }
 
     /// Adds a stacktrace to the [`Event`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Event, Level};
+    /// # use std::iter::FromIterator;
+    /// let mut event = Event::new_message(Level::Debug, Some("test logger".into()), "test");
+    /// event.add_stacktrace(0);
+    /// event.capture();
+    /// ```
     pub fn add_stacktrace(&mut self, len: usize) {
         let event = self.as_raw();
 
@@ -110,6 +128,16 @@ impl Event {
     }
 
     /// Sends the [`Event`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Event, Map, Object};
+    /// # use std::iter::FromIterator;
+    /// let mut event = Event::new();
+    /// let extra = Map::from_iter(&[("some extra data", "test data")]);
+    /// event.insert("extra", extra);
+    /// event.capture();
+    /// ```
     #[allow(clippy::must_use_candidate)]
     pub fn capture(self) -> Uuid {
         let event = self.take();

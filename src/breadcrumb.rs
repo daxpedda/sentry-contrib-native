@@ -29,7 +29,13 @@ impl Breadcrumb {
     ///
     /// # Panics
     /// Panics if `type` or `message` contain any null bytes.
-    #[allow(clippy::needless_pass_by_value)]
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Breadcrumb;
+    /// # use std::iter::FromIterator;
+    /// Breadcrumb::new(None, Some("test message".into())).add();
+    /// ```
     #[must_use]
     pub fn new(r#type: Option<String>, message: Option<String>) -> Self {
         let ty = r#type.map(RToC::into_cstring);
@@ -44,6 +50,13 @@ impl Breadcrumb {
 
     /// Adds the [`Breadcrumb`] to be sent in case of an
     /// [`Event::capture`](crate::Event::capture).
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Breadcrumb;
+    /// # use std::iter::FromIterator;
+    /// Breadcrumb::new(None, Some("test message".into())).add();
+    /// ```
     pub fn add(self) {
         let breadcrumb = self.take();
 

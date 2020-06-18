@@ -180,7 +180,7 @@ impl Options {
                 .into_cstring()
         };
         #[cfg(not(feature = "test"))]
-        let dsn = dsn.into().to_cstring();
+        let dsn = dsn.into().into_cstring();
         unsafe { sys::options_set_dsn(self.as_mut(), dsn.as_ptr()) };
     }
 
@@ -576,7 +576,7 @@ impl Options {
         )
         .into_os_vec();
         #[cfg(not(all(feature = "test", any(windows, target_os = "macos"))))]
-        let path = path.into().to_os_vec();
+        let path = path.into().into_os_vec();
 
         #[cfg(windows)]
         unsafe {
@@ -619,7 +619,7 @@ impl Options {
             .join(path.into())
             .into_os_vec();
         #[cfg(not(feature = "test"))]
-        let path = path.into().to_os_vec();
+        let path = path.into().into_os_vec();
 
         #[cfg(windows)]
         unsafe {

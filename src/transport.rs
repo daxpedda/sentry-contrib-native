@@ -165,7 +165,7 @@ impl Transport {
     /// can come at any time.
     #[must_use]
     pub fn new(transporter: Box<dyn Transporter + Send + Sync>) -> Box<Self> {
-        let inner = unsafe { sys::transport_new(Self::send_function) };
+        let inner = unsafe { sys::transport_new(Some(Self::send_function)) };
 
         unsafe {
             let ret = Box::new(Self {
@@ -176,9 +176,9 @@ impl Transport {
 
             let ptr = ret.into_raw();
             sys::transport_set_state(inner, ptr);
-            sys::transport_set_startup_hook(inner, Self::startup);
-            sys::transport_set_shutdown_func(inner, Self::shutdown);
-            sys::transport_set_free_func(inner, Self::free);
+            sys::transport_set_startup_func(inner, Some(Self::startup));
+            sys::transport_set_shutdown_func(inner, Some(Self::shutdown));
+            sys::transport_set_free_func(inner, Some(Self::free));
 
             Self::from_raw(ptr)
         }

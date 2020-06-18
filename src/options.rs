@@ -151,8 +151,11 @@ impl Options {
     /// options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_before_send<F: Fn(Value) -> Value + 'static + Send + Sync>(&mut self, fun: F) {
-        self.before_send = Some(Box::new(fun));
+    pub fn set_before_send<B: Into<Box<F>>, F: Fn(Value) -> Value + 'static + Send + Sync>(
+        &mut self,
+        fun: B,
+    ) {
+        self.before_send = Some(fun.into());
 
         unsafe { sys::options_set_before_send(self.as_mut(), Some(before_send), ptr::null_mut()) }
     }

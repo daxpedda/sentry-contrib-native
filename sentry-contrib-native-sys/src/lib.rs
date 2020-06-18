@@ -321,7 +321,7 @@ extern "C" {
     ///
     /// The return value needs to be freed with `sentry_string_free()`.
     #[link_name = "sentry_envelope_serialize"]
-    pub fn envelope_serialize(envelope: *const Envelope, size: &mut usize) -> *const c_char;
+    pub fn envelope_serialize(envelope: *const Envelope, size: *mut usize) -> *const c_char;
 
     /// Creates a new transport with an initial `send_func`.
     #[link_name = "sentry_transport_new"]

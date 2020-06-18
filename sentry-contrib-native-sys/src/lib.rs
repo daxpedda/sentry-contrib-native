@@ -326,7 +326,7 @@ extern "C" {
 
     /// Creates a new transport with an initial `send_func`.
     #[link_name = "sentry_transport_new"]
-    pub fn transport_new(send_fn: SendEnvelopeFunction) -> *mut Transport;
+    pub fn transport_new(send_func: Option<SendEnvelopeFunction>) -> *mut Transport;
 
     /// Sets the transport `state`.
     ///

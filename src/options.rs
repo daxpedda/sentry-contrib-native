@@ -125,7 +125,7 @@ impl Options {
     ///     // do something with the value and then return it
     ///     value
     /// });
-    /// options.init()?;
+    /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
     pub fn set_before_send<B: Into<Box<B>> + BeforeSend>(&mut self, fun: B) {
@@ -768,7 +768,7 @@ impl Shutdown {
 ///
 /// let mut options = Options::new();
 /// options.set_before_send(Filter { filtered: 0 });
-/// options.init()?;
+/// let _shutdown = options.init()?;
 /// # Ok(()) }
 /// ```
 pub trait BeforeSend: 'static + Send + Sync {

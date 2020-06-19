@@ -1,37 +1,30 @@
 //! Sentry options implementation.
 
 use crate::{CPath, CToR, Error, RToC, Value};
-use once_cell::sync::{Lazy, OnceCell};
+use once_cell::sync::Lazy;
 #[cfg(feature = "test")]
 use std::{env, ffi::CString};
 use std::{
     fmt::{Debug, Formatter, Result as FmtResult},
     mem,
+    mem::ManuallyDrop,
     os::raw::c_void,
     path::PathBuf,
-    ptr,
     sync::{RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
 /// Re-usable type to store function for [`Options::set_before_send`].
 type BeforeSend = Box<dyn Fn(Value) -> Value + 'static + Send + Sync>;
 
-/// Store function to use for [`Options::set_before_send`] globally because we
-/// need to access it inside a `extern "C"` function.
-static BEFORE_SEND: OnceCell<BeforeSend> = OnceCell::new();
-
 /// Function to give [`Options::set_before_send`] which in turn calls user
 /// defined one.
 extern "C" fn before_send(
     event: sys::Value,
     _hint: *mut c_void,
-    _closure: *mut c_void,
+    closure: *mut c_void,
 ) -> sys::Value {
-    if let Some(before_send) = BEFORE_SEND.get() {
-        before_send(unsafe { Value::from_raw(event) }).take()
-    } else {
-        event
-    }
+    let closure = ManuallyDrop::new(unsafe { Box::<BeforeSend>::from_raw(closure as *mut _) });
+    closure(unsafe { Value::from_raw(event) }).take()
 }
 
 /// Global lock for two purposes:
@@ -60,9 +53,6 @@ pub struct Options {
     /// work without polluting the file system.
     #[cfg(feature = "test")]
     database_path: Option<CString>,
-    /// Store function for [`Options::set_before_send`] here temporarily. This
-    /// way we can use [`OnceCell`] instead of a [`Mutex`](std::sync::Mutex).
-    before_send: Option<BeforeSend>,
 }
 
 unsafe impl Send for Options {}
@@ -112,7 +102,6 @@ impl Options {
             raw: Some(unsafe { sys::options_new() }),
             #[cfg(feature = "test")]
             database_path: None,
-            before_send: None,
         };
 
         #[cfg(feature = "test")]
@@ -155,9 +144,9 @@ impl Options {
         &mut self,
         fun: B,
     ) {
-        self.before_send = Some(fun.into());
+        let fun = Box::into_raw(Box::new(fun.into()));
 
-        unsafe { sys::options_set_before_send(self.as_mut(), Some(before_send), ptr::null_mut()) }
+        unsafe { sys::options_set_before_send(self.as_mut(), Some(before_send), fun as _) }
     }
 
     /// Sets the DSN.
@@ -574,10 +563,7 @@ impl Options {
         #[cfg(all(feature = "test", any(windows, target_os = "macos")))] _path: P,
     ) {
         #[cfg(all(feature = "test", any(windows, target_os = "macos")))]
-        let path = PathBuf::from(
-            env::var_os("CRASHPAD_HANDLER").expect("failed to find crashpad handler"),
-        )
-        .into_os_vec();
+        let path = PathBuf::from(env!("CRASHPAD_HANDLER")).into_os_vec();
         #[cfg(not(all(feature = "test", any(windows, target_os = "macos"))))]
         let path = path.into().into_os_vec();
 
@@ -618,7 +604,7 @@ impl Options {
     /// ```
     pub fn set_database_path<P: Into<PathBuf>>(&mut self, path: P) {
         #[cfg(feature = "test")]
-        let path = PathBuf::from(env::var_os("OUT_DIR").unwrap())
+        let path = PathBuf::from(env!("OUT_DIR"))
             .join(path.into())
             .into_os_vec();
         #[cfg(not(feature = "test"))]
@@ -685,13 +671,6 @@ impl Options {
                 *lock = true;
                 // init has taken ownership now
                 self.raw.take().expect("use after free");
-
-                if let Some(before_send) = self.before_send.take() {
-                    BEFORE_SEND
-                        .set(before_send)
-                        .ok()
-                        .expect("`BEFORE_SEND` was filled once before");
-                }
 
                 Ok(Shutdown)
             }

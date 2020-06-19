@@ -1,16 +1,32 @@
 use anyhow::Result;
-use sentry::{Event, Map, Options};
+use sentry::{BeforeSend, Event, Options, Value};
 use sentry_contrib_native as sentry;
-use std::ptr;
+use std::{thread, time::Duration};
+
+static mut BLUBB: usize = 0;
 
 fn main() -> Result<()> {
+    struct Filter;
+
+    impl BeforeSend for Filter {
+        fn before_send(&mut self, value: Value) -> Value {
+            unsafe { BLUBB += 1 };
+            value
+        }
+    }
+
     let mut options = Options::new();
-    options.set_before_send(|value| std::fs::write("blubb.txt", format!("{:?}", value)));
-    let _shutdown = Options::new().init()?;
+    options.set_before_send(|value| {
+        unsafe { BLUBB += 1 };
+        value
+    });
+    let _shutdown = options.init()?;
 
     Event::new().capture();
 
-    std::thread::sleep(std::time::Duration::from_secs(5));
+    thread::sleep(Duration::from_secs(5));
+
+    println!("BLUBB: {}", unsafe { BLUBB });
 
     Ok(())
 }

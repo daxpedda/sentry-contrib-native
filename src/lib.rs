@@ -32,7 +32,7 @@ pub use map::Map;
 pub use object::Object;
 use object::Sealed;
 use options::{global_read, global_write};
-pub use options::{Options, Shutdown};
+pub use options::{BeforeSend, Options, Shutdown};
 pub use panic::set_hook;
 use std::{convert::Infallible, os::raw::c_char, ptr};
 use thiserror::Error;

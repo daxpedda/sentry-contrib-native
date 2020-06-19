@@ -13,20 +13,6 @@ use std::{
     sync::{RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
-/// Re-usable type to store function for [`Options::set_before_send`].
-type BeforeSend = Box<dyn Fn(Value) -> Value + 'static + Send + Sync>;
-
-/// Function to give [`Options::set_before_send`] which in turn calls user
-/// defined one.
-extern "C" fn before_send(
-    event: sys::Value,
-    _hint: *mut c_void,
-    closure: *mut c_void,
-) -> sys::Value {
-    let closure = ManuallyDrop::new(unsafe { Box::<BeforeSend>::from_raw(closure as *mut _) });
-    closure(unsafe { Value::from_raw(event) }).take()
-}
-
 /// Global lock for two purposes:
 /// - Prevent [`Options::init`] from being called twice.
 /// - Fix some use-after-free bugs in `sentry-native` that can happen when
@@ -127,9 +113,11 @@ impl Options {
 
     /// Sets the before send callback.
     ///
+    /// May not work: <https://github.com/getsentry/sentry-native/issues/250>.
+    ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::Options;
+    /// # use sentry_contrib_native::{BeforeSend, Options, Value};
     /// # use std::error::Error;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
@@ -140,11 +128,8 @@ impl Options {
     /// options.init()?;
     /// # Ok(()) }
     /// ```
-    pub fn set_before_send<B: Into<Box<F>>, F: Fn(Value) -> Value + 'static + Send + Sync>(
-        &mut self,
-        fun: B,
-    ) {
-        let fun = Box::into_raw(Box::new(fun.into()));
+    pub fn set_before_send<B: Into<Box<B>> + BeforeSend>(&mut self, fun: B) {
+        let fun = Box::into_raw(Box::<Box<dyn BeforeSend>>::new(fun.into()));
 
         unsafe { sys::options_set_before_send(self.as_mut(), Some(before_send), fun as _) }
     }
@@ -760,6 +745,55 @@ impl Shutdown {
     pub fn shutdown(self) {
         mem::drop(self)
     }
+}
+
+/// Trait to help pass data to [`Options::set_before_send`].
+///
+/// # Examples
+/// ```
+/// # use sentry_contrib_native::{BeforeSend, Options, Value};
+/// # use std::error::Error;
+/// # fn main() -> anyhow::Result<()> {
+/// struct Filter {
+///     filtered: usize,
+/// };
+///
+/// impl BeforeSend for Filter {
+///     fn before_send(&mut self, value: Value) -> Value {
+///         self.filtered += 1;
+///         // do something with the value and then return it
+///         value
+///     }
+/// }
+///
+/// let mut options = Options::new();
+/// options.set_before_send(Filter { filtered: 0 });
+/// options.init()?;
+/// # Ok(()) }
+/// ```
+pub trait BeforeSend: 'static + Send + Sync {
+    /// Before send callback.
+    fn before_send(&mut self, value: Value) -> Value;
+}
+
+impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
+    fn before_send(&mut self, value: Value) -> Value {
+        self(value)
+    }
+}
+
+/// Function to give [`Options::set_before_send`] which in turn calls user
+/// defined one.
+extern "C" fn before_send(
+    event: sys::Value,
+    _hint: *mut c_void,
+    closure: *mut c_void,
+) -> sys::Value {
+    let mut before_send =
+        ManuallyDrop::new(unsafe { Box::<Box<dyn BeforeSend>>::from_raw(closure as *mut _) });
+    before_send
+        .before_send(unsafe { Value::from_raw(event) })
+        .take()
 }
 
 #[cfg(test)]

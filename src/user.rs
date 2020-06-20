@@ -1,9 +1,16 @@
 //! Sentry user implementation.
 
-use crate::{global_write, Object, Sealed};
-use std::net::SocketAddr;
+use crate::{global_write, Sealed};
 
 /// A Sentry user.
+///
+/// # Examples
+/// ```
+/// # use sentry_contrib_native::{Object, User};
+/// let mut user = User::new();
+/// user.insert("id", 1);
+/// user.set();
+/// ```
 pub struct User(Option<sys::Value>);
 
 impl Default for User {
@@ -19,91 +26,22 @@ impl User {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::{User, Object, Value};
-    /// # fn main() -> anyhow::Result<()> {
+    /// # use sentry_contrib_native::User;
     /// let mut user = User::new();
-    /// user.set_id("1");
-    /// user.set();
-    /// # Ok(()) }
     /// ```
     #[must_use]
     pub fn new() -> Self {
         Self(Some(unsafe { sys::value_new_object() }))
     }
 
-    /// Sets the id of the user.
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_contrib_native::{User, Object, Value};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let mut user = User::new();
-    /// user.set_id("1");
-    /// user.set();
-    /// # Ok(()) }
-    /// ```
-    pub fn set_id<S: Into<String>>(&mut self, id: S) {
-        self.insert("id", id.into())
-    }
-
-    /// Sets the username of the user.
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_contrib_native::{User, Object, Value};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let mut user = User::new();
-    /// user.set_id("1");
-    /// user.set_username("test");
-    /// user.set();
-    /// # Ok(()) }
-    /// ```
-    pub fn set_username<S: Into<String>>(&mut self, username: S) {
-        self.insert("username", username.into())
-    }
-
-    /// Sets the email of the user.
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_contrib_native::{User, Object, Value};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let mut user = User::new();
-    /// user.set_id("1");
-    /// user.set_email("example@test.org");
-    /// user.set();
-    /// # Ok(()) }
-    /// ```
-    pub fn set_email<S: Into<String>>(&mut self, email: S) {
-        self.insert("email", email.into())
-    }
-
-    /// Sets the IP address of the user.
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_contrib_native::{User, Object, Value};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let mut user = User::new();
-    /// user.set_id("1");
-    /// user.set_ip(([1, 1, 1, 1], 443));
-    /// user.set();
-    /// # Ok(()) }
-    /// ```
-    pub fn set_ip<IP: Into<SocketAddr>>(&mut self, ip: IP) {
-        self.insert("ip", ip.into().to_string())
-    }
-
     /// Sets the specified user.
     ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::{User, Object, Value};
-    /// # fn main() -> anyhow::Result<()> {
+    /// # use sentry_contrib_native::{Object, User};
     /// let mut user = User::new();
-    /// user.set_id("1");
+    /// user.insert("id", 1);
     /// user.set();
-    /// # Ok(()) }
     /// ```
     pub fn set(self) {
         let user = self.take();
@@ -111,6 +49,46 @@ impl User {
         {
             let _lock = global_write();
             unsafe { sys::set_user(user) };
+        }
+    }
+}
+
+#[test]
+fn threaded_stress() {
+    use crate::Object;
+    use std::thread;
+
+    let mut spawns = Vec::new();
+
+    spawns.push(thread::spawn(|| {
+        let mut handles = Vec::new();
+
+        for index in 0..100 {
+            handles.push(thread::spawn(move || {
+                let mut user = User::new();
+                user.insert("id", index);
+                user.set();
+            }))
+        }
+
+        handles
+    }));
+
+    spawns.push(thread::spawn(|| {
+        let mut handles = Vec::new();
+
+        for _ in 0..100 {
+            handles.push(thread::spawn(move || {
+                crate::remove_user();
+            }))
+        }
+
+        handles
+    }));
+
+    for handles in spawns {
+        for handle in handles.join().unwrap() {
+            handle.join().unwrap();
         }
     }
 }

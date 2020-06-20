@@ -262,9 +262,9 @@ pub fn user_consent_get() -> Consent {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Options, remove_user, User};
+/// # use sentry_contrib_native::{Object, Options, remove_user, User};
 /// let mut user = User::new();
-/// user.set_id("1");
+/// user.insert("id", 1);
 /// user.set();
 ///
 /// remove_user();

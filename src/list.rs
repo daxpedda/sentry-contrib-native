@@ -96,6 +96,12 @@ impl<V: Into<Value>> Extend<V> for List {
 
 impl List {
     /// Creates a new Sentry list.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::List;
+    /// let mut list = List::new();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self(Some(unsafe { sys::value_new_list() }))
@@ -121,6 +127,16 @@ impl List {
     }
 
     /// Converts the [`List`] to a [`Vec`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{List, Value};
+    /// # use std::iter::FromIterator;
+    /// let mut list = List::new();
+    /// list.push(true);
+    ///
+    /// assert_eq!(vec![Value::Bool(true)], list.to_vec());
+    /// ```
     #[must_use]
     pub fn to_vec(&self) -> Vec<Value> {
         let mut list = Vec::new();
@@ -141,6 +157,13 @@ impl List {
     /// # Panics
     /// - Panics if Sentry failed to allocate memory.
     /// - Panics if `value` is a [`Value::String`] and contains null bytes.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::List;
+    /// let mut list = List::new();
+    /// list.push(true);
+    /// ```
     pub fn push<V: Into<Value>>(&mut self, value: V) {
         let list = self.as_ref();
 
@@ -153,6 +176,15 @@ impl List {
     }
 
     /// Returns the length of the [`List`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::List;
+    /// let mut list = List::new();
+    /// list.push(true);
+    ///
+    /// assert_eq!(1, list.len());
+    /// ```
     #[must_use]
     pub fn len(&self) -> usize {
         let list = self.as_ref();
@@ -161,6 +193,13 @@ impl List {
     }
 
     /// Returns `true` if the [`List`] has a length of 0.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::List;
+    /// let list = List::new();
+    /// assert_eq!(true, list.is_empty());
+    /// ```
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
@@ -173,6 +212,7 @@ impl List {
     /// # use sentry_contrib_native::{List, Value};
     /// let mut list = List::new();
     /// list.push(true);
+    ///
     /// assert_eq!(Some(Value::Bool(true)), list.get(0));
     /// ```
     #[must_use]
@@ -196,6 +236,7 @@ impl List {
     /// # use sentry_contrib_native::{List, Value};
     /// let mut list = List::new();
     /// list.insert(5, true);
+    ///
     /// assert_eq!(Some(Value::Bool(true)), list.get(5));
     /// ```
     pub fn insert<V: Into<Value>>(&mut self, index: usize, value: V) {
@@ -221,6 +262,7 @@ impl List {
     /// let mut list = List::new();
     /// list.push(true);
     /// list.remove(0)?;
+    ///
     /// assert_eq!(None, list.get(0));
     /// # Ok(()) }
     /// ```

@@ -17,20 +17,15 @@ mod object;
 mod breadcrumb;
 mod event;
 mod ffi;
-mod list;
-mod map;
 mod options;
 mod panic;
 mod user;
 mod value;
 
 pub use breadcrumb::Breadcrumb;
-pub use event::{Event, Uuid};
+pub use event::{Event, Interface, Uuid};
 use ffi::{CPath, CToR, RToC};
-pub use list::List;
-pub use map::Map;
-pub use object::Object;
-use object::Sealed;
+use object::Object;
 use options::{global_read, global_write, BEFORE_SEND};
 pub use options::{BeforeSend, Options, Shutdown};
 pub use panic::set_hook;
@@ -198,6 +193,7 @@ pub fn clear_modulecache() {
 /// # Ok(()) }
 /// ```
 pub fn user_consent_give() {
+    let _lock = global_read();
     unsafe { sys::user_consent_give() };
 }
 
@@ -216,6 +212,7 @@ pub fn user_consent_give() {
 /// # Ok(()) }
 /// ```
 pub fn user_consent_revoke() {
+    let _lock = global_read();
     unsafe { sys::user_consent_revoke() };
 }
 
@@ -262,9 +259,9 @@ pub fn user_consent_get() -> Consent {
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Object, Options, remove_user, User};
+/// # use sentry_contrib_native::{Options, remove_user, User};
 /// let mut user = User::new();
-/// user.insert("id", 1);
+/// user.insert("id".into(), 1.into());
 /// user.set();
 ///
 /// remove_user();
@@ -326,7 +323,7 @@ pub fn remove_tag<S: Into<String>>(key: S) {
 /// ```
 pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
-    let value = value.into().take();
+    let value = value.into().into_raw();
 
     {
         let _lock = global_write();
@@ -367,7 +364,7 @@ pub fn remove_extra<S: Into<String>>(key: S) {
 /// ```
 pub fn set_context<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
-    let value = value.into().take();
+    let value = value.into().into_raw();
 
     {
         let _lock = global_write();

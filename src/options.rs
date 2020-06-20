@@ -786,12 +786,13 @@ extern "C" fn before_send(
         ManuallyDrop::new(unsafe { Box::<Box<dyn BeforeSend>>::from_raw(closure as *mut _) });
     before_send
         .before_send(unsafe { Value::from_raw(event) })
-        .take()
+        .into_raw()
 }
 
 #[test]
 fn options() -> anyhow::Result<()> {
     struct Filter;
+
     impl BeforeSend for Filter {
         fn before_send(&mut self, value: Value) -> Value {
             value

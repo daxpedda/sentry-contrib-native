@@ -1,7 +1,8 @@
 //! Sentry supported panic handler.
 
-use crate::{Event, Level, Map, Object};
+use crate::{Event, Level};
 use std::{
+    collections::BTreeMap,
     convert::TryFrom,
     panic::{self, PanicInfo},
 };
@@ -43,18 +44,18 @@ pub fn set_hook(hook: Option<Box<dyn Fn(&PanicInfo) + Sync + Send + 'static>>) {
         );
 
         if let Some(location) = panic_info.location() {
-            let mut extra = Map::new();
-            extra.insert("file", location.file());
+            let mut extra = BTreeMap::new();
+            extra.insert("file".into(), location.file().into());
 
             if let Ok(line) = i32::try_from(location.line()) {
-                extra.insert("line", line);
+                extra.insert("line".into(), line.into());
             }
 
             if let Ok(column) = i32::try_from(location.column()) {
-                extra.insert("column", column);
+                extra.insert("column".into(), column.into());
             }
 
-            event.insert("extra", extra);
+            event.insert("extra".into(), extra.into());
         }
 
         event.add_stacktrace(0);

@@ -1,20 +1,33 @@
 //! Sentry breadcrumb implementation.
 
-use crate::{global_write, RToC, Sealed};
-use std::ptr;
+use crate::{global_write, Object, RToC, Value};
+use std::{
+    collections::BTreeMap,
+    ops::{Deref, DerefMut},
+    ptr,
+};
 
 /// A Sentry breadcrumb.
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Breadcrumb, Map, Object};
-/// # use std::iter::FromIterator;
+/// # use sentry_contrib_native::Breadcrumb;
+/// # use std::collections::BTreeMap;
 /// let mut breadcrumb = Breadcrumb::new(None, Some("test message".into()));
-/// let data = Map::from_iter(&[("some extra data", "test data")]);
-/// breadcrumb.insert("data", data);
+/// let mut data = BTreeMap::new();
+/// data.insert("some extra data".into(), "test data".into());
+/// breadcrumb.insert("data".into(), data.into());
 /// breadcrumb.add();
 /// ```
-pub struct Breadcrumb(Option<sys::Value>);
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+pub struct Breadcrumb {
+    /// Breadcrumb type.
+    pub ty: Option<String>,
+    /// Breadcrumb message.
+    pub message: Option<String>,
+    /// Breadcrumb content.
+    pub map: BTreeMap<String, Value>,
+}
 
 impl Default for Breadcrumb {
     fn default() -> Self {
@@ -22,13 +35,35 @@ impl Default for Breadcrumb {
     }
 }
 
-derive_object!(Breadcrumb);
+impl Object for Breadcrumb {
+    fn into_parts(self) -> (sys::Value, BTreeMap<String, Value>) {
+        let ty = self.ty.map(RToC::into_cstring);
+        let ty = ty.as_ref().map_or(ptr::null(), |ty| ty.as_ptr());
+        let message = self.message.map(RToC::into_cstring);
+        let message = message
+            .as_ref()
+            .map_or(ptr::null(), |message| message.as_ptr());
+
+        (unsafe { sys::value_new_breadcrumb(ty, message) }, self.map)
+    }
+}
+
+impl Deref for Breadcrumb {
+    type Target = BTreeMap<String, Value>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.map
+    }
+}
+
+impl DerefMut for Breadcrumb {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.map
+    }
+}
 
 impl Breadcrumb {
     /// Creates a new Sentry breadcrumb.
-    ///
-    /// # Panics
-    /// Panics if `type` or `message` contain any null bytes.
     ///
     /// # Examples
     /// ```
@@ -36,19 +71,20 @@ impl Breadcrumb {
     /// let mut breadcrumb = Breadcrumb::new(None, Some("test message".into()));
     /// ```
     #[must_use]
-    pub fn new(r#type: Option<String>, message: Option<String>) -> Self {
-        let ty = r#type.map(RToC::into_cstring);
-        let ty = ty.as_ref().map_or(ptr::null(), |ty| ty.as_ptr());
-        let message = message.map(RToC::into_cstring);
-        let message = message
-            .as_ref()
-            .map_or(ptr::null(), |message| message.as_ptr());
-
-        Self(Some(unsafe { sys::value_new_breadcrumb(ty, message) }))
+    #[allow(clippy::missing_const_for_fn)]
+    pub fn new(ty: Option<String>, message: Option<String>) -> Self {
+        Self {
+            ty,
+            message,
+            map: BTreeMap::new(),
+        }
     }
 
     /// Adds the [`Breadcrumb`] to be sent in case of an
     /// [`Event::capture`](crate::Event::capture).
+    ///
+    /// # Panics
+    /// Panics if any [`String`] contains a null byte.
     ///
     /// # Examples
     /// ```
@@ -56,7 +92,7 @@ impl Breadcrumb {
     /// Breadcrumb::new(None, Some("test message".into())).add();
     /// ```
     pub fn add(self) {
-        let breadcrumb = self.take();
+        let breadcrumb = self.into_raw();
 
         {
             let _lock = global_write();
@@ -69,27 +105,10 @@ impl Breadcrumb {
 
 #[test]
 fn breadcrumb() {
-    use crate::Object;
-
     Breadcrumb::new(Some("test".into()), Some("test".into())).add();
 
-    let breadcrumb = Breadcrumb::new(None, None);
-    assert_eq!(None, breadcrumb.get("type"));
-    assert_eq!(None, breadcrumb.get("message"));
-    breadcrumb.add();
-
-    let breadcrumb = Breadcrumb::new(Some("test".into()), None);
-    assert_eq!(Some("test"), breadcrumb.get("type").unwrap().as_str());
-    assert_eq!(None, breadcrumb.get("message"));
-    breadcrumb.add();
-
-    let breadcrumb = Breadcrumb::new(None, Some("test".into()));
-    assert_eq!(None, breadcrumb.get("type"));
-    assert_eq!(Some("test"), breadcrumb.get("message").unwrap().as_str());
-    breadcrumb.add();
-
     let breadcrumb = Breadcrumb::new(Some("test".into()), Some("test".into()));
-    assert_eq!(Some("test"), breadcrumb.get("type").unwrap().as_str());
-    assert_eq!(Some("test"), breadcrumb.get("message").unwrap().as_str());
+    assert_eq!(Some("test".into()), breadcrumb.ty);
+    assert_eq!(Some("test".into()), breadcrumb.message);
     breadcrumb.add();
 }

@@ -1,10 +1,12 @@
 //! Sentry event implementation.
 
-use crate::{global_read, CToR, Level, Map, Object, RToC, Sealed, Value};
+use crate::{global_read, CToR, Level, Object, RToC, Value};
 use std::{
     cmp::Ordering,
+    collections::BTreeMap,
     fmt::{Display, Formatter, Result},
     hash::{Hash, Hasher},
+    ops::{Deref, DerefMut},
     os::raw::c_char,
     ptr,
 };
@@ -13,14 +15,37 @@ use std::{
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Event, Map, Object};
-/// # use std::iter::FromIterator;
+/// # use sentry_contrib_native::Event;
+/// # use std::collections::BTreeMap;
 /// let mut event = Event::new();
-/// let extra = Map::from_iter(&[("some extra data", "test data")]);
-/// event.insert("extra", extra);
+/// let mut extra = BTreeMap::new();
+/// extra.insert("some extra data".into(), "test data".into());
+/// event.insert("extra".into(), extra.into());
 /// event.capture();
 /// ```
-pub struct Event(Option<sys::Value>);
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+pub struct Event {
+    /// Event interface.
+    interface: Interface,
+    /// Event content.
+    map: BTreeMap<String, Value>,
+}
+
+/// Sentry event interface.
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+pub enum Interface {
+    /// Plain interface.
+    Event,
+    /// Message interface.
+    Message {
+        /// Level.
+        level: Level,
+        /// Logger.
+        logger: Option<String>,
+        /// Message text.
+        text: String,
+    },
+}
 
 impl Default for Event {
     fn default() -> Self {
@@ -28,7 +53,42 @@ impl Default for Event {
     }
 }
 
-derive_object!(Event);
+impl Object for Event {
+    fn into_parts(self) -> (sys::Value, BTreeMap<String, Value>) {
+        let event = match self.interface {
+            Interface::Event => unsafe { sys::value_new_event() },
+            Interface::Message {
+                level,
+                logger,
+                text,
+            } => {
+                let logger = logger.map(RToC::into_cstring);
+                let logger = logger
+                    .as_ref()
+                    .map_or(ptr::null(), |logger| logger.as_ptr());
+                let text = text.into_cstring();
+
+                unsafe { sys::value_new_message_event(level.into(), logger, text.as_ptr()) }
+            }
+        };
+
+        (event, self.map)
+    }
+}
+
+impl Deref for Event {
+    type Target = BTreeMap<String, Value>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.map
+    }
+}
+
+impl DerefMut for Event {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.map
+    }
+}
 
 impl Event {
     /// Creates a new Sentry event.
@@ -39,14 +99,15 @@ impl Event {
     /// let mut event = Event::new();
     /// ```
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn new() -> Self {
-        Self(Some(unsafe { sys::value_new_event() }))
+        Self {
+            interface: Interface::Event,
+            map: BTreeMap::new(),
+        }
     }
 
     /// Creates a new Sentry message event.
-    ///
-    /// # Panics
-    /// Panics if `logger` or `text` contain any null bytes.
     ///
     /// # Examples
     /// ```
@@ -54,15 +115,32 @@ impl Event {
     /// let mut event = Event::new_message(Level::Debug, Some("test logger".into()), "test");
     /// ```
     pub fn new_message<S: Into<String>>(level: Level, logger: Option<String>, text: S) -> Self {
-        let logger = logger.map(RToC::into_cstring);
-        let logger = logger
-            .as_ref()
-            .map_or(ptr::null(), |logger| logger.as_ptr());
-        let text = text.into().into_cstring();
+        Self {
+            interface: Interface::Message {
+                level,
+                logger,
+                text: text.into(),
+            },
+            map: BTreeMap::new(),
+        }
+    }
 
-        Self(Some(unsafe {
-            sys::value_new_message_event(level.into(), logger, text.as_ptr())
-        }))
+    /// Generate stacktrace.
+    fn stacktrace(len: usize) -> BTreeMap<String, Value> {
+        let event = unsafe {
+            let value = sys::value_new_event();
+            sys::event_value_add_stacktrace(value, ptr::null_mut(), len);
+            let event = Value::from_raw(value);
+            sys::value_decref(value);
+            event
+        };
+
+        event
+            .into_map()
+            .ok()
+            .and_then(|mut event| event.remove("threads"))
+            .and_then(|threads| threads.into_map().ok())
+            .expect("failed to get stacktrace")
     }
 
     /// Adds a stacktrace to the [`Event`].
@@ -70,15 +148,12 @@ impl Event {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{Event, Level};
-    /// # use std::iter::FromIterator;
     /// let mut event = Event::new_message(Level::Debug, Some("test logger".into()), "test");
     /// event.add_stacktrace(0);
     /// event.capture();
     /// ```
     pub fn add_stacktrace(&mut self, len: usize) {
-        let event = self.as_raw();
-
-        unsafe { sys::event_value_add_stacktrace(event, ptr::null_mut(), len) };
+        self.insert("threads".into(), Self::stacktrace(len).into());
     }
 
     /// Adds an exception to the [`Event`] along with a stacktrace. As a
@@ -88,51 +163,47 @@ impl Event {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::{Event, Level, Map, Object};
-    /// # use std::iter::FromIterator;
+    /// # use sentry_contrib_native::Event;
+    /// # use std::collections::BTreeMap;
     /// let mut event = Event::new();
-    /// let exception = Map::from_iter(&[
-    ///     ("type", "test exception"),
-    ///     ("value", "test exception value"),
-    /// ]);
-    /// event.add_exception(exception, 0);
+    /// let mut exception = BTreeMap::new();
+    /// exception.insert("type".into(), "test exception".into());
+    /// exception.insert("value".into(), "test exception value".into());
+    /// event.add_exception(exception.into(), 0);
     /// event.capture();
     /// ```
-    pub fn add_exception(&mut self, mut exception: Map, len: usize) {
-        self.add_stacktrace(len);
+    pub fn add_exception(&mut self, mut exception: BTreeMap<String, Value>, len: usize) {
+        let stacktrace = Self::stacktrace(len)
+            .remove("values")
+            .and_then(|values| values.into_list().ok())
+            .and_then(|values| values.into_iter().next())
+            .and_then(|thread| thread.into_map().ok())
+            .and_then(|mut thread| thread.remove("stacktrace"))
+            .filter(Value::is_map)
+            .expect("failed to move stacktrace");
 
-        if let Some(Value::Map(threads)) = self.get("threads") {
-            if let Some(Value::List(threads_values)) = threads.get("values") {
-                if let Some(Value::Map(thread)) = threads_values.get(0) {
-                    if let Some(Value::Map(stacktrace)) = thread.get("stacktrace") {
-                        exception.insert("stacktrace", stacktrace);
-
-                        if self.remove("threads").is_ok() {
-                            self.insert("exception", exception);
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-
-        panic!("failed to move stacktrace");
+        exception.insert("stacktrace".into(), stacktrace);
+        self.insert("exception".into(), exception.into());
     }
 
     /// Sends the [`Event`].
     ///
+    /// # Panics
+    /// Panics if any [`String`] contains a null byte.
+    ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::{Event, Map, Object};
-    /// # use std::iter::FromIterator;
+    /// # use sentry_contrib_native::Event;
+    /// # use std::collections::BTreeMap;
     /// let mut event = Event::new();
-    /// let extra = Map::from_iter(&[("some extra data", "test data")]);
-    /// event.insert("extra", extra);
+    /// let mut extra = BTreeMap::new();
+    /// extra.insert("some extra data".into(), "test data".into());
+    /// event.insert("extra".into(), extra.into());
     /// event.capture();
     /// ```
     #[allow(clippy::must_use_candidate)]
     pub fn capture(self) -> Uuid {
-        let event = self.take();
+        let event = self.into_raw();
 
         {
             let _lock = global_read();
@@ -253,41 +324,29 @@ impl From<Uuid> for [c_char; 16] {
 
 #[test]
 fn event() -> anyhow::Result<()> {
-    use crate::List;
-    use std::convert::TryInto;
+    let event = Event::new();
 
-    Event::new().capture();
+    if let Interface::Message { .. } = event.interface {
+        unreachable!()
+    }
 
-    let event = Event::new_message(Level::Debug, None, "test");
-    assert_eq!(Some("debug"), event.get("level").unwrap().as_str());
-    assert_eq!(None, event.get("logger"));
-    assert_eq!(
-        Some("test"),
-        event
-            .get("message")
-            .unwrap()
-            .as_map()
-            .unwrap()
-            .get("formatted")
-            .unwrap()
-            .as_str()
-    );
     event.capture();
 
     let event = Event::new_message(Level::Debug, Some("test".into()), "test");
-    assert_eq!(Some("debug"), event.get("level").unwrap().as_str());
-    assert_eq!(Some("test"), event.get("logger").unwrap().as_str());
-    assert_eq!(
-        Some("test"),
-        event
-            .get("message")
-            .unwrap()
-            .as_map()
-            .unwrap()
-            .get("formatted")
-            .unwrap()
-            .as_str()
-    );
+
+    if let Interface::Message {
+        level,
+        logger,
+        text,
+    } = &event.interface
+    {
+        assert_eq!(&Level::Debug, level);
+        assert_eq!(&Some("test".into()), logger);
+        assert_eq!("test", text);
+    } else {
+        unreachable!()
+    }
+
     event.capture();
 
     let mut event = Event::new();
@@ -299,16 +358,16 @@ fn event() -> anyhow::Result<()> {
     event.capture();
 
     let mut event = Event::new();
-    let mut exception = Map::new();
-    exception.insert("type", "test type");
-    exception.insert("value", "test value");
+    let mut exception = BTreeMap::new();
+    exception.insert("type".into(), "test type".into());
+    exception.insert("value".into(), "test value".into());
     event.add_exception(exception, 0);
 
-    let exception: Map = event.get("exception").unwrap().try_into()?;
+    let exception = event.get("exception").unwrap().as_map().unwrap();
     assert_eq!(Some("test type"), exception.get("type").unwrap().as_str());
     assert_eq!(Some("test value"), exception.get("value").unwrap().as_str());
-    let stacktrace: Map = exception.get("stacktrace").unwrap().try_into()?;
-    let frames: List = stacktrace.get("frames").unwrap().try_into()?;
+    let stacktrace = exception.get("stacktrace").unwrap().as_map().unwrap();
+    let frames = stacktrace.get("frames").unwrap().as_list().unwrap();
     assert_ne!(None, frames.get(0).unwrap().as_map());
 
     event.capture();

@@ -1,10 +1,15 @@
 //! Sentry value implementation.
 
-use crate::{CToR, Error, List, Map, RToC, Sealed};
-use std::convert::TryFrom;
+use crate::{CToR, Error, Object, RToC};
+use rmpv::decode;
+use std::{
+    collections::BTreeMap,
+    convert::{TryFrom, TryInto},
+    slice,
+};
 
 /// Represents a Sentry protocol value.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Value {
     /// Null value.
     Null,
@@ -17,9 +22,9 @@ pub enum Value {
     /// String.
     String(String),
     /// List.
-    List(List),
+    List(Vec<Value>),
     /// Map.
-    Map(Map),
+    Map(BTreeMap<String, Value>),
 }
 
 impl Default for Value {
@@ -39,9 +44,6 @@ impl Value {
 
     /// Creates a [`Value`] from [`sys::Value`]. This will deallocate the given
     /// `raw_value` or take ownership of it.
-    ///
-    /// # Panics
-    /// Panics if `raw_value` is a [`Value::String`] and contains invalid UTF-8.
     #[allow(unused_unsafe)]
     pub(crate) unsafe fn from_raw(raw_value: sys::Value) -> Self {
         match unsafe { sys::value_get_type(raw_value) } {
@@ -77,8 +79,36 @@ impl Value {
                 unsafe { sys::value_decref(raw_value) };
                 value
             }
-            sys::ValueType::List => Self::List(unsafe { List::from_raw(raw_value) }),
-            sys::ValueType::Object => Self::Map(unsafe { Map::from_raw(raw_value) }),
+            sys::ValueType::List => {
+                let mut list = Vec::new();
+
+                for index in 0..unsafe { sys::value_get_length(raw_value) } {
+                    list.push(unsafe {
+                        Self::from_raw(sys::value_get_by_index_owned(raw_value, index))
+                    })
+                }
+
+                unsafe { sys::value_decref(raw_value) };
+                Self::List(list)
+            }
+            sys::ValueType::Object => {
+                let mut size_out = 0;
+
+                let msg_raw = unsafe { sys::value_to_msgpack(raw_value, &mut size_out) };
+                unsafe { sys::value_decref(raw_value) };
+
+                let mut msg = unsafe { slice::from_raw_parts(msg_raw as _, size_out) };
+                let value = decode::read_value(&mut msg).expect("message pack decoding failed");
+                unsafe { sys::free(msg_raw as _) };
+
+                let map = value.into_value();
+
+                if map.is_map() {
+                    map
+                } else {
+                    panic!("message pack decoding failed")
+                }
+            }
         }
     }
 
@@ -86,9 +116,25 @@ impl Value {
     /// for deallocating [`sys::Value`].
     ///
     /// # Panics
-    /// Panics if `raw_value` is a [`Value::String`] and contains any null
-    /// bytes.
-    pub(crate) fn take(self) -> sys::Value {
+    /// - Panics if `self` is a [`Value::String`] and contains any null bytes.
+    /// - Panics if Sentry failed to allocate memory.
+    pub(crate) fn into_raw(self) -> sys::Value {
+        /// A simple [`Object`] implementation for [`Value::Map`].
+        pub struct Map(BTreeMap<String, Value>);
+
+        impl Map {
+            /// Create a [`Value::Map`].
+            pub fn new(value: BTreeMap<String, Value>) -> Self {
+                Self(value)
+            }
+        }
+
+        impl Object for Map {
+            fn into_parts(self) -> (sys::Value, BTreeMap<String, Value>) {
+                (unsafe { sys::value_new_object() }, self.0)
+            }
+        }
+
         match self {
             Self::Null => unsafe { sys::value_new_null() },
             Self::Bool(value) => unsafe { sys::value_new_bool(value.into()) },
@@ -98,8 +144,29 @@ impl Value {
                 let string = value.into_cstring();
                 unsafe { sys::value_new_string(string.as_ptr()) }
             }
-            Self::List(list) => list.take(),
-            Self::Map(map) => map.take(),
+            Self::List(old_list) => {
+                let list = unsafe { sys::value_new_list() };
+
+                for value in old_list {
+                    match unsafe { sys::value_append(list, value.into_raw()) } {
+                        0 => (),
+                        _ => panic!("Sentry failed to allocate memory"),
+                    }
+                }
+
+                list
+            }
+            Self::Map(old_map) => Map::new(old_map).into_raw(),
+        }
+    }
+
+    /// Returns `true` if `self` is [`Value::Null`].
+    #[must_use]
+    pub fn is_null(&self) -> bool {
+        if let Self::Null = self {
+            true
+        } else {
+            false
         }
     }
 
@@ -113,6 +180,28 @@ impl Value {
         }
     }
 
+    /// Returns [`Ok`] if `self` is [`Value::Null`].
+    ///
+    /// # Errors
+    /// Fails with [`Error::TryConvert`] if `self` isn't a [`Value::Null`];
+    pub fn into_null(self) -> Result<(), Error> {
+        if let Self::Null = self {
+            Ok(())
+        } else {
+            Err(Error::TryConvert(self))
+        }
+    }
+
+    /// Returns `true` if `self` is [`Value::Bool`].
+    #[must_use]
+    pub fn is_bool(&self) -> bool {
+        if let Self::Bool(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
     /// Returns [`Some`] with the inner value if `self` is [`Value::Bool`].
     #[must_use]
     pub fn as_bool(&self) -> Option<bool> {
@@ -120,6 +209,28 @@ impl Value {
             Some(*value)
         } else {
             None
+        }
+    }
+
+    /// Returns [`Ok`] with the inner value if `self` is [`Value::Bool`].
+    ///
+    /// # Errors
+    /// Fails with [`Error::TryConvert`] if `self` isn't a [`Value::Bool`];
+    pub fn into_bool(self) -> Result<bool, Error> {
+        if let Self::Bool(value) = self {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(self))
+        }
+    }
+
+    /// Returns `true` if `self` is [`Value::Int`].
+    #[must_use]
+    pub fn is_int(&self) -> bool {
+        if let Self::Int(_) = self {
+            true
+        } else {
+            false
         }
     }
 
@@ -133,6 +244,28 @@ impl Value {
         }
     }
 
+    /// Returns [`Ok`] with the inner value if `self` is [`Value::Int`].
+    ///
+    /// # Errors
+    /// Fails with [`Error::TryConvert`] if `self` isn't a [`Value::Int`];
+    pub fn into_int(self) -> Result<i32, Error> {
+        if let Self::Int(value) = self {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(self))
+        }
+    }
+
+    /// Returns `true` if `self` is [`Value::Double`].
+    #[must_use]
+    pub fn is_double(&self) -> bool {
+        if let Self::Double(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
     /// Returns [`Some`] with the inner value if `self` is [`Value::Double`].
     #[must_use]
     pub fn as_double(&self) -> Option<f64> {
@@ -140,6 +273,28 @@ impl Value {
             Some(*value)
         } else {
             None
+        }
+    }
+
+    /// Returns [`Ok`] with the inner value if `self` is [`Value::Double`].
+    ///
+    /// # Errors
+    /// Fails with [`Error::TryConvert`] if `self` isn't a [`Value::Double`];
+    pub fn into_double(self) -> Result<f64, Error> {
+        if let Self::Double(value) = self {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(self))
+        }
+    }
+
+    /// Returns `true` if `self` is [`Value::String`].
+    #[must_use]
+    pub fn is_string(&self) -> bool {
+        if let Self::String(_) = self {
+            true
+        } else {
+            false
         }
     }
 
@@ -153,9 +308,31 @@ impl Value {
         }
     }
 
+    /// Returns [`Ok`] with the inner value if `self` is [`Value::String`].
+    ///
+    /// # Errors
+    /// Fails with [`Error::TryConvert`] if `self` isn't a [`Value::String`];
+    pub fn into_string(self) -> Result<String, Error> {
+        if let Self::String(value) = self {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(self))
+        }
+    }
+
+    /// Returns `true` if `self` is [`Value::List`].
+    #[must_use]
+    pub fn is_list(&self) -> bool {
+        if let Self::List(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
     /// Returns [`Some`] with the inner value if `self` is [`Value::List`].
     #[must_use]
-    pub fn as_list(&self) -> Option<&List> {
+    pub fn as_list(&self) -> Option<&Vec<Self>> {
         if let Self::List(value) = self {
             Some(value)
         } else {
@@ -163,13 +340,88 @@ impl Value {
         }
     }
 
+    /// Returns [`Ok`] with the inner value if `self` is [`Value::List`].
+    ///
+    /// # Errors
+    /// Fails with [`Error::TryConvert`] if `self` isn't a [`Value::List`];
+    pub fn into_list(self) -> Result<Vec<Self>, Error> {
+        if let Self::List(value) = self {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(self))
+        }
+    }
+
+    /// Returns `true` if `self` is [`Value::Map`].
+    #[must_use]
+    pub fn is_map(&self) -> bool {
+        if let Self::Map(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
     /// Returns [`Some`] with the inner value if `self` is [`Value::Map`].
     #[must_use]
-    pub fn as_map(&self) -> Option<&Map> {
+    pub fn as_map(&self) -> Option<&BTreeMap<String, Self>> {
         if let Self::Map(value) = self {
             Some(value)
         } else {
             None
+        }
+    }
+
+    /// Returns [`Ok`] with the inner value if `self` is [`Value::Map`].
+    ///
+    /// # Errors
+    /// Fails with [`Error::TryConvert`] if `self` isn't a [`Value::Map`];
+    pub fn into_map(self) -> Result<BTreeMap<String, Self>, Error> {
+        if let Self::Map(value) = self {
+            Ok(value)
+        } else {
+            Err(Error::TryConvert(self))
+        }
+    }
+}
+
+/// Convenience trait to convert [`MpValue`] to [`Value`].
+trait MP {
+    /// Convert [`MpValue`] to [`Value`].
+    fn into_value(self) -> Value;
+}
+
+impl MP for rmpv::Value {
+    fn into_value(self) -> Value {
+        match self {
+            Self::Nil => Value::Null,
+            Self::Boolean(value) => Value::Bool(value),
+            Self::Integer(value) => Value::Int(
+                value
+                    .as_i64()
+                    .and_then(|value| value.try_into().ok())
+                    .expect("message pack decoding failed"),
+            ),
+            Self::F64(value) => Value::Double(value),
+            Self::String(value) => {
+                Value::String(value.into_str().expect("message pack decoding failed"))
+            }
+            Self::Array(value) => Value::List(value.into_iter().map(MP::into_value).collect()),
+            Self::Map(value) => Value::Map(
+                value
+                    .into_iter()
+                    .map(|(key, value)| {
+                        let key = if let Self::String(key) = key {
+                            key.into_str().expect("message pack decoding failed")
+                        } else {
+                            unreachable!("message pack decoding failed")
+                        };
+
+                        (key, value.into_value())
+                    })
+                    .collect(),
+            ),
+            _ => unreachable!("message pack decoding failed"),
         }
     }
 }
@@ -215,19 +467,25 @@ impl From<&str> for Value {
     }
 }
 
-impl From<List> for Value {
-    fn from(value: List) -> Self {
+impl From<Vec<Self>> for Value {
+    fn from(value: Vec<Self>) -> Self {
         Self::List(value)
     }
 }
 
-impl From<Map> for Value {
-    fn from(value: Map) -> Self {
+impl From<Vec<(String, Self)>> for Value {
+    fn from(value: Vec<(String, Self)>) -> Self {
+        Self::Map(value.into_iter().collect())
+    }
+}
+
+impl From<BTreeMap<String, Self>> for Value {
+    fn from(value: BTreeMap<String, Self>) -> Self {
         Self::Map(value)
     }
 }
 
-impl<V: Into<Value> + Copy> From<&V> for Value {
+impl<V: Into<Self> + Copy> From<&V> for Value {
     fn from(value: &V) -> Self {
         (*value).into()
     }
@@ -237,11 +495,7 @@ impl TryFrom<Value> for () {
     type Error = Error;
 
     fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Null = value {
-            Ok(())
-        } else {
-            Err(Error::TryConvert(value))
-        }
+        value.into_null()
     }
 }
 
@@ -249,11 +503,7 @@ impl TryFrom<Value> for bool {
     type Error = Error;
 
     fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Bool(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert(value))
-        }
+        value.into_bool()
     }
 }
 
@@ -261,11 +511,7 @@ impl TryFrom<Value> for i32 {
     type Error = Error;
 
     fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Int(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert(value))
-        }
+        value.into_int()
     }
 }
 
@@ -273,11 +519,7 @@ impl TryFrom<Value> for f64 {
     type Error = Error;
 
     fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Double(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert(value))
-        }
+        value.into_double()
     }
 }
 
@@ -285,34 +527,81 @@ impl TryFrom<Value> for String {
     type Error = Error;
 
     fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::String(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert(value))
-        }
+        value.into_string()
     }
 }
 
-impl TryFrom<Value> for List {
+impl TryFrom<Value> for Vec<Value> {
     type Error = Error;
 
     fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::List(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert(value))
-        }
+        value.into_list()
     }
 }
 
-impl TryFrom<Value> for Map {
+impl TryFrom<Value> for BTreeMap<String, Value> {
     type Error = Error;
 
     fn try_from(value: Value) -> Result<Self, Error> {
-        if let Value::Map(value) = value {
-            Ok(value)
-        } else {
-            Err(Error::TryConvert(value))
-        }
+        value.into_map()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #![allow(clippy::non_ascii_literal)]
+
+    use crate::Value;
+
+    #[test]
+    fn value() {
+        let value = Value::new(());
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::new(false);
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::new(true);
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::new(-100);
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::new(0);
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::new(0.);
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::new(1_000_000.);
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::new("asdasdasd");
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::new("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️");
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::List(vec![
+            ().into(),
+            true.into(),
+            0.into(),
+            0.0.into(),
+            "test".into(),
+            vec![Value::from(true)].into(),
+            vec![("test".into(), true.into())].into(),
+        ]);
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
+
+        let value = Value::from(vec![
+            ("0".into(), ().into()),
+            ("0".into(), true.into()),
+            ("0".into(), 0.into()),
+            ("0".into(), 0.0.into()),
+            ("0".into(), "test".into()),
+            ("0".into(), vec![Value::from(true)].into()),
+            ("0".into(), vec![("test".into(), true.into())].into()),
+        ]);
+        assert_eq!(value, unsafe { Value::from_raw(value.clone().into_raw()) });
     }
 }

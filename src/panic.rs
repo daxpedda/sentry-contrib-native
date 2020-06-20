@@ -68,12 +68,18 @@ pub fn set_hook(hook: Option<Box<dyn Fn(&PanicInfo) + Sync + Send + 'static>>) {
 
 #[cfg(test)]
 #[rusty_fork::test_fork]
-#[should_panic]
 fn hook() -> anyhow::Result<()> {
-    use crate::Options;
+    use std::thread;
+
+    static mut TEST: bool = false;
 
     set_hook(None);
+    set_hook(Some(Box::new(|_| unsafe { TEST = true })));
 
-    let _shutdown = Options::new().init()?;
-    panic!("this panic is a test");
+    thread::spawn(|| panic!("this panic is a test"))
+        .join()
+        .unwrap_err();
+
+    assert!(unsafe { TEST });
+    Ok(())
 }

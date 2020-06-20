@@ -806,8 +806,12 @@ fn options() -> anyhow::Result<()> {
     options.set_dsn("yourdsn.com");
     assert_eq!(Some("yourdsn.com"), options.dsn());
 
-    options.set_sample_rate(0.5)?;
-    assert_eq!(0.5, options.sample_rate());
+    let sample_rate = 0.5;
+    options.set_sample_rate(sample_rate)?;
+    #[allow(clippy::float_cmp)]
+    {
+        assert_eq!(sample_rate, options.sample_rate());
+    }
 
     options.set_release("1.0");
     assert_eq!(Some("1.0"), options.release());

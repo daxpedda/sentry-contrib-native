@@ -1,7 +1,7 @@
 //! Sentry options implementation.
 
 use crate::{CPath, CToR, Error, RToC, Value};
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 #[cfg(feature = "test")]
 use std::{env, ffi::CString};
 use std::{
@@ -10,7 +10,7 @@ use std::{
     mem::ManuallyDrop,
     os::raw::c_void,
     path::PathBuf,
-    sync::{RwLock, RwLockReadGuard, RwLockWriteGuard},
+    sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
 /// Global lock for two purposes:
@@ -39,6 +39,9 @@ pub struct Options {
     /// work without polluting the file system.
     #[cfg(feature = "test")]
     database_path: Option<CString>,
+    /// Storing [`Options::set_before_send`] data to properly deallocate it
+    /// later.
+    before_send: Option<Box<Box<dyn BeforeSend>>>,
 }
 
 unsafe impl Send for Options {}
@@ -88,6 +91,7 @@ impl Options {
             raw: Some(unsafe { sys::options_new() }),
             #[cfg(feature = "test")]
             database_path: None,
+            before_send: None,
         };
 
         #[cfg(feature = "test")]
@@ -113,8 +117,6 @@ impl Options {
 
     /// Sets the before send callback.
     ///
-    /// May not work: <https://github.com/getsentry/sentry-native/issues/250>.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{BeforeSend, Options, Value};
@@ -130,6 +132,7 @@ impl Options {
     /// ```
     pub fn set_before_send<B: Into<Box<B>> + BeforeSend>(&mut self, fun: B) {
         let fun = Box::into_raw(Box::<Box<dyn BeforeSend>>::new(fun.into()));
+        self.before_send = Some(unsafe { Box::from_raw(fun) });
 
         unsafe { sys::options_set_before_send(self.as_mut(), Some(before_send), fun as _) }
     }
@@ -656,6 +659,15 @@ impl Options {
                 *lock = true;
                 // init has taken ownership now
                 self.raw.take().expect("use after free");
+                mem::drop(lock);
+
+                // store `before_send` data so we can deallocate it later
+                if let Some(before_send) = self.before_send.take() {
+                    BEFORE_SEND
+                        .set(Mutex::new(Some(before_send)))
+                        .map_err(|_| ())
+                        .expect("`BEFORE_SEND` was set once before");
+                }
 
                 Ok(Shutdown)
             }
@@ -746,6 +758,10 @@ impl Shutdown {
         mem::drop(self)
     }
 }
+
+/// Store [`Options::set_before_send`] data to properly allocate later.
+#[allow(clippy::type_complexity)]
+pub static BEFORE_SEND: OnceCell<Mutex<Option<Box<Box<dyn BeforeSend>>>>> = OnceCell::new();
 
 /// Trait to help pass data to [`Options::set_before_send`].
 ///

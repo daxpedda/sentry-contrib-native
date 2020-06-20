@@ -108,7 +108,7 @@ std::panic::set_hook(Box::new(|_| sentry_contrib_native::shutdown()));
 
 This crate relies on [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys) which in turn builds [Sentry's Native SDK](https://github.com/getsentry/sentry-native). This requires [CMake](https://cmake.org) or alternatively a pre-installed version can be provided with the `SENTRY_NATIVE_INSTALL` environment variable.
 
-Additionally on any other platform then Window, the development version of `curl` is required.
+Additionally on any other platform than Windows, the development version of `curl` is required.
 
 See [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys) for more details.
 

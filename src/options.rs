@@ -13,12 +13,15 @@ use std::{
     sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
-/// Global lock for two purposes:
+/// Global lock for the following purposes:
 /// - Prevent [`Options::init`] from being called twice.
 /// - Fix some use-after-free bugs in `sentry-native` that can happen when
 ///   shutdown is called while other functions are still accessing global
 ///   options. Hopefully this will be fixed upstream in the future, see
 ///   <https://github.com/getsentry/sentry-native/issues/280>.
+/// - [`Event::capture`](crate::Event::capture) uses mutable global data passed
+///   to [`Options::set_before_send`], which would otherwise need a seperate
+///   [`Mutex`] to do safely.
 static GLOBAL_LOCK: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
 
 /// Convenience function to get a read lock on `GLOBAL_LOCK`.
@@ -32,6 +35,14 @@ pub fn global_write() -> RwLockWriteGuard<'static, bool> {
 }
 
 /// The Sentry client options.
+///
+/// # Examples
+/// ```
+/// # use sentry_contrib_native::Options;
+/// # fn main() -> anyhow::Result<()> {
+/// let _shutdown = Options::new().init()?;
+/// # Ok(()) }
+/// ```
 pub struct Options {
     /// Raw Sentry options.
     raw: Option<*mut sys::Options>,
@@ -55,7 +66,20 @@ impl Default for Options {
 
 impl Debug for Options {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> FmtResult {
-        fmt.debug_struct("Options").field("raw", &self.raw).finish()
+        let mut debug = fmt.debug_struct("Options");
+        debug.field("raw", &self.raw);
+        #[cfg(feature = "test")]
+        debug.field("database_path", &self.database_path);
+        debug
+            .field(
+                "before_send",
+                if self.before_send.is_some() {
+                    &"Some"
+                } else {
+                    &"None"
+                },
+            )
+            .finish()
     }
 }
 
@@ -68,10 +92,12 @@ impl Drop for Options {
 }
 
 impl PartialEq for Options {
-    fn eq(&self, _: &Self) -> bool {
-        false
+    fn eq(&self, other: &Self) -> bool {
+        self.raw == other.raw
     }
 }
+
+impl Eq for Options {}
 
 impl Options {
     /// Crates new Sentry client options.
@@ -79,10 +105,7 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
-    /// let options = Options::new();
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
+    /// let mut options = Options::new();
     /// ```
     #[must_use]
     pub fn new() -> Self {
@@ -119,16 +142,12 @@ impl Options {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::{BeforeSend, Options, Value};
-    /// # use std::error::Error;
-    /// # fn main() -> anyhow::Result<()> {
+    /// # use sentry_contrib_native::Options;
     /// let mut options = Options::new();
     /// options.set_before_send(|value| {
     ///     // do something with the value and then return it
     ///     value
     /// });
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_before_send<B: Into<Box<B>> + BeforeSend>(&mut self, fun: B) {
         let fun = Box::into_raw(Box::<Box<dyn BeforeSend>>::new(fun.into()));
@@ -145,11 +164,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_dsn("yourdsn.com");
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_dsn<S: Into<String>>(&mut self, dsn: S) {
         #[cfg(feature = "test")]
@@ -169,12 +185,10 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_dsn("yourdsn.com");
+    ///
     /// assert_eq!(Some("yourdsn.com"), options.dsn());
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     #[must_use]
     pub fn dsn(&self) -> Option<&str> {
@@ -194,17 +208,14 @@ impl Options {
     /// [`Event`](crate::Event) when a sample rate < 1 is set.
     ///
     /// # Errors
-    /// Fails with [`Error::SampleRateRange`] if `sample_rate` is smaller then
-    /// `0.0` or bigger then `1.0`.
+    /// Fails with [`Error::SampleRateRange`] if `sample_rate` is smaller than
+    /// `0.0` or bigger than `1.0`.
     ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_sample_rate(0.5);
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_sample_rate(&mut self, sample_rate: f64) -> Result<(), Error> {
         if sample_rate >= 0. && sample_rate <= 1. {
@@ -223,9 +234,9 @@ impl Options {
     /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
-    /// options.set_sample_rate(0.5);
+    /// options.set_sample_rate(0.5)?;
+    ///
     /// assert_eq!(0.5, options.sample_rate());
-    /// let _shutdown = options.init()?;
     /// # Ok(()) }
     /// ```
     #[must_use]
@@ -241,11 +252,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_release("1.0");
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_release<S: Into<String>>(&mut self, release: S) {
         let release = release.into().into_cstring();
@@ -257,12 +265,10 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_release("1.0");
+    ///
     /// assert_eq!(Some("1.0"), options.release());
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     #[must_use]
     pub fn release(&self) -> Option<&str> {
@@ -277,11 +283,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_environment("production");
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_environment<S: Into<String>>(&mut self, environment: S) {
         let environment = environment.into().into_cstring();
@@ -293,12 +296,10 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_environment("production");
+    ///
     /// assert_eq!(Some("production"), options.environment());
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     #[must_use]
     pub fn environment(&self) -> Option<&str> {
@@ -313,11 +314,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_distribution("release-pgo");
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_distribution<S: Into<String>>(&mut self, distribution: S) {
         let dist = distribution.into().into_cstring();
@@ -329,12 +327,10 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_distribution("release-pgo");
+    ///
     /// assert_eq!(Some("release-pgo"), options.distribution());
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     #[must_use]
     pub fn distribution(&self) -> Option<&str> {
@@ -349,11 +345,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_http_proxy("1.1.1.1");
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_http_proxy<S: Into<String>>(&mut self, proxy: S) {
         let proxy = proxy.into().into_cstring();
@@ -365,12 +358,10 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_http_proxy("1.1.1.1");
+    ///
     /// assert_eq!(Some("1.1.1.1"), options.http_proxy());
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     #[must_use]
     pub fn http_proxy(&self) -> Option<&str> {
@@ -386,11 +377,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_ca_certs("certs.pem");
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_ca_certs<S: Into<String>>(&mut self, path: S) {
         let path = path.into().into_cstring();
@@ -402,12 +390,10 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_ca_certs("certs.pem");
+    ///
     /// assert_eq!(Some("certs.pem"), options.ca_certs());
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     #[must_use]
     pub fn ca_certs(&self) -> Option<&str> {
@@ -419,11 +405,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_debug(true);
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_debug(&mut self, debug: bool) {
         let debug = debug.into();
@@ -435,12 +418,10 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_debug(true);
+    ///
     /// assert!(options.debug());
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     #[must_use]
     pub fn debug(&self) -> bool {
@@ -460,11 +441,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_require_user_consent(true);
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_require_user_consent(&mut self, val: bool) {
         let val = val.into();
@@ -476,12 +454,10 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_require_user_consent(true);
+    ///
     /// assert!(options.require_user_consent());
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     #[must_use]
     pub fn require_user_consent(&self) -> bool {
@@ -494,17 +470,13 @@ impl Options {
     /// Adds a new attachment to be sent along.
     ///
     /// # Panics
-    /// - Panics if `name` contains any null bytes.
-    /// - Panics if `path` contains any null bytes.
+    /// Panics if `name` or `path` contain any null bytes.
     ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
-    /// options.add_attachment("your_attachment", "server.log");
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
+    /// options.add_attachment("test attachment", "server.log");
     /// ```
     pub fn add_attachment<S: Into<String>, P: Into<PathBuf>>(&mut self, name: S, path: P) {
         let name = name.into().into_cstring();
@@ -535,11 +507,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_handler_path("crashpad_handler");
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     #[cfg_attr(
         all(feature = "test", any(windows, target_os = "macos")),
@@ -584,11 +553,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
-    /// options.set_database_path(".sentry-native2");
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
+    /// options.set_database_path(".sentry-native");
     /// ```
     pub fn set_database_path<P: Into<PathBuf>>(&mut self, path: P) {
         #[cfg(feature = "test")]
@@ -618,11 +584,8 @@ impl Options {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
-    /// # fn main() -> anyhow::Result<()> {
     /// let mut options = Options::new();
     /// options.set_system_crash_reporter(true);
-    /// let _shutdown = options.init()?;
-    /// # Ok(()) }
     /// ```
     pub fn set_system_crash_reporter(&mut self, enabled: bool) {
         let enabled = enabled.into();
@@ -643,15 +606,14 @@ impl Options {
     /// ```
     /// # use sentry_contrib_native::Options;
     /// # fn main() -> anyhow::Result<()> {
-    /// let options = Options::new();
-    /// let _shutdown = options.init()?;
+    /// let _shutdown = Options::new().init()?;
     /// # Ok(()) }
     /// ```
     pub fn init(mut self) -> Result<Shutdown, Error> {
         let mut lock = global_write();
 
         if *lock {
-            panic!("already initialized before!")
+            panic!("already initialized Sentry once")
         }
 
         match unsafe { sys::init(self.raw.unwrap()) } {
@@ -768,7 +730,6 @@ pub static BEFORE_SEND: OnceCell<Mutex<Option<Box<Box<dyn BeforeSend>>>>> = Once
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{BeforeSend, Options, Value};
-/// # use std::error::Error;
 /// # fn main() -> anyhow::Result<()> {
 /// struct Filter {
 ///     filtered: usize,
@@ -789,6 +750,22 @@ pub static BEFORE_SEND: OnceCell<Mutex<Option<Box<Box<dyn BeforeSend>>>>> = Once
 /// ```
 pub trait BeforeSend: 'static + Send + Sync {
     /// Before send callback.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{BeforeSend, Value};
+    /// struct Filter {
+    ///     filtered: usize,
+    /// };
+    ///
+    /// impl BeforeSend for Filter {
+    ///     fn before_send(&mut self, value: Value) -> Value {
+    ///         self.filtered += 1;
+    ///         // do something with the value and then return it
+    ///         value
+    ///     }
+    /// }
+    /// ```
     fn before_send(&mut self, value: Value) -> Value;
 }
 
@@ -812,54 +789,182 @@ extern "C" fn before_send(
         .take()
 }
 
+#[test]
+fn options() -> anyhow::Result<()> {
+    struct Filter;
+    impl BeforeSend for Filter {
+        fn before_send(&mut self, value: Value) -> Value {
+            value
+        }
+    }
+
+    let mut options = Options::new();
+
+    options.set_before_send(|value| value);
+    options.set_before_send(Filter);
+
+    options.set_dsn("yourdsn.com");
+    assert_eq!(Some("yourdsn.com"), options.dsn());
+
+    options.set_sample_rate(0.5)?;
+    assert_eq!(0.5, options.sample_rate());
+
+    options.set_release("1.0");
+    assert_eq!(Some("1.0"), options.release());
+
+    options.set_environment("production");
+    assert_eq!(Some("production"), options.environment());
+
+    options.set_distribution("release-pgo");
+    assert_eq!(Some("release-pgo"), options.distribution());
+
+    options.set_http_proxy("1.1.1.1");
+    assert_eq!(Some("1.1.1.1"), options.http_proxy());
+
+    options.set_ca_certs("certs.pem");
+    assert_eq!(Some("certs.pem"), options.ca_certs());
+
+    options.set_debug(true);
+    assert!(options.debug());
+
+    options.set_require_user_consent(true);
+    assert!(options.require_user_consent());
+
+    options.add_attachment("test attachment", "server.log");
+
+    options.set_handler_path("crashpad_handler");
+
+    options.set_database_path(".sentry-native");
+
+    options.set_system_crash_reporter(true);
+
+    Ok(())
+}
+
 #[cfg(test)]
-mod test {
-    use crate::{Options, Shutdown};
+#[rusty_fork::test_fork]
+fn threaded_stress() -> anyhow::Result<()> {
+    use std::{
+        convert::TryFrom,
+        sync::{Arc, Mutex, MutexGuard},
+        thread,
+    };
+
+    fn spawns(tests: Vec<fn(MutexGuard<Options>, usize)>) -> Options {
+        let options = Arc::new(Mutex::new(Options::new()));
+
+        let mut spawns = Vec::with_capacity(tests.len());
+        for test in tests {
+            let options = Arc::clone(&options);
+
+            let handle = thread::spawn(move || {
+                let mut handles = Vec::with_capacity(100);
+
+                for index in 0..100 {
+                    let options = Arc::clone(&options);
+
+                    handles.push(thread::spawn(move || {
+                        let options = options.lock().unwrap();
+                        test(options, index)
+                    }))
+                }
+
+                handles
+            });
+            spawns.push(handle)
+        }
+
+        for spawn in spawns {
+            for handle in spawn.join().unwrap() {
+                handle.join().unwrap()
+            }
+        }
+
+        Arc::try_unwrap(options).unwrap().into_inner().unwrap()
+    }
+
+    let options = spawns(vec![
+        |mut options, _| options.set_before_send(|value| value),
+        |mut options, index| options.set_dsn(index.to_string()),
+        |options, _| println!("{:?}", options.dsn()),
+        |mut options, index| {
+            let sample_rate = f64::from(u32::try_from(index).unwrap()) / 100.;
+            options.set_sample_rate(sample_rate).unwrap()
+        },
+        |options, _| println!("{:?}", options.sample_rate()),
+        |mut options, index| options.set_release(index.to_string()),
+        |options, _| println!("{:?}", options.release()),
+        |mut options, index| options.set_environment(index.to_string()),
+        |options, _| println!("{:?}", options.environment()),
+        |mut options, index| options.set_distribution(index.to_string()),
+        |options, _| println!("{:?}", options.distribution()),
+        |mut options, index| options.set_http_proxy(index.to_string()),
+        |options, _| println!("{:?}", options.http_proxy()),
+        |mut options, index| options.set_ca_certs(index.to_string()),
+        |options, _| println!("{:?}", options.ca_certs()),
+        |mut options, index| {
+            options.set_debug(match index % 2 {
+                0 => false,
+                1 => true,
+                _ => unreachable!(),
+            })
+        },
+        |options, _| println!("{:?}", options.debug()),
+        |mut options, index| {
+            options.set_require_user_consent(match index % 2 {
+                0 => false,
+                1 => true,
+                _ => unreachable!(),
+            })
+        },
+        |options, _| println!("{:?}", options.require_user_consent()),
+        |mut options, index| options.add_attachment(index.to_string(), index.to_string()),
+        |mut options, index| options.set_handler_path(index.to_string()),
+        |mut options, index| options.set_database_path(index.to_string()),
+        |mut options, index| {
+            options.set_system_crash_reporter(match index % 2 {
+                0 => false,
+                1 => true,
+                _ => unreachable!(),
+            })
+        },
+    ]);
+
+    options.init()?;
+    Ok(())
+}
+
+#[cfg(test)]
+#[rusty_fork::test_fork]
+fn sync() -> anyhow::Result<()> {
     use anyhow::{anyhow, Result};
-    use rusty_fork::test_fork;
     use std::{sync::Arc, thread};
 
-    #[test_fork]
-    fn send() -> Result<()> {
-        let mut options = Options::new();
-        options.set_debug(true);
+    let mut options = Options::new();
+    options.set_debug(true);
+    let options = Arc::new(options);
+    let mut handles = vec![];
 
-        let _shutdown =
-            thread::spawn(move || -> Result<Shutdown> { options.init().map_err(Into::into) })
-                .join()
-                .unwrap()?;
-
-        Ok(())
+    for _ in 0..100 {
+        let options = Arc::clone(&options);
+        let handle = thread::spawn(move || {
+            println!("{}", options.debug());
+        });
+        handles.push(handle);
     }
 
-    #[test_fork]
-    fn sync() -> Result<()> {
-        let mut options = Options::new();
-        options.set_debug(true);
-        let options = Arc::new(options);
-        let mut handles = vec![];
-
-        for _ in 0..100 {
-            let options = Arc::clone(&options);
-            let handle = thread::spawn(move || {
-                println!("{}", options.debug());
-            });
-            handles.push(handle);
-        }
-
-        for handle in handles {
-            handle.join().unwrap();
-        }
-
-        let _shutdown = thread::spawn(move || -> Result<Shutdown> {
-            Arc::try_unwrap(options)
-                .map_err(|_| anyhow!("failed to unwrap arc"))?
-                .init()
-                .map_err(Into::into)
-        })
-        .join()
-        .unwrap()?;
-
-        Ok(())
+    for handle in handles {
+        handle.join().unwrap();
     }
+
+    let _shutdown = thread::spawn(move || -> Result<Shutdown> {
+        Arc::try_unwrap(options)
+            .map_err(|_| anyhow!("failed to unwrap arc"))?
+            .init()
+            .map_err(Into::into)
+    })
+    .join()
+    .unwrap()?;
+
+    Ok(())
 }

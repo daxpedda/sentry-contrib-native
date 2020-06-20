@@ -371,7 +371,7 @@ fn list() -> anyhow::Result<()> {
 }
 
 #[test]
-fn sync() -> anyhow::Result<()> {
+fn threaded_stress() -> anyhow::Result<()> {
     use std::{
         convert::{TryFrom, TryInto},
         sync::{Arc, Mutex},
@@ -422,7 +422,7 @@ fn sync() -> anyhow::Result<()> {
 }
 
 #[test]
-fn send() {
+fn send_sync() {
     use std::thread;
 
     let mut list = List::new();

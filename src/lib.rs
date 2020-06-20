@@ -401,7 +401,7 @@ pub fn remove_context<S: Into<String>>(key: S) {
 /// Panics if [`String`]s in `fingerprints` contain any null bytes.
 ///
 /// # Errors
-/// Fails with [`Error::Fingerprints`] if `fingerprints` is longer then 32;
+/// Fails with [`Error::Fingerprints`] if `fingerprints` is longer than 32;
 ///
 /// # Examples
 /// ```
@@ -548,139 +548,133 @@ pub fn end_session() {
     unsafe { sys::end_session() };
 }
 
+#[test]
+fn error() -> Result<(), Error> {
+    Ok::<_, Infallible>(())?;
+    Ok(())
+}
+
+#[test]
+fn level() {
+    assert_eq!(-1, Level::Debug.into());
+    assert_eq!(0, Level::Info.into());
+    assert_eq!(1, Level::Warning.into());
+    assert_eq!(2, Level::Error.into());
+    assert_eq!(3, Level::Fatal.into());
+}
+
 #[cfg(test)]
-mod test {
+#[rusty_fork::test_fork]
+fn consent() -> anyhow::Result<()> {
+    assert_eq!(Consent::Unknown, crate::user_consent_get());
 
-    use crate::{Consent, Error, Level, Options};
-    use anyhow::Result;
-    use rusty_fork::test_fork;
-    use std::{
-        convert::{Infallible, TryFrom},
-        thread,
-    };
+    crate::user_consent_give();
+    assert_eq!(Consent::Unknown, crate::user_consent_get());
 
-    #[test]
-    fn error() -> Result<(), Error> {
-        Ok::<_, Infallible>(())?;
-        Ok(())
-    }
+    crate::user_consent_revoke();
+    assert_eq!(Consent::Unknown, crate::user_consent_get());
 
-    #[test]
-    fn level() {
-        assert_eq!(-1, Level::Debug.into());
-        assert_eq!(0, Level::Info.into());
-        assert_eq!(1, Level::Warning.into());
-        assert_eq!(2, Level::Error.into());
-        assert_eq!(3, Level::Fatal.into());
-    }
+    crate::user_consent_reset();
+    assert_eq!(Consent::Unknown, crate::user_consent_get());
 
-    #[test_fork]
-    fn consent() -> Result<()> {
-        assert_eq!(Consent::Unknown, crate::user_consent_get());
+    let _shutdown = Options::new().init()?;
 
-        crate::user_consent_give();
-        assert_eq!(Consent::Unknown, crate::user_consent_get());
+    crate::user_consent_give();
+    assert_eq!(Consent::Given, crate::user_consent_get());
 
-        crate::user_consent_revoke();
-        assert_eq!(Consent::Unknown, crate::user_consent_get());
+    crate::user_consent_revoke();
+    assert_eq!(Consent::Revoked, crate::user_consent_get());
 
-        crate::user_consent_reset();
-        assert_eq!(Consent::Unknown, crate::user_consent_get());
+    crate::user_consent_reset();
+    assert_eq!(Consent::Unknown, crate::user_consent_get());
 
-        let _shutdown = Options::new().init()?;
+    Ok(())
+}
 
-        crate::user_consent_give();
-        assert_eq!(Consent::Given, crate::user_consent_get());
+#[cfg(test)]
+#[rusty_fork::test_fork]
+fn fingerprint() -> anyhow::Result<()> {
+    for len in 1..33 {
+        let mut fingerprints = Vec::with_capacity(len);
 
-        crate::user_consent_revoke();
-        assert_eq!(Consent::Revoked, crate::user_consent_get());
-
-        crate::user_consent_reset();
-        assert_eq!(Consent::Unknown, crate::user_consent_get());
-
-        Ok(())
-    }
-
-    #[test_fork]
-    fn fingerprint() -> Result<()> {
-        for len in 1..33 {
-            let mut fingerprints = Vec::with_capacity(len);
-
-            for fingerprint in 0..len {
-                fingerprints.push(fingerprint.to_string());
-            }
-
-            crate::set_fingerprint(fingerprints)?;
-        }
-
-        Ok(())
-    }
-
-    #[test_fork]
-    #[should_panic]
-    fn fingerprint_invalid() -> Result<()> {
-        let mut fingerprints = Vec::with_capacity(33);
-
-        for fingerprint in 0..33 {
+        for fingerprint in 0..len {
             fingerprints.push(fingerprint.to_string());
         }
 
         crate::set_fingerprint(fingerprints)?;
-
-        Ok(())
     }
 
-    #[test_fork]
-    fn misc_threading() -> Result<()> {
-        fn spawns(tests: Vec<fn(usize)>) {
-            let mut spawns = Vec::with_capacity(tests.len());
-            for test in tests {
-                let handle = thread::spawn(move || {
-                    let mut handles = Vec::with_capacity(100);
+    Ok(())
+}
 
-                    for index in 0..100 {
-                        handles.push(thread::spawn(move || test(index)))
-                    }
+#[cfg(test)]
+#[rusty_fork::test_fork]
+#[should_panic]
+fn fingerprint_invalid() -> anyhow::Result<()> {
+    let mut fingerprints = Vec::with_capacity(33);
 
-                    handles
-                });
-                spawns.push(handle)
-            }
+    for fingerprint in 0..33 {
+        fingerprints.push(fingerprint.to_string());
+    }
 
-            for spawn in spawns {
-                for handle in spawn.join().unwrap() {
-                    handle.join().unwrap()
+    crate::set_fingerprint(fingerprints)?;
+
+    Ok(())
+}
+
+#[cfg(test)]
+#[rusty_fork::test_fork]
+fn threaded_stress() -> anyhow::Result<()> {
+    use std::{convert::TryFrom, thread};
+
+    fn spawns(tests: Vec<fn(usize)>) {
+        let mut spawns = Vec::with_capacity(tests.len());
+        for test in tests {
+            let handle = thread::spawn(move || {
+                let mut handles = Vec::with_capacity(100);
+
+                for index in 0..100 {
+                    handles.push(thread::spawn(move || test(index)))
                 }
-            }
+
+                handles
+            });
+            spawns.push(handle)
         }
 
-        let _shutdown = Options::new().init()?;
-
-        spawns(vec![
-            |_| crate::clear_modulecache(),
-            |_| crate::remove_user(),
-            |index| crate::set_tag(index.to_string(), index.to_string()),
-            |index| crate::remove_tag(index.to_string()),
-            |index| crate::set_extra(index.to_string(), i32::try_from(index).unwrap()),
-            |index| crate::remove_extra(index.to_string()),
-            |index| crate::set_context(index.to_string(), i32::try_from(index).unwrap()),
-            |index| crate::remove_context(index.to_string()),
-            |index| crate::set_fingerprint(vec![index.to_string()]).unwrap(),
-            |_| crate::remove_fingerprint(),
-            |index| crate::set_transaction(index.to_string()),
-            |_| crate::remove_transaction(),
-            |index| {
-                crate::set_level(match index % 5 {
-                    0 => Level::Debug,
-                    1 => Level::Info,
-                    2 => Level::Warning,
-                    3 => Level::Error,
-                    4 => Level::Fatal,
-                    _ => unreachable!(),
-                })
-            },
-        ]);
-
-        Ok(())
+        for spawn in spawns {
+            for handle in spawn.join().unwrap() {
+                handle.join().unwrap()
+            }
+        }
     }
+
+    let _shutdown = Options::new().init()?;
+
+    spawns(vec![
+        |_| crate::clear_modulecache(),
+        |_| crate::remove_user(),
+        |index| crate::set_tag(index.to_string(), index.to_string()),
+        |index| crate::remove_tag(index.to_string()),
+        |index| crate::set_extra(index.to_string(), i32::try_from(index).unwrap()),
+        |index| crate::remove_extra(index.to_string()),
+        |index| crate::set_context(index.to_string(), i32::try_from(index).unwrap()),
+        |index| crate::remove_context(index.to_string()),
+        |index| crate::set_fingerprint(vec![index.to_string()]).unwrap(),
+        |_| crate::remove_fingerprint(),
+        |index| crate::set_transaction(index.to_string()),
+        |_| crate::remove_transaction(),
+        |index| {
+            crate::set_level(match index % 5 {
+                0 => Level::Debug,
+                1 => Level::Info,
+                2 => Level::Warning,
+                3 => Level::Error,
+                4 => Level::Fatal,
+                _ => unreachable!(),
+            })
+        },
+    ]);
+
+    Ok(())
 }

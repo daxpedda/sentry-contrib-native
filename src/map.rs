@@ -26,6 +26,12 @@ derive_object!(Map);
 
 impl Map {
     /// Creates a new Sentry map.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Map;
+    /// let mut map = Map::new();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self(Some(unsafe { sys::value_new_object() }))

@@ -35,12 +35,8 @@ impl Event {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::{Event, Map, Object};
-    /// # use std::iter::FromIterator;
+    /// # use sentry_contrib_native::Event;
     /// let mut event = Event::new();
-    /// let extra = Map::from_iter(&[("some extra data", "test data")]);
-    /// event.insert("extra", extra);
-    /// event.capture();
     /// ```
     #[must_use]
     pub fn new() -> Self {
@@ -54,12 +50,8 @@ impl Event {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::{Event, Level, Map, Object};
-    /// # use std::iter::FromIterator;
+    /// # use sentry_contrib_native::{Event, Level};
     /// let mut event = Event::new_message(Level::Debug, Some("test logger".into()), "test");
-    /// let extra = Map::from_iter(&[("some extra data", "test data")]);
-    /// event.insert("extra", extra);
-    /// event.capture();
     /// ```
     pub fn new_message<S: Into<String>>(level: Level, logger: Option<String>, text: S) -> Self {
         let logger = logger.map(RToC::into_cstring);
@@ -208,18 +200,39 @@ impl Hash for Uuid {
 
 impl Uuid {
     /// Creates a new empty Sentry UUID.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Uuid;
+    /// assert_eq!(
+    ///     "00000000-0000-0000-0000-000000000000",
+    ///     Uuid::new().to_string()
+    /// );
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self(unsafe { sys::uuid_nil() })
     }
 
     /// Creates a new empty UUID with the given `bytes`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Uuid;
+    /// Uuid::from_bytes([0; 16]);
+    /// ```
     #[must_use]
     pub const fn from_bytes(bytes: [c_char; 16]) -> Self {
         Self(sys::Uuid { bytes })
     }
 
     /// Returns the bytes of the [`Uuid`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Uuid;
+    /// assert_eq!([0; 16], Uuid::new().as_bytes());
+    /// ```
     #[must_use]
     pub const fn as_bytes(self) -> [c_char; 16] {
         self.0.bytes

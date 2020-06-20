@@ -33,8 +33,7 @@ impl Breadcrumb {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Breadcrumb;
-    /// # use std::iter::FromIterator;
-    /// Breadcrumb::new(None, Some("test message".into())).add();
+    /// let mut breadcrumb = Breadcrumb::new(None, Some("test message".into()));
     /// ```
     #[must_use]
     pub fn new(r#type: Option<String>, message: Option<String>) -> Self {
@@ -54,7 +53,6 @@ impl Breadcrumb {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Breadcrumb;
-    /// # use std::iter::FromIterator;
     /// Breadcrumb::new(None, Some("test message".into())).add();
     /// ```
     pub fn add(self) {

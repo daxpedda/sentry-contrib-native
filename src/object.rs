@@ -1,6 +1,7 @@
 //! Sentry object implementation, represents common functionality between
 //! [`Map`](crate::Map), [`Breadcrumb`](crate::Breadcrumb),
 //! [`Event`](crate::Event), and [`User`](crate::User).
+
 use crate::{Error, List, Map, RToC, Value};
 use rmpv::{decode, Value as MpValue};
 use std::{convert::TryInto, iter::FromIterator, slice};
@@ -43,6 +44,15 @@ pub trait Object: Sealed {
     /// - Panics if Sentry failed to allocate memory.
     /// - Panics if `key` contains any null bytes.
     /// - Panics if `value` is a [`Value::String`] and contains null bytes.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Map, Object, Value};
+    /// let mut object = Map::new();
+    /// object.insert("test", true);
+    ///
+    /// assert_eq!(Some(Value::Bool(true)), object.get("test"));
+    /// ```
     fn insert<S: Into<String>, V: Into<Value>>(&mut self, key: S, value: V) {
         let object = self.as_raw();
 
@@ -70,6 +80,7 @@ pub trait Object: Sealed {
     /// let mut object = Map::new();
     /// object.insert("test", true);
     /// object.remove("test")?;
+    ///
     /// assert_eq!(None, object.get("test"));
     /// # Ok(()) }
     /// ```
@@ -94,6 +105,7 @@ pub trait Object: Sealed {
     /// # use sentry_contrib_native::{Map, Object, Value};
     /// let mut object = Map::new();
     /// object.insert("test", true);
+    ///
     /// assert_eq!(Some(Value::Bool(true)), object.get("test"));
     /// ```
     fn get<S: Into<String>>(&self, key: S) -> Option<Value> {
@@ -111,15 +123,11 @@ pub trait Object: Sealed {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::{Event, Map, Object};
-    /// # fn main() -> anyhow::Result<()> {
-    /// let mut event = Event::new();
+    /// # use sentry_contrib_native::{Map, Object};
     /// let mut object = Map::new();
     /// object.insert("test", true);
+    ///
     /// assert_eq!(1, object.len());
-    /// event.insert("test", object);
-    /// event.capture();
-    /// # Ok(()) }
     /// ```
     #[must_use]
     fn len(&self) -> usize {
@@ -129,12 +137,28 @@ pub trait Object: Sealed {
     }
 
     /// Returns true if the [`Object`] contains no elements.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Map, Object};
+    /// let map = Map::new();
+    /// assert_eq!(true, map.is_empty());
+    /// ```
     #[must_use]
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     /// Converts the [`Object`] to a [`Vec`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Map, Object, Value};
+    /// let mut map = Map::new();
+    /// map.insert("test", true);
+    ///
+    /// assert_eq!(vec![("test".into(), Value::Bool(true))], map.to_vec());
+    /// ```
     fn to_vec(&self) -> Vec<(String, Value)> {
         let map_mp = self.to_msgpack();
         let mut map = Vec::new();

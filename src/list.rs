@@ -131,7 +131,6 @@ impl List {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{List, Value};
-    /// # use std::iter::FromIterator;
     /// let mut list = List::new();
     /// list.push(true);
     ///

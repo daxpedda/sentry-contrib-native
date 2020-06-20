@@ -539,10 +539,3 @@ extern "C" {
     #[link_name = "sentry_end_session"]
     pub fn end_session();
 }
-
-// examples nochmal überprüfen
-// builder pattern
-// update to 0.3.1
-// panic handler
-// improve fingerprint
-// transport / envelope

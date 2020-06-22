@@ -10,6 +10,7 @@ use std::{
     fmt::Debug,
     os::raw::{c_char, c_int, c_void},
 };
+pub use va_list::VaList;
 
 #[allow(non_camel_case_types)]
 type c_wchar = u16;
@@ -99,6 +100,9 @@ pub enum UserConsent {
 /// Type of the callback for modifying events.
 pub type EventFunction =
     extern "C" fn(event: Value, hint: *mut c_void, closure: *mut c_void) -> Value;
+
+/// Type of the callback for logging debug events.
+pub type LoggerFunction = extern "C" fn(level: i32, message: *const c_char, args: VaList);
 
 extern "C" {
     /// Releases memory allocated from the underlying allocator.
@@ -349,6 +353,11 @@ extern "C" {
     #[link_name = "sentry_options_get_debug"]
     pub fn options_get_debug(opts: *const Options) -> c_int;
 
+    /// Sets the sentry-native logger function.
+    /// Used for logging debug events when the `debug` option is set to true.
+    #[link_name = "sentry_options_set_logger"]
+    pub fn options_set_logger(opts: *mut Options, logger_func: Option<LoggerFunction>);
+
     /// Enables or disabled user consent requirements for uploads.
     ///
     /// This disables uploads until the user has given the consent to the SDK.
@@ -360,6 +369,19 @@ extern "C" {
     /// Returns true if user consent is required.
     #[link_name = "sentry_options_get_require_user_consent"]
     pub fn options_get_require_user_consent(opts: *const Options) -> c_int;
+
+    /// Enables or disables on-device symbolication of stack traces.
+    ///
+    /// This feature can have a performance impact, and is enabled by default on
+    /// Android. It is usually only needed when it is not possible to provide
+    /// debug information files for system libraries which are needed for
+    /// serverside symbolication.
+    #[link_name = "sentry_options_set_symbolize_stacktraces"]
+    pub fn options_set_symbolize_stacktraces(opts: *const Options, val: c_int);
+
+    /// Returns true if on-device symbolication of stack traces is enabled.
+    #[link_name = "sentry_options_get_symbolize_stacktraces"]
+    pub fn options_get_symbolize_stacktraces(opts: *const Options) -> c_int;
 
     /// Adds a new attachment to be sent along.
     ///

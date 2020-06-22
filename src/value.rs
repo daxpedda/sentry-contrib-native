@@ -1,6 +1,6 @@
 //! Sentry value implementation.
 
-use crate::{CToR, Error, Object, RToC};
+use crate::{CToR, Error, Map, Object, RToC};
 use rmpv::decode;
 use std::{
     collections::BTreeMap,
@@ -119,22 +119,6 @@ impl Value {
     /// - Panics if `self` is a [`Value::String`] and contains any null bytes.
     /// - Panics if Sentry failed to allocate memory.
     pub(crate) fn into_raw(self) -> sys::Value {
-        /// A simple [`Object`] implementation for [`Value::Map`].
-        pub struct Map(BTreeMap<String, Value>);
-
-        impl Map {
-            /// Create a [`Value::Map`].
-            pub fn new(value: BTreeMap<String, Value>) -> Self {
-                Self(value)
-            }
-        }
-
-        impl Object for Map {
-            fn into_parts(self) -> (sys::Value, BTreeMap<String, Value>) {
-                (unsafe { sys::value_new_object() }, self.0)
-            }
-        }
-
         match self {
             Self::Null => unsafe { sys::value_new_null() },
             Self::Bool(value) => unsafe { sys::value_new_bool(value.into()) },
@@ -385,9 +369,9 @@ impl Value {
     }
 }
 
-/// Convenience trait to convert [`MpValue`] to [`Value`].
+/// Convenience trait to convert [`rmpv::Value`] to [`Value`].
 trait MP {
-    /// Convert [`MpValue`] to [`Value`].
+    /// Convert [`rmpv::Value`] to [`Value`].
     fn into_value(self) -> Value;
 }
 

@@ -31,3 +31,19 @@ pub trait Object {
         raw
     }
 }
+
+/// A simple [`Object`] implementation for [`Value::Map`].
+pub struct Map(BTreeMap<String, Value>);
+
+impl Map {
+    /// Create a [`Value::Map`].
+    pub fn new(value: BTreeMap<String, Value>) -> Self {
+        Self(value)
+    }
+}
+
+impl Object for Map {
+    fn into_parts(self) -> (sys::Value, BTreeMap<String, Value>) {
+        (unsafe { sys::value_new_object() }, self.0)
+    }
+}

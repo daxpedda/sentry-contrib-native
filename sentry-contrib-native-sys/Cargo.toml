@@ -9,6 +9,9 @@ links = "sentry-native"
 anyhow = "1"
 cmake = "0.1"
 
+[dependencies]
+va_list = "0.1"
+
 [features]
 default = ["default-transport"]
 default-transport = []

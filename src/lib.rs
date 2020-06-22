@@ -25,11 +25,16 @@ mod value;
 pub use breadcrumb::Breadcrumb;
 pub use event::{Event, Interface, Uuid};
 use ffi::{CPath, CToR, RToC};
-use object::Object;
+use object::{Map, Object};
 use options::{global_read, global_write, BEFORE_SEND};
 pub use options::{BeforeSend, Options, Shutdown};
 pub use panic::set_hook;
-use std::{convert::Infallible, os::raw::c_char, ptr};
+use std::{
+    convert::Infallible,
+    fmt::{Display, Formatter, Result as FmtResult},
+    os::raw::c_char,
+    ptr,
+};
 use thiserror::Error;
 pub use user::User;
 pub use value::Value;
@@ -78,14 +83,40 @@ pub enum Level {
     Fatal,
 }
 
-impl From<Level> for i32 {
-    fn from(level: Level) -> Self {
+impl Display for Level {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        let text = match self {
+            Self::Debug => "Debug",
+            Self::Info => "Info",
+            Self::Warning => "Warning",
+            Self::Error => "Error",
+            Self::Fatal => "Fatal",
+        };
+        write!(f, "{}", text)
+    }
+}
+
+impl Level {
+    /// Convert [`Level`] to [`i32`].
+    fn into_raw(self) -> i32 {
+        match self {
+            Self::Debug => sys::Level::Debug as _,
+            Self::Info => sys::Level::Info as _,
+            Self::Warning => sys::Level::Warning as _,
+            Self::Error => sys::Level::Error as _,
+            Self::Fatal => sys::Level::Fatal as _,
+        }
+    }
+
+    /// Convert [`i32`] to [`Level`].
+    fn from_raw(level: i32) -> Self {
         match level {
-            Level::Debug => sys::Level::Debug as _,
-            Level::Info => sys::Level::Info as _,
-            Level::Warning => sys::Level::Warning as _,
-            Level::Error => sys::Level::Error as _,
-            Level::Fatal => sys::Level::Fatal as _,
+            level if level == sys::Level::Debug as _ => Self::Debug,
+            level if level == sys::Level::Info as _ => Self::Info,
+            level if level == sys::Level::Warning as _ => Self::Warning,
+            level if level == sys::Level::Error as _ => Self::Error,
+            level if level == sys::Level::Fatal as _ => Self::Fatal,
+            _ => unreachable!("failed to convert `i32` to `Level`"),
         }
     }
 }
@@ -101,8 +132,9 @@ pub enum Consent {
     Given,
 }
 
-impl From<sys::UserConsent> for Consent {
-    fn from(level: sys::UserConsent) -> Self {
+impl Consent {
+    /// Convert [`sys::UserConsent`] to [`Consent`].
+    fn from_raw(level: &sys::UserConsent) -> Self {
         match level {
             sys::UserConsent::Unknown => Self::Unknown,
             sys::UserConsent::Revoked => Self::Revoked,
@@ -252,7 +284,7 @@ pub fn user_consent_reset() {
 /// ```
 #[must_use]
 pub fn user_consent_get() -> Consent {
-    unsafe { sys::user_consent_get() }.into()
+    Consent::from_raw(&unsafe { sys::user_consent_get() })
 }
 
 /// Removes a user.
@@ -524,7 +556,7 @@ pub fn remove_transaction() {
 /// ```
 pub fn set_level(level: Level) {
     let _lock = global_write();
-    unsafe { sys::set_level(level.into()) }
+    unsafe { sys::set_level(level.into_raw()) }
 }
 
 /// Starts a new session.
@@ -553,11 +585,17 @@ fn error() -> Result<(), Error> {
 
 #[test]
 fn level() {
-    assert_eq!(-1, Level::Debug.into());
-    assert_eq!(0, Level::Info.into());
-    assert_eq!(1, Level::Warning.into());
-    assert_eq!(2, Level::Error.into());
-    assert_eq!(3, Level::Fatal.into());
+    assert_eq!(-1, Level::Debug.into_raw());
+    assert_eq!(0, Level::Info.into_raw());
+    assert_eq!(1, Level::Warning.into_raw());
+    assert_eq!(2, Level::Error.into_raw());
+    assert_eq!(3, Level::Fatal.into_raw());
+
+    assert_eq!(Level::Debug, Level::from_raw(-1));
+    assert_eq!(Level::Info, Level::from_raw(0));
+    assert_eq!(Level::Warning, Level::from_raw(1));
+    assert_eq!(Level::Error, Level::from_raw(2));
+    assert_eq!(Level::Fatal, Level::from_raw(3));
 }
 
 #[cfg(test)]

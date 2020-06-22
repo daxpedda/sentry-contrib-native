@@ -1,17 +1,17 @@
 //! Sentry options implementation.
 
-use crate::{CPath, CToR, Error, RToC, Value};
+use crate::{CPath, CToR, Error, Level, RToC, Value};
 use once_cell::sync::{Lazy, OnceCell};
 #[cfg(feature = "test")]
 use std::{env, ffi::CString};
 use std::{
-    fmt::{Debug, Formatter, Result as FmtResult},
-    mem,
-    mem::ManuallyDrop,
-    os::raw::c_void,
+    fmt::{Debug, Display, Formatter, Result as FmtResult},
+    mem::{self, ManuallyDrop},
+    os::raw::{c_char, c_void},
     path::PathBuf,
     sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
+use sys::VaList;
 
 /// Global lock for the following purposes:
 /// - Prevent [`Options::init`] from being called twice.
@@ -149,11 +149,11 @@ impl Options {
     ///     value
     /// });
     /// ```
-    pub fn set_before_send<B: Into<Box<B>> + BeforeSend>(&mut self, fun: B) {
-        let fun = Box::into_raw(Box::<Box<dyn BeforeSend>>::new(fun.into()));
+    pub fn set_before_send<B: Into<Box<B>> + BeforeSend>(&mut self, before_send: B) {
+        let fun = Box::into_raw(Box::<Box<dyn BeforeSend>>::new(before_send.into()));
         self.before_send = Some(unsafe { Box::from_raw(fun) });
 
-        unsafe { sys::options_set_before_send(self.as_mut(), Some(before_send), fun as _) }
+        unsafe { sys::options_set_before_send(self.as_mut(), Some(ffi_before_send), fun as _) }
     }
 
     /// Sets the DSN.
@@ -431,6 +431,27 @@ impl Options {
         }
     }
 
+    /// Sets the Sentry logger function.
+    /// Used for logging debug events when the `debug` option is set to true.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Level, Options};
+    /// # use std::iter::FromIterator;
+    /// let mut options = Options::new();
+    /// options.set_debug(true);
+    /// options.set_logger(|level, message| {
+    ///     println!("[{}]: {}", level, message);
+    /// });
+    /// ```
+    pub fn set_logger<B: Into<Box<L>>, L: Fn(Level, Message) + 'static + Send + Sync>(
+        &mut self,
+        logger: B,
+    ) {
+        *LOGGER.write().expect("failed to set `LOGGER`") = Some(logger.into());
+        unsafe { sys::options_set_logger(self.as_mut(), Some(ffi_logger)) }
+    }
+
     /// Enables or disabled user consent requirements for uploads.
     ///
     /// This disables uploads until the user has given the consent to the SDK.
@@ -449,7 +470,7 @@ impl Options {
         unsafe { sys::options_set_require_user_consent(self.as_mut(), val) }
     }
 
-    /// Returns true if user consent is required.
+    /// Returns `true` if user consent is required.
     ///
     /// # Examples
     /// ```
@@ -462,6 +483,42 @@ impl Options {
     #[must_use]
     pub fn require_user_consent(&self) -> bool {
         match unsafe { sys::options_get_require_user_consent(self.as_ref()) } {
+            1 => true,
+            _ => false,
+        }
+    }
+
+    /// Enables or disables on-device symbolication of stack traces.
+    ///
+    /// This feature can have a performance impact, and is enabled by default on
+    /// Android. It is usually only needed when it is not possible to provide
+    /// debug information files for system libraries which are needed for
+    /// serverside symbolication.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Options;
+    /// let mut options = Options::new();
+    /// options.set_symbolize_stacktraces(true);
+    /// ```
+    pub fn set_symbolize_stacktraces(&mut self, val: bool) {
+        let val = val.into();
+        unsafe { sys::options_set_symbolize_stacktraces(self.as_mut(), val) }
+    }
+
+    /// Returns `true` if on-device symbolication of stack traces is enabled.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Options;
+    /// let mut options = Options::new();
+    /// options.set_symbolize_stacktraces(true);
+    ///
+    /// assert!(options.symbolize_stacktraces());
+    /// ```
+    #[must_use]
+    pub fn symbolize_stacktraces(&self) -> bool {
+        match unsafe { sys::options_get_symbolize_stacktraces(self.as_ref()) } {
             1 => true,
             _ => false,
         }
@@ -621,7 +678,6 @@ impl Options {
                 *lock = true;
                 // init has taken ownership now
                 self.raw.take().expect("use after free");
-                mem::drop(lock);
 
                 // store `before_send` data so we can deallocate it later
                 if let Some(before_send) = self.before_send.take() {
@@ -630,6 +686,8 @@ impl Options {
                         .map_err(|_| ())
                         .expect("`BEFORE_SEND` was set once before");
                 }
+
+                mem::drop(lock);
 
                 Ok(Shutdown)
             }
@@ -777,7 +835,7 @@ impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
 
 /// Function to give [`Options::set_before_send`] which in turn calls user
 /// defined one.
-extern "C" fn before_send(
+extern "C" fn ffi_before_send(
     event: sys::Value,
     _hint: *mut c_void,
     closure: *mut c_void,
@@ -787,6 +845,54 @@ extern "C" fn before_send(
     before_send
         .before_send(unsafe { Value::from_raw(event) })
         .into_raw()
+}
+
+/// Closure type for [`Options::set_logger`].
+type Logger = dyn Fn(Level, Message) + Send + Sync;
+
+/// Globally stored closure for [`Options::set_logger`].
+static LOGGER: Lazy<RwLock<Option<Box<Logger>>>> = Lazy::new(|| RwLock::new(None));
+
+/// Message received for custom logger.
+#[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+pub enum Message {
+    /// Message could be parsed into a valid UTF-8 [`String`].
+    Utf8(String),
+    /// Message could not be parsed into a valid UTF-8 [`String`] and is
+    /// returned as a `Vec<u8>`.
+    Raw(Vec<u8>),
+}
+
+impl Display for Message {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            Self::Utf8(text) => write!(f, "{}", text),
+            Self::Raw(raw) => write!(f, "{}", String::from_utf8_lossy(raw)),
+        }
+    }
+}
+
+/// Function to give [`Options::set_logger`] which in turn calls user
+/// defined one.
+extern "C" fn ffi_logger(level: i32, message: *const c_char, mut args: VaList) {
+    let lock = LOGGER.read();
+    let logger = lock
+        .as_ref()
+        .ok()
+        .and_then(|logger| logger.as_deref())
+        .expect("failed to get `LOGGER`");
+
+    let level = Level::from_raw(level);
+    let message = if let Ok(message) = unsafe { vsprintf::vsprintf(message, &mut args) } {
+        Message::Utf8(message)
+    } else {
+        Message::Raw(
+            unsafe { vsprintf::vsprintf_raw(message, &mut args) }
+                .expect("failed to format logger string"),
+        )
+    };
+
+    logger(level, message);
 }
 
 #[test]
@@ -832,8 +938,13 @@ fn options() -> anyhow::Result<()> {
     options.set_debug(true);
     assert!(options.debug());
 
+    options.set_logger(|_, _| ());
+
     options.set_require_user_consent(true);
     assert!(options.require_user_consent());
+
+    options.set_symbolize_stacktraces(true);
+    assert!(options.symbolize_stacktraces());
 
     options.add_attachment("test attachment", "server.log");
 
@@ -842,6 +953,61 @@ fn options() -> anyhow::Result<()> {
     options.set_database_path(".sentry-native");
 
     options.set_system_crash_reporter(true);
+
+    Ok(())
+}
+
+#[cfg(test)]
+#[rusty_fork::test_fork]
+fn before_send() -> anyhow::Result<()> {
+    use crate::Event;
+    use std::cell::RefCell;
+
+    thread_local! {
+        static COUNTER: RefCell<usize> = RefCell::new(0);
+    }
+
+    struct Filter {
+        counter: usize,
+    }
+
+    impl BeforeSend for Filter {
+        fn before_send(&mut self, value: Value) -> Value {
+            self.counter += 1;
+            value
+        }
+    }
+
+    impl Drop for Filter {
+        fn drop(&mut self) {
+            COUNTER.with(|counter| *counter.borrow_mut() = self.counter)
+        }
+    }
+
+    let mut options = Options::new();
+    options.set_before_send(Filter { counter: 0 });
+    let shutdown = options.init()?;
+
+    Event::new().capture();
+    Event::new().capture();
+    Event::new().capture();
+
+    shutdown.shutdown();
+
+    COUNTER.with(|counter| assert_eq!(3, *counter.borrow()));
+
+    Ok(())
+}
+
+#[cfg(test)]
+#[rusty_fork::test_fork]
+fn logger() -> anyhow::Result<()> {
+    let mut options = Options::new();
+    options.set_debug(true);
+    options.set_logger(|level, message| {
+        println!("[{}]: {}", level, message);
+    });
+    options.init()?;
 
     Ok(())
 }
@@ -923,6 +1089,14 @@ fn threaded_stress() -> anyhow::Result<()> {
             })
         },
         |options, _| println!("{:?}", options.require_user_consent()),
+        |mut options, index| {
+            options.set_symbolize_stacktraces(match index % 2 {
+                0 => false,
+                1 => true,
+                _ => unreachable!(),
+            })
+        },
+        |options, _| println!("{:?}", options.symbolize_stacktraces()),
         |mut options, index| options.add_attachment(index.to_string(), index.to_string()),
         |mut options, index| options.set_handler_path(index.to_string()),
         |mut options, index| options.set_database_path(index.to_string()),

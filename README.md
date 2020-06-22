@@ -33,15 +33,21 @@
 
 ## Description
 
-**Unofficial** bindings to the [Sentry Native SDK](https://github.com/getsentry/sentry-native) for Rust.
-See the [Alternatives section](#alternatives) for details on the official Sentry SDK for Rust.
+**Unofficial** bindings to the
+[Sentry Native SDK](https://github.com/getsentry/sentry-native) for Rust. See
+the [Alternatives section](#alternatives) for details on the official Sentry SDK
+for Rust.
 
-This crates main purpose is to enable an application to send reports to Sentry even if it crashes, which is currently not covered by the official Sentry SDK for Rust.
+This crates main purpose is to enable an application to send reports to Sentry
+even if it crashes, which is currently not covered by the official Sentry SDK
+for Rust.
 
 ## Branches
 
-- **[release](https://github.com/daxpedda/sentry-contrib-native/tree/release)** - For releases only.
-- **[master](https://github.com/daxpedda/sentry-contrib-native)** - For active development inluding PR's.
+- **[release](https://github.com/daxpedda/sentry-contrib-native/tree/release)** -
+  For releases only.
+- **[master](https://github.com/daxpedda/sentry-contrib-native)** - For active
+  development inluding PR's.
 
 ## Usage
 
@@ -69,9 +75,14 @@ fn main() {
 }
 ```
 
-On MacOS and Windows the Crashpad handler executable has to be shipped with the application, for convenience the Crashpad handler executable will be copied to Cargo's default binary output folder, so using `cargo run` works without any additional setup or configuration.
+On MacOS and Windows the Crashpad handler executable has to be shipped with the
+application, for convenience the Crashpad handler executable will be copied to
+Cargo's default binary output folder, so using `cargo run` works without any
+additional setup or configuration.
 
-If you need to export the Crashpad handler executable programmatically to a specific output path, a "convenient" environment variable is provided to help with that: `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
+If you need to export the Crashpad handler executable programmatically to a
+specific output path, a "convenient" environment variable is provided to help
+with that: `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
 
 Here is an example `build.rs`.
 
@@ -98,7 +109,8 @@ fn main() {
 }
 ```
 
-If you are using `panic = abort` make sure to let the panic handler call `shutdown` to flush remaining transport before aborting the application.
+If you are using `panic = abort` make sure to let the panic handler call
+`shutdown` to flush remaining transport before aborting the application.
 
 ```rust
 std::panic::set_hook(Box::new(|_| sentry_contrib_native::shutdown()));
@@ -106,31 +118,47 @@ std::panic::set_hook(Box::new(|_| sentry_contrib_native::shutdown()));
 
 ## Build
 
-This crate relies on [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys) which in turn builds [Sentry's Native SDK](https://github.com/getsentry/sentry-native). This requires [CMake](https://cmake.org) or alternatively a pre-installed version can be provided with the `SENTRY_NATIVE_INSTALL` environment variable.
+This crate relies on
+[`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys)
+which in turn builds
+[Sentry's Native SDK](https://github.com/getsentry/sentry-native). This requires
+[CMake](https://cmake.org) or alternatively a pre-installed version can be
+provided with the `SENTRY_NATIVE_INSTALL` environment variable.
 
-Additionally on any other platform than Windows, the development version of `curl` is required.
+Additionally on any other platform than Windows, the development version of
+`curl` is required.
 
-See [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys) for more details.
+See
+[`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys)
+for more details.
 
 ## Crate features
 
-- **default-transport** - **Enabled by default**, will use `winhttp` on Windows and `curl` everywhere else as the default transport.
+- **default-transport** - **Enabled by default**, will use `winhttp` on Windows
+  and `curl` everywhere else as the default transport.
 - **test** - Corrects testing for documentation tests and examples.
-- **nightly** - Enables full documentation through [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html).
+- **nightly** - Enables full documentation through
+  [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html).
 
 ## Deployment
 
-When deploying a binary for MacOS or Windows, it has to be shipped together with the `crashpad_handler(.exe)` executable. A way to programmatically export it using `build.rs` is provided through the `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
+When deploying a binary for MacOS or Windows, it has to be shipped together with
+the `crashpad_handler(.exe)` executable. A way to programmatically export it
+using `build.rs` is provided through the `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
 
 See the [Usage section](#usage) for an example.
 
 ## Documentation
 
-- For the bindings used: [official documentation](https://docs.sentry.io/platforms/native)
-- For releases on [crates.io](https://crates.io): [![Docs](https://docs.rs/sentry-contrib-native/badge.svg)](https://docs.rs/sentry-contrib-native).
-- For the master branch: [![Docs](https://github.com/daxpedda/sentry-contrib-native/workflows/docs/badge.svg)](https://daxpedda.github.io/sentry-contrib-native/master/doc/index.html).
+- For the bindings used:
+  [official documentation](https://docs.sentry.io/platforms/native)
+- For releases on [crates.io](https://crates.io):
+  [![Docs](https://docs.rs/sentry-contrib-native/badge.svg)](https://docs.rs/sentry-contrib-native).
+- For the master branch:
+  [![Docs](https://github.com/daxpedda/sentry-contrib-native/workflows/docs/badge.svg)](https://daxpedda.github.io/sentry-contrib-native/master/doc/index.html).
 
-Currently, nightly is needed for full documentation: `cargo doc --features nightly`
+Currently, nightly is needed for full documentation:
+`cargo doc --features nightly`
 
 If nightly isn't available, use `cargo doc` as usual.
 
@@ -145,24 +173,28 @@ For correct testing the following has to be provided:
 
 ## Alternatives
 
-It's recommended to use Sentry's official SDK for rust: **[sentry](https://github.com/getsentry/sentry-rust)** - [![Crates.io](https://img.shields.io/crates/v/sentry.svg)](https://crates.io/crates/sentry).
+It's recommended to use Sentry's official SDK for rust:
+**[sentry](https://github.com/getsentry/sentry-rust)** -
+[![Crates.io](https://img.shields.io/crates/v/sentry.svg)](https://crates.io/crates/sentry).
 
 The official SDK provides a much better user experience and customizability.
 
-In comparison the only upside this crate can provide is application crash handling, the official SDK for rust can only handle panics.
+In comparison the only upside this crate can provide is application crash
+handling, the official SDK for rust can only handle panics.
 
 ## Changelog
 
-See the [CHANGELOG](https://github.com/daxpedda/sentry-contrib-native/blob/master/CHANGELOG.md) file for details.
+See the
+[CHANGELOG](https://github.com/daxpedda/sentry-contrib-native/blob/master/CHANGELOG.md)
+file for details.
 
 ## License
 
 Licensed under either of
 
-- Apache License, Version 2.0
-  ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license
-  ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
+  http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
 

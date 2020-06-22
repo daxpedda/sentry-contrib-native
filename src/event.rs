@@ -68,7 +68,7 @@ impl Object for Event {
                     .map_or(ptr::null(), |logger| logger.as_ptr());
                 let text = text.into_cstring();
 
-                unsafe { sys::value_new_message_event(level.into(), logger, text.as_ptr()) }
+                unsafe { sys::value_new_message_event(level.into_raw(), logger, text.as_ptr()) }
             }
         };
 
@@ -130,9 +130,7 @@ impl Event {
         let event = unsafe {
             let value = sys::value_new_event();
             sys::event_value_add_stacktrace(value, ptr::null_mut(), len);
-            let event = Value::from_raw(value);
-            sys::value_decref(value);
-            event
+            Value::from_raw(value)
         };
 
         event

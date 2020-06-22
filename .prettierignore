@@ -1,0 +1,3 @@
+/target
+Cargo.lock
+/sentry-contrib-native-sys/sentry-native

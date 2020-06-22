@@ -10,12 +10,45 @@ use std::{
 /// The request your [`Transporter`] is expected to send.
 pub type SentryRequest = http::Request<Envelope>;
 
+/// From sentry.h, but only present as a preprocessor define :(
+pub const USER_AGENT: &str = "sentry.native/0.3.2";
+/// The MIME type for Sentry envelopes
+pub const ENVELOPE_MIME: &str = "application/x-sentry-envelope";
+/// Version of the Sentry API we can communicate with, AFAICT this is just
+/// hardcoded into sentry-native, so...two can play at that game!
+pub const API_VERSION: i8 = 7;
+
+#[derive(Copy, Clone)]
+pub enum TransportShutdown {
+    Success,
+    TimedOut,
+}
+
 /// Trait used to define your own transport that Sentry can use to send events
 /// to a Sentry service
-pub trait Transporter {
-    /// Method called when Sentry wishes to send data to a Sentry service
+pub trait TransportWorker {
+    /// Starts up the transport worker, with the options that were used to
+    /// create the Sentry SDK
+    fn startup(&self, dsn: Dsn, debug: bool);
+
+    /// Sends the specified Envelope to a Sentry service.
     ///
-    /// The request contains all of the necessary pieces of data
+    /// It is **highly** recommended to not block in this method, but rather
+    /// to enqueue the worker to another thread.
+    fn send(&self, envelope: PostedEnvelope);
+
+    /// Shuts down the transport worker. The worker should try to flush all
+    /// of the pending requests to Sentry before shutdown. If the worker is
+    /// successfully able to empty its queue and shutdown before the specified
+    /// timeout duration, it should return [`WorkerShutdown::Success`].
+    fn shutdown(&self, timeout: std::time::Duration) -> TransportShutdown;
+
+    /// Constructs an HTTP request for the provided [`sys::Envelope`] with the
+    /// DSN that was registered with the SDK.
+    ///
+    /// The return value has all of the necessary pieces of data to create a
+    /// HTTP request with the HTTP client of your choice:
+    ///
     /// * The uri to send the request to
     /// * The headers that must be set
     /// * The body of the request
@@ -28,135 +61,80 @@ pub trait Transporter {
     /// to retrieve the actual bytes that should be sent as the body
     ///
     /// # Errors
-    /// If your [`Transporter`] is unable to send the request, it can return
-    /// an error if it wishes. This error will be printed out to stderr if
-    /// you have enabled debugging in [`Options`]
-    fn send(&self, request: SentryRequest) -> Result<(), &'static str>;
-}
+    /// Can fail if the envelope can't be serialized, or there is an invalid
+    /// header value
+    fn convert_to_request(
+        dsn: &Dsn,
+        envelope: PostedEnvelope,
+    ) -> Result<SentryRequest, &'static str>
+    where
+        Self: Sized,
+    {
+        let mut builder = http::Request::builder();
 
-impl<F> Transporter for F
-where
-    F: Fn(SentryRequest) -> Result<(), &'static str> + Send + Sync,
-{
-    fn send(&self, request: SentryRequest) -> Result<(), &'static str> {
-        self(request)
-    }
-}
-
-/// Wrapper around the raw pointer so that we can mark it as Send so that we
-/// postpone any actual work to the worker thread
-struct PostedEnvelope(*mut sys::Envelope);
-
-unsafe impl Send for PostedEnvelope {}
-
-/// Sentry internally uses a simple background thread worker to do the actual
-/// work of sending requests for the provided transports, so we do as well
-struct Worker {
-    /// Sender we use to enqueue work to the background thread
-    tx: mpsc::Sender<PostedEnvelope>,
-    /// Condition variable we use to detect when the background thread has been
-    /// shutdown
-    shutdown: Arc<(Mutex<()>, Condvar)>,
-    /// True if the user specified they want debug information from the SDK
-    debug: bool,
-}
-
-impl Worker {
-    /// Creates a new worker which spins up a thread to handle sending requests
-    /// to Sentry
-    fn new(debug: bool, dsn: Dsn, transporter: Box<dyn Transporter + Send + Sync>) -> Self {
-        let (tx, rx) = mpsc::channel::<PostedEnvelope>();
-        let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
-        let tshutdown = shutdown.clone();
-
-        if debug {
-            eprintln!("[sentry-contrib-native]: Starting up worker thread");
+        {
+            let headers = builder
+                .headers_mut()
+                .ok_or_else(|| "unable to mutate headers")?;
+            headers.insert(
+                "user-agent",
+                USER_AGENT
+                    .parse()
+                    .map_err(|_| "failed to parse user agent")?,
+            );
+            headers.insert(
+                "content-type",
+                ENVELOPE_MIME
+                    .parse()
+                    .map_err(|_| "failed to parse MIME type")?,
+            );
+            headers.insert(
+                "accept",
+                "*/*".parse().map_err(|_| "failed to parse accept")?,
+            );
         }
 
-        std::thread::spawn(move || {
-            while let Ok(envelope) = rx.recv() {
-                let envelope = envelope.0;
+        builder = builder.method("POST");
+        builder = dsn.build_req(builder);
 
-                // We don't protect against panics here, but maybe that should
-                // be an option?
-                match construct_request(envelope, &dsn) {
-                    Ok(request) => {
-                        if debug {
-                            eprintln!(
-                                "[sentry-contrib-native]: Sending envelope {} {:#?}",
-                                request.uri(),
-                                request.headers(),
-                            );
-                        }
+        let envelope = unsafe {
+            let mut envelope_size = 0;
+            let serialized_envelope = sys::envelope_serialize(envelope.0, &mut envelope_size);
 
-                        let res = transporter.send(request);
-
-                        if debug {
-                            match res {
-                                Ok(_) => {
-                                    eprintln!("[sentry-contrib-native]: Successfully sent envelope")
-                                }
-                                Err(err) => eprintln!(
-                                    "[sentry-contrib-native]: Failed to send envelope: {}",
-                                    err
-                                ),
-                            }
-                        }
-                    }
-                    Err(_) => unsafe { sys::envelope_free(envelope) },
-                }
+            if envelope_size == 0 || serialized_envelope.is_null() {
+                return Err("failed to seialize envelope");
             }
 
-            let (lock, cvar) = &*tshutdown;
-            let _shutdown = lock.lock().unwrap();
-            cvar.notify_one();
-        });
+            builder = builder.header("content-length", envelope_size);
 
-        Self {
-            debug,
-            tx,
-            shutdown,
-        }
-    }
+            Envelope {
+                inner: envelope.0,
+                data: serialized_envelope,
+                len: envelope_size,
+            }
+        };
 
-    /// Enqueues an envelope to be sent via the user's [`Transporter`]
-    fn enqueue(&self, envelope: *mut sys::Envelope) {
-        self.tx
-            .send(PostedEnvelope(envelope))
-            .expect("failed to enqueue envelope");
-    }
-
-    /// Shuts down the worker and waits for it be shutdown up to the specified
-    /// time. Returns `true` if the timeout is reached before the worker has
-    /// been fully shutdown.
-    fn shutdown(self, timeout: std::time::Duration) -> bool {
-        if self.debug {
-            eprintln!("[sentry-contrib-native]: Shutting down worker thread");
-        }
-
-        // Drop the sender so that the background thread will exit once
-        // it has dequeued and processed all the envelopes we have enqueued
-        drop(self.tx);
-
-        // Wait for the condition variable to notify that the thread has shutdown
-        let (lock, cvar) = &*self.shutdown;
-        let shutdown = lock.lock().unwrap();
-        let result = cvar.wait_timeout(shutdown, timeout).unwrap();
-
-        result.1.timed_out()
+        builder
+            .body(envelope)
+            .map_err(|_| "failed to build HTTP request")
     }
 }
+
+/// Wrapper for the raw Envelope that we should send to Sentry
+pub struct PostedEnvelope(pub *mut sys::Envelope);
+
+// TODO: Implement Drop for PostedEnvelope, along with TryFrom for Envelope
+
+unsafe impl Send for PostedEnvelope {}
 
 /// Holds the state for your custom transport. The lifetime of this state is
 /// handled by the underlying Sentry library, which is why you only get a `Box<>`
 pub struct Transport {
     /// The inner transport that our state is attached to
     pub(crate) inner: *mut sys::Transport,
-    /// The user's [`Transporter`] implementation, moved to the background
-    /// worker on startup
-    user_impl: Option<Box<dyn Transporter + Send + Sync>>,
-    /// Our background worker
-    worker: Option<Worker>,
+    /// The user's [`TransportWorker`] that's actually responsible for sendin
+    /// requests to a remote Sentry service
+    worker: Option<Box<dyn TransportWorker>>,
 }
 
 impl Transport {
@@ -164,14 +142,13 @@ impl Transport {
     /// implementation. It's required to by [`Send`] and [`Sync`] as requests
     /// can come at any time.
     #[must_use]
-    pub fn new(transporter: Box<dyn Transporter + Send + Sync>) -> Box<Self> {
+    pub fn new(worker: Box<dyn TransportWorker>) -> Box<Self> {
         let inner = unsafe { sys::transport_new(Some(Self::send_function)) };
 
         unsafe {
             let ret = Box::new(Self {
                 inner,
-                user_impl: Some(transporter),
-                worker: None,
+                worker: Some(worker),
             });
 
             let ptr = ret.into_raw();
@@ -201,7 +178,7 @@ impl Transport {
     extern "C" fn send_function(envelope: *mut sys::Envelope, state: *mut c_void) {
         let s = Self::from_raw(state);
         if let Some(q) = &s.worker {
-            q.enqueue(envelope);
+            q.send(PostedEnvelope(envelope));
         }
         s.into_raw();
     }
@@ -211,7 +188,7 @@ impl Transport {
     extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
         let mut s = Self::from_raw(state);
 
-        if let Some(imp) = s.user_impl.take() {
+        if let Some(imp) = &s.worker {
             unsafe {
                 let dsn = sys::options_get_dsn(options);
                 let debug = sys::options_get_debug(options) == 1;
@@ -230,7 +207,7 @@ impl Transport {
                 match dsn.to_str() {
                     Ok(dsn_url) => match dsn_url.parse() {
                         Ok(dsn) => {
-                            s.worker = Some(Worker::new(debug, dsn, imp));
+                            imp.startup(dsn, debug);
                         }
                         Err(err) => {
                             if debug {
@@ -260,7 +237,10 @@ impl Transport {
         let mut s = Self::from_raw(state);
 
         let sent_all = match s.worker.take() {
-            Some(worker) => !worker.shutdown(std::time::Duration::from_millis(timeout)),
+            Some(worker) => match worker.shutdown(std::time::Duration::from_millis(timeout)) {
+                TransportShutdown::Success => true,
+                TransportShutdown::TimedOut => false,
+            },
             None => true,
         };
 
@@ -270,7 +250,7 @@ impl Transport {
     }
 
     /// The function registered with [`sys::transport_set_free_func`] that
-    /// actually frees
+    /// actually frees our state
     extern "C" fn free(state: *mut c_void) {
         let mut s = Self::from_raw(state);
         s.inner = std::ptr::null_mut();
@@ -286,14 +266,6 @@ impl Drop for Transport {
         }
     }
 }
-
-/// From sentry.h, but only present as a preprocessor define :(
-const USER_AGENT: &str = "sentry.native/0.3.2";
-/// The MIME type for Sentry envelopes
-const ENVELOPE_MIME: &str = "application/x-sentry-envelope";
-/// Version of the Sentry API we can communicate with, AFAICT this is just
-/// hardcoded into sentry-native, so...two can play at that game!
-const API_VERSION: i8 = 7;
 
 /// The actual body which transports send to Sentry.
 pub struct Envelope {
@@ -325,11 +297,11 @@ impl Drop for Envelope {
 
 /// Contains the pieces we need to send requests based on the DSN the user
 /// set on [`Options`]
-struct Dsn {
+pub struct Dsn {
     /// The auth header value
-    auth: String,
+    pub auth: String,
     /// The full URI to send envelopes to
-    uri: String,
+    pub uri: String,
 }
 
 impl Dsn {
@@ -386,45 +358,6 @@ impl std::str::FromStr for Dsn {
             None => Err("DSN doesn't have a host"),
         }
     }
-}
-
-/// Constructs an HTTP request for the provided [`sys::Envelope`] with the DSN
-/// that was registered with the SDK
-fn construct_request(
-    envelope: *mut sys::Envelope,
-    dsn: &Dsn,
-) -> Result<http::Request<Envelope>, ()> {
-    let mut builder = http::Request::builder();
-
-    {
-        let headers = builder.headers_mut().expect("unable to mutate headers");
-        headers.insert("user-agent", USER_AGENT.parse().unwrap());
-        headers.insert("content-type", ENVELOPE_MIME.parse().unwrap());
-        headers.insert("accept", "*/*".parse().unwrap());
-    }
-
-    builder = builder.method("POST");
-    builder = dsn.build_req(builder);
-
-    // Get the DSN for the options, which informs us where to send the request, and what auth token to use
-    let envelope = unsafe {
-        let mut envelope_size = 0;
-        let serialized_envelope = sys::envelope_serialize(envelope, &mut envelope_size);
-
-        if envelope_size == 0 || serialized_envelope.is_null() {
-            return Err(());
-        }
-
-        builder = builder.header("content-length", envelope_size);
-
-        Envelope {
-            inner: envelope,
-            data: serialized_envelope,
-            len: envelope_size,
-        }
-    };
-
-    builder.body(envelope).map_err(|_| ())
 }
 
 #[cfg(test)]

@@ -41,7 +41,9 @@ use std::{
 };
 use thiserror::Error;
 #[cfg(feature = "custom-transport")]
-pub use transport::{SentryRequest, Transport, Transporter};
+pub use transport::{
+    Dsn, PostedEnvelope, SentryRequest, Transport, TransportShutdown, TransportWorker,
+};
 pub use user::User;
 pub use value::Value;
 

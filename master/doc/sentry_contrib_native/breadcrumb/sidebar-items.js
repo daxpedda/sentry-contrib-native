@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Breadcrumb","A Sentry breadcrumb."]]});

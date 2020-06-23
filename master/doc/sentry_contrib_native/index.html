@@ -1,0 +1,218 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `sentry_contrib_native` crate."><meta name="keywords" content="rust, rustlang, rust-lang, sentry_contrib_native"><title>sentry_contrib_native - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../sentry_contrib_native/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate sentry_contrib_native</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all sentry_contrib_native's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'sentry_contrib_native', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/sentry_contrib_native/lib.rs.html#1-715' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>sentry_contrib_native</a></span></h1><div class='docblock'><h1 id="sentry-contrib-native" class="section-header"><a href="#sentry-contrib-native">sentry-contrib-native</a></h1>
+<p><a href="https://crates.io/crates/sentry-contrib-native"><img src="https://img.shields.io/crates/v/sentry-contrib-native.svg" alt="Crates.io" /></a>
+<a href="https://libraries.io/cargo/sentry-contrib-native"><img src="https://img.shields.io/librariesio/release/cargo/sentry-contrib-native.svg" alt="Libraries.io" /></a>
+<a href="https://github.com/daxpedda/sentry-contrib-native/releases/latest"><img src="https://img.shields.io/github/commits-since/daxpedda/sentry-contrib-native/latest" alt="Commits since" /></a>
+<a href="http://isitmaintained.com/project/daxpedda/sentry-contrib-native"><img src="https://isitmaintained.com/badge/resolution/daxpedda/sentry-contrib-native.svg" alt="Resolution" /></a>
+<a href="http://isitmaintained.com/project/daxpedda/sentry-contrib-native"><img src="https://isitmaintained.com/badge/open/daxpedda/sentry-contrib-native.svg" alt="Issues" /></a>
+<a href="https://github.com/daxpedda/sentry-contrib-native/blob/master/LICENSE"><img src="https://img.shields.io/crates/l/sentry-contrib-native" alt="License" /></a>
+<a href="https://github.com/daxpedda/sentry-contrib-native"><img src="https://tokei.rs/b1/github/daxpedda/sentry-contrib-native" alt="LoC" /></a></p>
+<p><strong><a href="https://github.com/daxpedda/sentry-contrib-native/tree/release">Release</a>:</strong>
+<a href="https://github.com/daxpedda/sentry-contrib-native/actions?query=workflow%3ACI+branch%3Arelease"><img src="https://github.com/daxpedda/sentry-contrib-native/workflows/CI/badge.svg?branch=release" alt="Build" /></a>
+<a href="https://docs.rs/sentry-contrib-native"><img src="https://docs.rs/sentry-contrib-native/badge.svg" alt="Docs" /></a></p>
+<p><strong><a href="https://github.com/daxpedda/sentry-contrib-native">Master</a>:</strong>
+<a href="https://github.com/daxpedda/sentry-contrib-native/actions?query=workflow%3ACI+branch%3Amaster"><img src="https://github.com/daxpedda/sentry-contrib-native/workflows/CI/badge.svg?branch=master" alt="Build" /></a>
+<a href="https://daxpedda.github.io/sentry-contrib-native/master/doc/index.html"><img src="https://github.com/daxpedda/sentry-contrib-native/workflows/docs/badge.svg" alt="Docs" /></a></p>
+<h2 id="table-of-contents" class="section-header"><a href="#table-of-contents">Table of contents</a></h2>
+<ul>
+<li><a href="#description">Description</a></li>
+<li><a href="#branches">Branches</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#build">Build</a></li>
+<li><a href="#crate-features">Crate features</a></li>
+<li><a href="#deployment">Deployment</a></li>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#tests">Tests</a></li>
+<li><a href="#alternatives">Alternatives</a></li>
+<li><a href="#changelog">Changelog</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#contribution">Contribution</a></li>
+</ul>
+<h2 id="description" class="section-header"><a href="#description">Description</a></h2>
+<p><strong>Unofficial</strong> bindings to the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a> for Rust. See
+the <a href="#alternatives">Alternatives section</a> for details on the official Sentry SDK
+for Rust.</p>
+<p>This crates main purpose is to enable an application to send reports to Sentry
+even if it crashes, which is currently not covered by the official Sentry SDK
+for Rust.</p>
+<h2 id="branches" class="section-header"><a href="#branches">Branches</a></h2>
+<ul>
+<li><strong><a href="https://github.com/daxpedda/sentry-contrib-native/tree/release">release</a></strong> -
+For releases only.</li>
+<li><strong><a href="https://github.com/daxpedda/sentry-contrib-native">master</a></strong> - For active
+development inluding PR's.</li>
+</ul>
+<h2 id="usage" class="section-header"><a href="#usage">Usage</a></h2>
+<div class='information'><div class='tooltip should_panic'>ⓘ<span class='tooltiptext'>This example panics</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered should_panic">
+<span class="kw">use</span> <span class="ident">sentry_contrib_native</span> <span class="kw">as</span> <span class="ident">sentry</span>;
+<span class="kw">use</span> <span class="ident">sentry</span>::{<span class="ident">Event</span>, <span class="ident">Level</span>, <span class="ident">Options</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>;
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="comment">// set up panic handler</span>
+    <span class="ident">sentry</span>::<span class="ident">set_hook</span>(<span class="prelude-val">None</span>);
+    <span class="comment">// start Sentry</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+    <span class="ident">options</span>.<span class="ident">set_dsn</span>(<span class="string">&quot;your-sentry-dsn.com&quot;</span>);
+    <span class="kw">let</span> <span class="ident">_shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>().<span class="ident">expect</span>(<span class="string">&quot;failed to initialize Sentry&quot;</span>);
+
+    <span class="comment">// send an event to Sentry</span>
+    <span class="ident">Event</span>::<span class="ident">new_message</span>(<span class="ident">Level</span>::<span class="ident">Debug</span>, <span class="prelude-val">None</span>, <span class="string">&quot;test&quot;</span>);
+
+    <span class="comment">// this code triggers a crash, but it will still be reported to Sentry</span>
+    <span class="kw">unsafe</span> { <span class="kw-2">*</span><span class="ident">ptr</span>::<span class="ident">null_mut</span>() <span class="op">=</span> <span class="bool-val">true</span>; }
+
+    <span class="comment">// Sentry receives an event with an attached stacktrace and message</span>
+    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;application should have crashed at this point&quot;</span>);
+}</pre></div>
+<p>On MacOS and Windows the Crashpad handler executable has to be shipped with the
+application, for convenience the Crashpad handler executable will be copied to
+Cargo's default binary output folder, so using <code>cargo run</code> works without any
+additional setup or configuration.</p>
+<p>If you need to export the Crashpad handler executable programmatically to a
+specific output path, a &quot;convenient&quot; environment variable is provided to help
+with that: <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
+<p>Here is an example <code>build.rs</code>.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">env</span>, <span class="ident">fs</span>, <span class="ident">path</span>::<span class="ident">Path</span>};
+
+<span class="kw">static</span> <span class="ident">OUTPUT_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;your/output/path&quot;</span>;
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+    <span class="kw">let</span> <span class="ident">target_os</span> <span class="op">=</span> <span class="ident">env</span>::<span class="ident">var_os</span>(<span class="string">&quot;CARGO_CFG_TARGET_OS&quot;</span>).<span class="ident">unwrap</span>();
+
+    <span class="kw">if</span> <span class="ident">target_os</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;macos&quot;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">target_os</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;windows&quot;</span> {
+        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">env</span>::<span class="ident">var_os</span>(<span class="string">&quot;DEP_SENTRY_NATIVE_CRASHPAD_HANDLER&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">executable</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">target_os</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;macos&quot;</span> {
+            <span class="string">&quot;crashpad_handler&quot;</span>
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">target_os</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;windows&quot;</span> {
+            <span class="string">&quot;crashpad_handler.exe&quot;</span>
+        } <span class="kw">else</span> {
+            <span class="macro">unreachable</span><span class="macro">!</span>()
+        };
+
+        <span class="ident">fs</span>::<span class="ident">copy</span>(<span class="ident">handler</span>, <span class="ident">Path</span>::<span class="ident">new</span>(<span class="ident">OUTPUT_PATH</span>).<span class="ident">join</span>(<span class="ident">executable</span>)).<span class="ident">unwrap</span>();
+    }
+}</pre></div>
+<p>If you are using <code>panic = abort</code> make sure to let the panic handler call
+<code>shutdown</code> to flush remaining transport before aborting the application.</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="ident">std</span>::<span class="ident">panic</span>::<span class="ident">set_hook</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">sentry_contrib_native</span>::<span class="ident">shutdown</span>()));</pre></div>
+<h2 id="build" class="section-header"><a href="#build">Build</a></h2>
+<p>This crate relies on
+<a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
+which in turn builds
+<a href="https://github.com/getsentry/sentry-native">Sentry's Native SDK</a>. This requires
+<a href="https://cmake.org">CMake</a> or alternatively a pre-installed version can be
+provided with the <code>SENTRY_NATIVE_INSTALL</code> environment variable.</p>
+<p>Additionally on any other platform than Windows, the development version of
+<code>curl</code> is required.</p>
+<p>See
+<a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
+for more details.</p>
+<h2 id="crate-features" class="section-header"><a href="#crate-features">Crate features</a></h2>
+<ul>
+<li><strong>default-transport</strong> - <strong>Enabled by default</strong>, will use <code>winhttp</code> on Windows
+and <code>curl</code> everywhere else as the default transport.</li>
+<li><strong>test</strong> - Corrects testing for documentation tests and examples.</li>
+<li><strong>nightly</strong> - Enables full documentation through
+<a href="https://doc.rust-lang.org/unstable-book/language-features/external-doc.html"><code>feature(external_doc)</code></a>.</li>
+</ul>
+<h2 id="deployment" class="section-header"><a href="#deployment">Deployment</a></h2>
+<p>When deploying a binary for MacOS or Windows, it has to be shipped together with
+the <code>crashpad_handler(.exe)</code> executable. A way to programmatically export it
+using <code>build.rs</code> is provided through the <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
+<p>See the <a href="#usage">Usage section</a> for an example.</p>
+<h2 id="documentation" class="section-header"><a href="#documentation">Documentation</a></h2>
+<ul>
+<li>For the bindings used:
+<a href="https://docs.sentry.io/platforms/native">official documentation</a></li>
+<li>For releases on <a href="https://crates.io">crates.io</a>:
+<a href="https://docs.rs/sentry-contrib-native"><img src="https://docs.rs/sentry-contrib-native/badge.svg" alt="Docs" /></a>.</li>
+<li>For the master branch:
+<a href="https://daxpedda.github.io/sentry-contrib-native/master/doc/index.html"><img src="https://github.com/daxpedda/sentry-contrib-native/workflows/docs/badge.svg" alt="Docs" /></a>.</li>
+</ul>
+<p>Currently, nightly is needed for full documentation:
+<code>cargo doc --features nightly</code></p>
+<p>If nightly isn't available, use <code>cargo doc</code> as usual.</p>
+<h2 id="tests" class="section-header"><a href="#tests">Tests</a></h2>
+<p>For correct testing the following has to be provided:</p>
+<ul>
+<li><code>feature = &quot;test&quot;</code> has to be enabled.</li>
+<li><code>SENTRY_DSN</code> environment variable has to contain a valid sentry URL.</li>
+</ul>
+<p><code>cargo test --features test</code></p>
+<h2 id="alternatives" class="section-header"><a href="#alternatives">Alternatives</a></h2>
+<p>It's recommended to use Sentry's official SDK for rust:
+<strong><a href="https://github.com/getsentry/sentry-rust">sentry</a></strong> -
+<a href="https://crates.io/crates/sentry"><img src="https://img.shields.io/crates/v/sentry.svg" alt="Crates.io" /></a>.</p>
+<p>The official SDK provides a much better user experience and customizability.</p>
+<p>In comparison the only upside this crate can provide is application crash
+handling, the official SDK for rust can only handle panics.</p>
+<h2 id="changelog" class="section-header"><a href="#changelog">Changelog</a></h2>
+<p>See the
+<a href="https://github.com/daxpedda/sentry-contrib-native/blob/master/CHANGELOG.md">CHANGELOG</a>
+file for details.</p>
+<h2 id="license" class="section-header"><a href="#license">License</a></h2>
+<p>Licensed under either of</p>
+<ul>
+<li>Apache License, Version 2.0 (<a href="LICENSE-APACHE">LICENSE-APACHE</a> or
+http://www.apache.org/licenses/LICENSE-2.0)</li>
+<li>MIT license (<a href="LICENSE-MIT">LICENSE-MIT</a> or http://opensource.org/licenses/MIT)</li>
+</ul>
+<p>at your option.</p>
+<h2 id="contribution" class="section-header"><a href="#contribution">Contribution</a></h2>
+<p>Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.</p>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table><tr class='module-item'><td><a class="mod" href="breadcrumb/index.html" title='sentry_contrib_native::breadcrumb mod'>breadcrumb</a></td><td class='docblock-short'><p>Sentry breadcrumb implementation.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="event/index.html" title='sentry_contrib_native::event mod'>event</a></td><td class='docblock-short'><p>Sentry event implementation.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="ffi/index.html" title='sentry_contrib_native::ffi mod'>ffi</a></td><td class='docblock-short'><p>FFI helper types to communicate with <code>sentry-native</code>.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="object/index.html" title='sentry_contrib_native::object mod'>object</a></td><td class='docblock-short'><p>Sentry object implementation, represents common functionality between
+<a href="../sentry_contrib_native/object/struct.Map.html"><code>Map</code></a>, <a href="../sentry_contrib_native/struct.Breadcrumb.html"><code>Breadcrumb</code></a>,
+<a href="../sentry_contrib_native/struct.Event.html"><code>Event</code></a>, and <a href="../sentry_contrib_native/struct.User.html"><code>User</code></a>.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="options/index.html" title='sentry_contrib_native::options mod'>options</a></td><td class='docblock-short'><p>Sentry options implementation.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="panic/index.html" title='sentry_contrib_native::panic mod'>panic</a></td><td class='docblock-short'><p>Sentry supported panic handler.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="user/index.html" title='sentry_contrib_native::user mod'>user</a></td><td class='docblock-short'><p>Sentry user implementation.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="value/index.html" title='sentry_contrib_native::value mod'>value</a></td><td class='docblock-short'><p>Sentry value implementation.</p>
+</td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table><tr class='module-item'><td><a class="struct" href="struct.Breadcrumb.html" title='sentry_contrib_native::Breadcrumb struct'>Breadcrumb</a></td><td class='docblock-short'><p>A Sentry breadcrumb.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Event.html" title='sentry_contrib_native::Event struct'>Event</a></td><td class='docblock-short'><p>A Sentry event.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Options.html" title='sentry_contrib_native::Options struct'>Options</a></td><td class='docblock-short'><p>The Sentry client options.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Shutdown.html" title='sentry_contrib_native::Shutdown struct'>Shutdown</a></td><td class='docblock-short'><p>Automatically shuts down the Sentry client on drop.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.User.html" title='sentry_contrib_native::User struct'>User</a></td><td class='docblock-short'><p>A Sentry user.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Uuid.html" title='sentry_contrib_native::Uuid struct'>Uuid</a></td><td class='docblock-short'><p>A Sentry UUID.</p>
+</td></tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table><tr class='module-item'><td><a class="enum" href="enum.Consent.html" title='sentry_contrib_native::Consent enum'>Consent</a></td><td class='docblock-short'><p>The state of user consent.</p>
+</td></tr><tr class='module-item'><td><a class="enum" href="enum.Error.html" title='sentry_contrib_native::Error enum'>Error</a></td><td class='docblock-short'><p>Sentry errors.</p>
+</td></tr><tr class='module-item'><td><a class="enum" href="enum.Interface.html" title='sentry_contrib_native::Interface enum'>Interface</a></td><td class='docblock-short'><p>Sentry event interface.</p>
+</td></tr><tr class='module-item'><td><a class="enum" href="enum.Level.html" title='sentry_contrib_native::Level enum'>Level</a></td><td class='docblock-short'><p>Sentry levels for events and breadcrumbs.</p>
+</td></tr><tr class='module-item'><td><a class="enum" href="enum.Value.html" title='sentry_contrib_native::Value enum'>Value</a></td><td class='docblock-short'><p>Represents a Sentry protocol value.</p>
+</td></tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table><tr class='module-item'><td><a class="trait" href="trait.BeforeSend.html" title='sentry_contrib_native::BeforeSend trait'>BeforeSend</a></td><td class='docblock-short'><p>Trait to help pass data to <a href="../sentry_contrib_native/struct.Options.html#method.set_before_send" title="`Options::set_before_send`"><code>Options::set_before_send</code></a>.</p>
+</td></tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table><tr class='module-item'><td><a class="fn" href="fn.clear_modulecache.html" title='sentry_contrib_native::clear_modulecache fn'>clear_modulecache</a></td><td class='docblock-short'><p>Clears the internal module cache.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.end_session.html" title='sentry_contrib_native::end_session fn'>end_session</a></td><td class='docblock-short'><p>Ends a session.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.remove_context.html" title='sentry_contrib_native::remove_context fn'>remove_context</a></td><td class='docblock-short'><p>Removes the context object with the specified key.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.remove_extra.html" title='sentry_contrib_native::remove_extra fn'>remove_extra</a></td><td class='docblock-short'><p>Removes the extra with the specified <code>key</code>.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.remove_fingerprint.html" title='sentry_contrib_native::remove_fingerprint fn'>remove_fingerprint</a></td><td class='docblock-short'><p>Removes the fingerprint.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.remove_tag.html" title='sentry_contrib_native::remove_tag fn'>remove_tag</a></td><td class='docblock-short'><p>Removes the tag with the specified <code>key</code>.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.remove_transaction.html" title='sentry_contrib_native::remove_transaction fn'>remove_transaction</a></td><td class='docblock-short'><p>Removes the transaction.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.remove_user.html" title='sentry_contrib_native::remove_user fn'>remove_user</a></td><td class='docblock-short'><p>Removes a user.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.set_context.html" title='sentry_contrib_native::set_context fn'>set_context</a></td><td class='docblock-short'><p>Sets a context object.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.set_extra.html" title='sentry_contrib_native::set_extra fn'>set_extra</a></td><td class='docblock-short'><p>Sets extra information.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.set_fingerprint.html" title='sentry_contrib_native::set_fingerprint fn'>set_fingerprint</a></td><td class='docblock-short'><p>Sets the event fingerprint.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.set_hook.html" title='sentry_contrib_native::set_hook fn'>set_hook</a></td><td class='docblock-short'><p>Panic handler to send an event with the current stacktrace to Sentry.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.set_level.html" title='sentry_contrib_native::set_level fn'>set_level</a></td><td class='docblock-short'><p>Sets the event level.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.set_tag.html" title='sentry_contrib_native::set_tag fn'>set_tag</a></td><td class='docblock-short'><p>Sets a tag.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.set_transaction.html" title='sentry_contrib_native::set_transaction fn'>set_transaction</a></td><td class='docblock-short'><p>Sets the transaction.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.shutdown.html" title='sentry_contrib_native::shutdown fn'>shutdown</a></td><td class='docblock-short'><p>Shuts down the Sentry client and forces transports to flush out.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.start_session.html" title='sentry_contrib_native::start_session fn'>start_session</a></td><td class='docblock-short'><p>Starts a new session.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.user_consent_get.html" title='sentry_contrib_native::user_consent_get fn'>user_consent_get</a></td><td class='docblock-short'><p>Checks the current state of user consent.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.user_consent_give.html" title='sentry_contrib_native::user_consent_give fn'>user_consent_give</a></td><td class='docblock-short'><p>Gives user consent.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.user_consent_reset.html" title='sentry_contrib_native::user_consent_reset fn'>user_consent_reset</a></td><td class='docblock-short'><p>Resets the user consent (back to unknown).</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.user_consent_revoke.html" title='sentry_contrib_native::user_consent_revoke fn'>user_consent_revoke</a></td><td class='docblock-short'><p>Revokes user consent.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "sentry_contrib_native";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

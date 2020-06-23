@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["set_hook","Panic handler to send an event with the current stacktrace to Sentry."]]});

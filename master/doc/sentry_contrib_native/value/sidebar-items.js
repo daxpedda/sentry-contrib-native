@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Value","Represents a Sentry protocol value."]],"trait":[["MP","Convenience trait to convert [`rmpv::Value`] to [`Value`]."]]});

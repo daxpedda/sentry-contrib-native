@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["CPath","Trait for converting [`PathBuf`] to `Vec<COsString>`."],["CToR","Trait for converting `*const c_char` to [`str`]."],["RToC","Trait for converting [`str`] to [`CString`]."]],"type":[["COsString","Cross-platform return type for [`CPath::into_os_vec`]."]]});

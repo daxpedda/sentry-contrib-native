@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Map","A simple [`Object`] implementation for [`Value::Map`]."]],"trait":[["Object","Private trait methods of [`Object`]."]]});

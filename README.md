@@ -150,6 +150,8 @@ for more details.
 
 - **default-transport** - **Enabled by default**, will use `winhttp` on Windows
   and `curl` everywhere else as the default transport.
+- **custom-transport** - Allows you to register your own transport with the SDK
+to use instead of the default transports.
 - **test** - Corrects testing for documentation tests and examples.
   - Automatically sets the DSN to the `SENTRY_DSN` environment variable, no
     matter what is set through `Options::set_dsn`.

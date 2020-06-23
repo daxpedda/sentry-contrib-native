@@ -26,7 +26,11 @@ fn main() -> Result<()> {
     let source = PathBuf::from("sentry-native");
     // path to installation or to install to
     let install = if let Some(install) = env::var_os("SENTRY_NATIVE_INSTALL").map(PathBuf::from) {
-        if fs::read_dir(&install).is_err() {
+        if fs::read_dir(&install)
+            .ok()
+            .and_then(|mut dir| dir.next())
+            .is_none()
+        {
             build(&source, Some(&install))?
         } else {
             install
@@ -108,7 +112,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-/// Build `sentry_native` with CMake.
+/// Build `sentry_native` with `CMake`.
 fn build(source: &Path, install: Option<&Path>) -> Result<PathBuf> {
     let mut cmake_config = Config::new(source);
     cmake_config

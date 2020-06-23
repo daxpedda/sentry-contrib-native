@@ -21,6 +21,8 @@ jobs:
         with:
           ref: master
           submodules: "recursive"
+      - name: Install curl
+        run: sudo apt install libcurl4-openssl-dev
       - name: Documentation
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page

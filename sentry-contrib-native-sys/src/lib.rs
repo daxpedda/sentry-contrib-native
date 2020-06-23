@@ -10,7 +10,6 @@ use std::{
     fmt::Debug,
     os::raw::{c_char, c_int, c_void},
 };
-pub use va_list::VaList;
 
 #[allow(non_camel_case_types)]
 type c_wchar = u16;
@@ -102,7 +101,7 @@ pub type EventFunction =
     extern "C" fn(event: Value, hint: *mut c_void, closure: *mut c_void) -> Value;
 
 /// Type of the callback for logging debug events.
-pub type LoggerFunction = extern "C" fn(level: i32, message: *const c_char, args: VaList);
+pub type LoggerFunction = extern "C" fn(level: i32, message: *const c_char, args: *mut c_void);
 
 extern "C" {
     /// Releases memory allocated from the underlying allocator.

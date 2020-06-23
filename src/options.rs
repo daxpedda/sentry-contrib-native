@@ -11,7 +11,6 @@ use std::{
     path::PathBuf,
     sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
-use sys::VaList;
 
 /// Global lock for the following purposes:
 /// - Prevent [`Options::init`] from being called twice.
@@ -874,7 +873,7 @@ impl Display for Message {
 
 /// Function to give [`Options::set_logger`] which in turn calls user
 /// defined one.
-extern "C" fn ffi_logger(level: i32, message: *const c_char, mut args: VaList) {
+extern "C" fn ffi_logger(level: i32, message: *const c_char, args: *mut c_void) {
     let lock = LOGGER.read();
     let logger = lock
         .as_ref()
@@ -883,11 +882,11 @@ extern "C" fn ffi_logger(level: i32, message: *const c_char, mut args: VaList) {
         .expect("failed to get `LOGGER`");
 
     let level = Level::from_raw(level);
-    let message = if let Ok(message) = unsafe { vsprintf::vsprintf(message, &mut args) } {
+    let message = if let Ok(message) = unsafe { vsprintf::vsprintf(message, args) } {
         Message::Utf8(message)
     } else {
         Message::Raw(
-            unsafe { vsprintf::vsprintf_raw(message, &mut args) }
+            unsafe { vsprintf::vsprintf_raw(message, args) }
                 .expect("failed to format logger string"),
         )
     };

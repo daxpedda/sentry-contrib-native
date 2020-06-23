@@ -136,6 +136,8 @@ for more details.
 
 - **default-transport** - **Enabled by default**, will use `winhttp` on Windows
   and `curl` everywhere else as the default transport.
+- **custom-transport** - Allows you to register your own transport with the SDK
+to use instead of the default transports.
 - **test** - Corrects testing for documentation tests and examples.
 - **nightly** - Enables full documentation through
   [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html).

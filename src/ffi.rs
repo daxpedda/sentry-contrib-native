@@ -124,7 +124,7 @@ mod cpath {
         {
             OsString::from_vec(
                 path.into_iter()
-                    .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) })
+                    .map(|ch| unsafe { mem::transmute::<i8, u8>(ch) })
                     .collect(),
             )
         }

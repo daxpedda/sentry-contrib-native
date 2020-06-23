@@ -107,11 +107,11 @@ mod cpath {
     #![allow(clippy::non_ascii_literal)]
 
     use crate::CPath;
-    #[cfg(not(windows))]
-    use std::os::unix::ffi::OsStringExt;
     #[cfg(windows)]
     use std::os::windows::ffi::OsStringExt;
     use std::{ffi::OsString, path::PathBuf};
+    #[cfg(not(windows))]
+    use std::{mem, os::unix::ffi::OsStringExt};
 
     fn convert(string: &str) -> OsString {
         let path = PathBuf::from(string.to_owned()).into_os_vec();

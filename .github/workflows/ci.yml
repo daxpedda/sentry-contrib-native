@@ -93,11 +93,11 @@ jobs:
         run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}
       - name: Clippy
         if: always() && steps.checkout.outcome == 'success'
-        run:
+        run: |
           cargo clippy -v --all-targets ${{ matrix.feature }} ${{
           matrix.rust.feature }} -- -D warnings
       - name: Test
-        if:
+        if: |
           always() && steps.build.outcome == 'success' && matrix.feature ==
           '--features test'
         env:
@@ -107,7 +107,7 @@ jobs:
         if: always() && steps.checkout.outcome == 'success'
         env:
           RUSTDOCFLAGS: -D warnings
-        run:
+        run: |
           cargo -v doc --no-deps --document-private-items --workspace ${{
           matrix.feature }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
@@ -219,11 +219,11 @@ jobs:
         run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}
       - name: Clippy
         if: always() && steps.checkout.outcome == 'success'
-        run:
+        run: |
           cargo clippy -v --all-targets ${{ matrix.feature }} ${{
           matrix.rust.feature }} -- -D warnings
       - name: Test
-        if:
+        if: |
           always() && steps.build.outcome == 'success' && matrix.feature ==
           '--features test'
         env:
@@ -233,7 +233,7 @@ jobs:
         if: always() && steps.checkout.outcome == 'success'
         env:
           RUSTDOCFLAGS: -D warnings
-        run:
+        run: |
           cargo -v doc --no-deps --document-private-items --workspace ${{
           matrix.feature }} ${{ matrix.rust.feature }}
       - name: Rust Formatting

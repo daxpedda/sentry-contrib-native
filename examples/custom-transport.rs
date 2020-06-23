@@ -1,8 +1,8 @@
-use sentry_contrib_native as sentry;
+use parking_lot::{Condvar, Mutex};
 use sentry::PostedEnvelope;
-use parking_lot::{Mutex, Condvar};
-use tokio::sync::mpsc;
+use sentry_contrib_native as sentry;
 use std::sync::Arc;
+use tokio::sync::mpsc;
 
 struct TransportState {
     tx: mpsc::Sender<PostedEnvelope>,
@@ -18,9 +18,12 @@ async fn send_sentry_request(
 
     // Sentry should only give us POST requests to send
     if parts.method != http::Method::POST {
-        return Err(format!("Sentry SDK is trying to send an unexpected request of '{}'", parts.method));
+        return Err(format!(
+            "Sentry SDK is trying to send an unexpected request of '{}'",
+            parts.method
+        ));
     }
-    
+
     let rb = client.post(&parts.uri.to_string());
 
     // We cheat so that we don't have to copy all of the bytes of the body
@@ -181,11 +184,14 @@ fn main() -> Result<(), String> {
     // Actually registers our custom transport so that the SDK will use that to
     // send requests to your Sentry service, rather than the built in transports
     // that come with the SDK
-    options.set_transport(sentry::Transport::new(Box::new(
-        ReqwestTransport::new(client, runtime.handle().clone()),
-    )));
+    options.set_transport(sentry::Transport::new(Box::new(ReqwestTransport::new(
+        client,
+        runtime.handle().clone(),
+    ))));
 
-    let _shutdown = options.init().map_err(|e| format!("Failed to initialize Sentry: {}", e))?;
+    let _shutdown = options
+        .init()
+        .map_err(|e| format!("Failed to initialize Sentry: {}", e))?;
 
     Ok(())
 }

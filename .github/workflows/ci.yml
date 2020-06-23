@@ -64,9 +64,9 @@ jobs:
               feature: --features nightly,
             }
         feature:
-          - --no-default-features
-          - ""
-          - --features test
+          - { name: --no-default-features, cache: no_transport }
+          - { name: "", cache: default_transport }
+          - { name: --features test, cache: default_transport }
         os:
           - ubuntu-latest
           - macos-latest
@@ -100,29 +100,32 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/sentry-native
-          key: ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}
+          key:
+            ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
+            matrix.feature.cache }}
       - name: Build
         id: build
-        run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}
+        run:
+          cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Clippy
         if: always() && steps.checkout.outcome == 'success'
         run:
-          cargo clippy -v --all-targets ${{ matrix.feature }} ${{
+          cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -D warnings
       - name: Test
         if:
-          always() && steps.build.outcome == 'success' && matrix.feature ==
+          always() && steps.build.outcome == 'success' && matrix.feature.name ==
           '--features test'
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: cargo -v test ${{ matrix.feature }} ${{ matrix.rust.feature }}
+        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.checkout.outcome == 'success'
         env:
           RUSTDOCFLAGS: -D warnings
         run:
           cargo -v doc --no-deps --document-private-items --workspace ${{
-          matrix.feature }} ${{ matrix.rust.feature }}
+          matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'
         continue-on-error: ${{ matrix.rust.continue-on-error }}
@@ -199,9 +202,9 @@ jobs:
               feature: --features nightly,
             }
         feature:
-          - --no-default-features
-          - ""
-          - --features test
+          - { name: --no-default-features, cache: no_transport }
+          - { name: "", cache: default_transport }
+          - { name: --features test, cache: default_transport }
         os:
           - ubuntu-latest
           - macos-latest
@@ -239,29 +242,32 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/sentry-native
-          key: ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}
+          key:
+            ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
+            matrix.feature.cache }}
       - name: Build
         id: build
-        run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}
+        run:
+          cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Clippy
         if: always() && steps.checkout.outcome == 'success'
         run:
-          cargo clippy -v --all-targets ${{ matrix.feature }} ${{
+          cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -D warnings
       - name: Test
         if:
-          always() && steps.build.outcome == 'success' && matrix.feature ==
+          always() && steps.build.outcome == 'success' && matrix.feature.name ==
           '--features test'
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: cargo -v test ${{ matrix.feature }} ${{ matrix.rust.feature }}
+        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.checkout.outcome == 'success'
         env:
           RUSTDOCFLAGS: -D warnings
         run:
           cargo -v doc --no-deps --document-private-items --workspace ${{
-          matrix.feature }} ${{ matrix.rust.feature }}
+          matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'
         continue-on-error: ${{ matrix.rust.continue-on-error }}

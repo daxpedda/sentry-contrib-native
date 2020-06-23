@@ -35,7 +35,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/sentry-native
-          key: ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}
+          key:
+            ${{ runner.os }}-${{ steps.sentry_native.outputs.version
+            }}-default_transport
       - name: Documentation
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page

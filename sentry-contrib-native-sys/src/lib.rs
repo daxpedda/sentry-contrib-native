@@ -344,7 +344,10 @@ extern "C" {
 
     /// Sets the transport startup hook.
     #[link_name = "sentry_transport_set_startup_func"]
-    pub fn transport_set_startup_func(transport: *mut Transport, startup_func: Option<StartupFunction>);
+    pub fn transport_set_startup_func(
+        transport: *mut Transport,
+        startup_func: Option<StartupFunction>,
+    );
 
     /// Sets the transport shutdown hook.
     ///
@@ -352,7 +355,10 @@ extern "C" {
     /// `true` in case all the pending envelopes have been sent within the timeout,
     /// or `false` if the timeout was hit.
     #[link_name = "sentry_transport_set_shutdown_func"]
-    pub fn transport_set_shutdown_func(transport: *mut Transport, shutdown_func: Option<ShutdownFunction>);
+    pub fn transport_set_shutdown_func(
+        transport: *mut Transport,
+        shutdown_func: Option<ShutdownFunction>,
+    );
 
     /// Generic way to free a transport.
     #[link_name = "sentry_transport_free"]

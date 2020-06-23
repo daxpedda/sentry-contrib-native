@@ -1,7 +1,5 @@
 //! FFI helper types to communicate with `sentry-native`.
 
-#[cfg(not(windows))]
-use std::os::unix::ffi::OsStringExt;
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
 use std::{
@@ -9,6 +7,8 @@ use std::{
     os::raw::c_char,
     path::PathBuf,
 };
+#[cfg(not(windows))]
+use std::{mem, os::unix::ffi::OsStringExt};
 
 /// Cross-platform return type for [`CPath::into_os_vec`].
 #[cfg(windows)]
@@ -35,7 +35,7 @@ impl CPath for PathBuf {
             .into_os_string()
             .into_vec()
             .into_iter()
-            .map(|ch| ch as _)
+            .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) })
             .collect();
 
         if path.contains(&0) {

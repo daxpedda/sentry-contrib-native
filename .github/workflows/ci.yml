@@ -85,6 +85,9 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: "recursive"
+      - name: Install curl
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt install libcurl4-openssl-dev
       - name: Build
         id: build
         run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}
@@ -97,6 +100,8 @@ jobs:
         if:
           always() && steps.build.outcome == 'success' && matrix.feature ==
           '--features test'
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: cargo -v test ${{ matrix.feature }} ${{ matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.checkout.outcome == 'success'
@@ -206,6 +211,9 @@ jobs:
         with:
           ref: ${{ matrix.branch }}
           submodules: "recursive"
+      - name: Install curl
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt install libcurl4-openssl-dev
       - name: Build
         id: build
         run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}
@@ -218,6 +226,8 @@ jobs:
         if:
           always() && steps.build.outcome == 'success' && matrix.feature ==
           '--features test'
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: cargo -v test ${{ matrix.feature }} ${{ matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.checkout.outcome == 'success'

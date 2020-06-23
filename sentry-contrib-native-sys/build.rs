@@ -17,18 +17,22 @@
 use anyhow::Result;
 use cmake::Config;
 use std::{
-    env,
+    env, fs,
     path::{Path, PathBuf},
 };
 
 fn main() -> Result<()> {
     // path to source.
     let source = PathBuf::from("sentry-native");
-    // path to installation
+    // path to installation or to install to
     let install = if let Some(install) = env::var_os("SENTRY_NATIVE_INSTALL").map(PathBuf::from) {
-        install
+        if fs::read_dir(&install).is_err() {
+            build(&source, Some(&install))?
+        } else {
+            install
+        }
     } else {
-        build(&source)?
+        build(&source, None)?
     };
 
     println!("cargo:rerun-if-env-changed=SENTRY_NATIVE_INSTALL");
@@ -105,13 +109,18 @@ fn main() -> Result<()> {
 }
 
 /// Build `sentry_native` with CMake.
-fn build(source: &Path) -> Result<PathBuf> {
+fn build(source: &Path, install: Option<&Path>) -> Result<PathBuf> {
     let mut cmake_config = Config::new(source);
     cmake_config
         .define("BUILD_SHARED_LIBS", "OFF")
         .define("SENTRY_BUILD_TESTS", "OFF")
         .define("SENTRY_BUILD_EXAMPLES", "OFF")
         .profile("RelWithDebInfo");
+
+    if let Some(install) = install {
+        fs::create_dir_all(install).expect("failed to create install directory");
+        cmake_config.out_dir(install);
+    }
 
     if cfg!(not(feature = "default-transport")) {
         cmake_config.define("SENTRY_TRANSPORT", "none");

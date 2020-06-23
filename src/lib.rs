@@ -430,7 +430,7 @@ pub fn remove_context<S: Into<String>>(key: S) {
 /// Panics if [`String`]s in `fingerprints` contain any null bytes.
 ///
 /// # Errors
-/// Fails with [`Error::Fingerprints`] if `fingerprints` is longer than 32;
+/// Fails with [`Error::Fingerprints`] if `fingerprints` is longer than 32.
 ///
 /// # Examples
 /// ```

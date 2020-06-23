@@ -74,6 +74,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      SENTRY_NATIVE_INSTALL: ~/sentry-native
+
     steps:
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
@@ -88,6 +91,16 @@ jobs:
       - name: Install curl
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt install libcurl4-openssl-dev
+      - name: Get sentry-native commit
+        id: sentry_native
+        run:
+          echo ::set-output name=version::$(git submodule status | cut -d ' ' -f
+          2)
+      - name: Cache sentry-native
+        uses: actions/cache@v2
+        with:
+          path: ~/sentry-native
+          key: ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}
       - name: Build
         id: build
         run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}
@@ -199,6 +212,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      SENTRY_NATIVE_INSTALL: ~/sentry-native
+
     steps:
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
@@ -214,6 +230,16 @@ jobs:
       - name: Install curl
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt install libcurl4-openssl-dev
+      - name: Get sentry-native commit
+        id: sentry_native
+        run:
+          echo ::set-output name=version::$(git submodule status | cut -d ' ' -f
+          2)
+      - name: Cache sentry-native
+        uses: actions/cache@v2
+        with:
+          path: ~/sentry-native
+          key: ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}
       - name: Build
         id: build
         run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}

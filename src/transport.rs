@@ -254,7 +254,7 @@ impl Drop for Transport {
 }
 
 /// Wrapper for the raw Envelope that we should send to Sentry
-pub struct PostedEnvelope(pub *mut sys::Envelope);
+pub struct PostedEnvelope(*mut sys::Envelope);
 
 unsafe impl Send for PostedEnvelope {}
 
@@ -271,8 +271,6 @@ impl Drop for PostedEnvelope {
 
 /// The actual body which transports send to Sentry.
 pub struct Envelope {
-    /// The underlying opaque pointer. Freed once we are finished with the envelope.
-    inner: PostedEnvelope,
     /// The raw bytes of the serialized envelope, which is the actual data to
     /// send as the body of a request
     data: *const std::os::raw::c_char,
@@ -294,7 +292,6 @@ impl Drop for Envelope {
             unsafe {
                 sys::free(self.data as *mut _);
                 self.data = std::ptr::null();
-                drop(&mut self.inner);
             }
         }
     }
@@ -314,7 +311,6 @@ impl TryFrom<PostedEnvelope> for Envelope {
             }
 
             Ok(Self {
-                inner: pe,
                 data: serialized_envelope,
                 len: envelope_size,
             })

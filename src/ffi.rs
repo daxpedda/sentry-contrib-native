@@ -122,7 +122,11 @@ mod cpath {
         }
         #[cfg(not(windows))]
         {
-            OsString::from_vec(path.into_iter().map(|ch| ch as _).collect())
+            OsString::from_vec(
+                path.into_iter()
+                    .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) })
+                    .collect(),
+            )
         }
     }
 

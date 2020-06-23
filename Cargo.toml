@@ -22,9 +22,18 @@ rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-ma
   "macro"
 ] }
 
+# Used by the custom-transport example
+parking_lot = "0.10"
+reqwest = { version = "0.10", default-features = false, features = ["rustls-tls"] }
+tokio = { verion = "0.2", features = ["rt-threaded"] }
+
 [features]
 default = ["default-transport"]
 default-transport = ["sys/default-transport"]
 custom-transport = ["http", "url"]
 nightly = []
 test = []
+
+[[example]]
+name = "custom-transport"
+required-features = ["custom-transport"]

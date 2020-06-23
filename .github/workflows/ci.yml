@@ -34,7 +34,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Audit
-        run: cargo audit -D
+        run: |
+          cargo audit -D \
+          --ignore RUSTSEC-2020-0016 \ # Ignore net2 deprecation, only used by examples
+          --ignore RUSTSEC-2019-0031 # Ignore spin deprecation, only used by examples
 
   prettier:
     if: github.event_name != 'schedule'

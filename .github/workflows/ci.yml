@@ -1,0 +1,229 @@
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - gh-pages
+  pull_request:
+    branches-ignore:
+      - gh-pages
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  cargo-audit:
+    if: github.event_name != 'schedule'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+      - name: Cache
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: |
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/bin/cargo-audit
+          key: cargo-audit
+      - name: Install cargo-audit
+        id: install
+        run: cargo -v install cargo-audit
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Audit
+        run: cargo audit -D
+
+  prettier:
+    if: github.event_name != 'schedule'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Prettier
+        run: npm install --no-save prettier prettier-plugin-toml
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Prettier
+        run: npx prettier -l .
+
+  ci:
+    if: github.event_name != 'schedule'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        rust:
+          - { channel: stable, continue-on-error: false, feature: "" }
+          - { channel: beta, continue-on-error: false, feature: "" }
+          - {
+              channel: nightly,
+              continue-on-error: true,
+              feature: --features nightly,
+            }
+        feature:
+          - --no-default-features
+          - ""
+          - --features test
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust.channel }}
+          components: rustfmt, clippy
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v2
+      - name: Build
+        id: build
+        run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}
+      - name: Clippy
+        if: always() && steps.checkout.outcome == 'success'
+        run:
+          cargo clippy -v --all-targets ${{ matrix.feature }} ${{
+          matrix.rust.feature }} -- -D warnings
+      - name: Test
+        if:
+          always() && steps.build.outcome == 'success' && matrix.feature ==
+          'test'
+        run: cargo -v test ${{ matrix.feature }} ${{ matrix.rust.feature }}
+      - name: Documentation
+        if: always() && steps.checkout.outcome == 'success'
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run:
+          cargo -v doc --no-deps --document-private-items --workspace ${{
+          matrix.feature }} ${{ matrix.rust.feature }}
+      - name: Rust Formatting
+        if: always() && steps.checkout.outcome == 'success'
+        continue-on-error: ${{ matrix.rust.continue-on-error }}
+        run: cargo fmt -v --all -- --check
+
+  schedule-cargo-audit:
+    if: github.event_name == 'schedule'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        branch:
+          - master
+          #- release
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+      - name: Cache
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: |
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/bin/cargo-audit
+          key: cargo-audit
+      - name: Install cargo-audit
+        id: install
+        run: cargo -v install cargo-audit
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Audit
+        run: cargo audit -D
+
+  schedule-prettier:
+    if: github.event_name == 'schedule'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        branch:
+          - master
+          #- release
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Prettier
+        run: npm install --no-save prettier prettier-plugin-toml
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Prettier
+        run: npx prettier -l .
+
+  schedule-ci:
+    if: github.event_name == 'schedule'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        rust:
+          - { channel: stable, continue-on-error: false, feature: "" }
+          - { channel: beta, continue-on-error: false, feature: "" }
+          - {
+              channel: nightly,
+              continue-on-error: true,
+              feature: --features nightly,
+            }
+        feature:
+          - --no-default-features
+          - ""
+          - --features test
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        branch:
+          - master
+          #- release
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust.channel }}
+          components: rustfmt, clippy
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Build
+        id: build
+        run: cargo -v build ${{ matrix.feature }} ${{ matrix.rust.feature }}
+      - name: Clippy
+        if: always() && steps.checkout.outcome == 'success'
+        run:
+          cargo clippy -v --all-targets ${{ matrix.feature }} ${{
+          matrix.rust.feature }} -- -D warnings
+      - name: Test
+        if:
+          always() && steps.build.outcome == 'success' && matrix.feature ==
+          'test'
+        run: cargo -v test ${{ matrix.feature }} ${{ matrix.rust.feature }}
+      - name: Documentation
+        if: always() && steps.checkout.outcome == 'success'
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run:
+          cargo -v doc --no-deps --document-private-items --workspace ${{
+          matrix.feature }} ${{ matrix.rust.feature }}
+      - name: Rust Formatting
+        if: always() && steps.checkout.outcome == 'success'
+        continue-on-error: ${{ matrix.rust.continue-on-error }}
+        run: cargo fmt -v --all -- --check

@@ -2,10 +2,7 @@
 //! library can use to send data to your upstream Sentry service in lieue of
 //! the built-in transports provided by the sentry-native library itself
 
-use std::{
-    os::raw::c_void,
-    sync::{mpsc, Arc, Condvar, Mutex},
-};
+use std::{convert::TryFrom, os::raw::c_void};
 
 /// The request your [`Transporter`] is expected to send.
 pub type SentryRequest = http::Request<Envelope>;
@@ -18,14 +15,21 @@ pub const ENVELOPE_MIME: &str = "application/x-sentry-envelope";
 /// hardcoded into sentry-native, so...two can play at that game!
 pub const API_VERSION: i8 = 7;
 
+/// The return from [`TransportWorker::shutdown`], which determines if we tell
+/// the Sentry SDK if we were able to send all requests to the remote service
+/// or not in the time allotted
+#[allow(clippy::module_name_repetitions)]
 #[derive(Copy, Clone)]
 pub enum TransportShutdown {
+    /// The custom transport was able to send all requests in the time specified
     Success,
+    /// One or more requests could be sent in the specified time frame
     TimedOut,
 }
 
 /// Trait used to define your own transport that Sentry can use to send events
 /// to a Sentry service
+#[allow(clippy::module_name_repetitions)]
 pub trait TransportWorker {
     /// Starts up the transport worker, with the options that were used to
     /// create the Sentry SDK
@@ -97,35 +101,14 @@ pub trait TransportWorker {
         builder = builder.method("POST");
         builder = dsn.build_req(builder);
 
-        let envelope = unsafe {
-            let mut envelope_size = 0;
-            let serialized_envelope = sys::envelope_serialize(envelope.0, &mut envelope_size);
-
-            if envelope_size == 0 || serialized_envelope.is_null() {
-                return Err("failed to seialize envelope");
-            }
-
-            builder = builder.header("content-length", envelope_size);
-
-            Envelope {
-                inner: envelope.0,
-                data: serialized_envelope,
-                len: envelope_size,
-            }
-        };
+        let envelope = Envelope::try_from(envelope)?;
+        builder = builder.header("content-length", envelope.as_ref().len());
 
         builder
             .body(envelope)
             .map_err(|_| "failed to build HTTP request")
     }
 }
-
-/// Wrapper for the raw Envelope that we should send to Sentry
-pub struct PostedEnvelope(pub *mut sys::Envelope);
-
-// TODO: Implement Drop for PostedEnvelope, along with TryFrom for Envelope
-
-unsafe impl Send for PostedEnvelope {}
 
 /// Holds the state for your custom transport. The lifetime of this state is
 /// handled by the underlying Sentry library, which is why you only get a `Box<>`
@@ -177,16 +160,19 @@ impl Transport {
     /// to send an envelope to Sentry
     extern "C" fn send_function(envelope: *mut sys::Envelope, state: *mut c_void) {
         let s = Self::from_raw(state);
+        let envelope = PostedEnvelope(envelope);
+
         if let Some(q) = &s.worker {
-            q.send(PostedEnvelope(envelope));
+            q.send(envelope);
         }
+
         s.into_raw();
     }
 
     /// The function registered with [`sys::transport_set_startup_hook`] to
     /// start our transport so that we can being sending requests to Sentry
     extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
-        let mut s = Self::from_raw(state);
+        let s = Self::from_raw(state);
 
         if let Some(imp) = &s.worker {
             unsafe {
@@ -267,10 +253,26 @@ impl Drop for Transport {
     }
 }
 
+/// Wrapper for the raw Envelope that we should send to Sentry
+pub struct PostedEnvelope(pub *mut sys::Envelope);
+
+unsafe impl Send for PostedEnvelope {}
+
+impl Drop for PostedEnvelope {
+    fn drop(&mut self) {
+        if !self.0.is_null() {
+            unsafe {
+                sys::envelope_free(self.0);
+                self.0 = std::ptr::null_mut();
+            }
+        }
+    }
+}
+
 /// The actual body which transports send to Sentry.
 pub struct Envelope {
     /// The underlying opaque pointer. Freed once we are finished with the envelope.
-    inner: *mut sys::Envelope,
+    inner: PostedEnvelope,
     /// The raw bytes of the serialized envelope, which is the actual data to
     /// send as the body of a request
     data: *const std::os::raw::c_char,
@@ -288,9 +290,34 @@ impl AsRef<[u8]> for Envelope {
 
 impl Drop for Envelope {
     fn drop(&mut self) {
+        if !self.data.is_null() {
+            unsafe {
+                sys::free(self.data as *mut _);
+                self.data = std::ptr::null();
+                drop(&mut self.inner);
+            }
+        }
+    }
+}
+
+impl TryFrom<PostedEnvelope> for Envelope {
+    type Error = &'static str;
+
+    fn try_from(pe: PostedEnvelope) -> Result<Self, Self::Error> {
         unsafe {
-            sys::free(self.data as *mut _);
-            sys::envelope_free(self.inner);
+            let mut envelope_size = 0;
+            let serialized_envelope = sys::envelope_serialize(pe.0, &mut envelope_size);
+
+            // I assume the serialization can fail
+            if envelope_size == 0 || serialized_envelope.is_null() {
+                return Err("failed to serialize envelope");
+            }
+
+            Ok(Self {
+                inner: pe,
+                data: serialized_envelope,
+                len: envelope_size,
+            })
         }
     }
 }
@@ -322,35 +349,35 @@ impl std::str::FromStr for Dsn {
         // * username = public key
         // * host = obviously, the host, sentry.io in the case of the hosted service
         // * path = the project ID
-        let url = url::Url::parse(s).map_err(|_| "failed to parse DSN url")?;
+        let dsn_url = url::Url::parse(s).map_err(|_| "failed to parse DSN url")?;
 
         // Do some basic checking that the DSN is remotely valid
-        if !url.scheme().starts_with("http") {
+        if !dsn_url.scheme().starts_with("http") {
             return Err("DSN doesn't have an http(s) scheme");
         }
 
-        if url.username().is_empty() {
+        if dsn_url.username().is_empty() {
             return Err("DSN has no username");
         }
 
-        if url.path().is_empty() || url.path() == "/" {
+        if dsn_url.path().is_empty() || dsn_url.path() == "/" {
             return Err("DSN doesn't have a path");
         }
 
-        match url.host_str() {
+        match dsn_url.host_str() {
             Some(host) => {
                 let auth = format!(
                     "Sentry sentry_key={}, sentry_version={}, sentry_client={}",
-                    url.username(),
+                    dsn_url.username(),
                     API_VERSION,
                     USER_AGENT
                 );
 
                 let uri = format!(
                     "{}://{}/api/{}/envelope/",
-                    url.scheme(),
+                    dsn_url.scheme(),
                     host,
-                    &url.path()[1..]
+                    &dsn_url.path()[1..]
                 );
 
                 Ok(Self { auth, uri })

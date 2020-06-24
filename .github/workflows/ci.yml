@@ -110,7 +110,7 @@ jobs:
         if: always() && steps.checkout.outcome == 'success'
         run:
           cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
-          matrix.rust.feature }} -- -D warnings
+          matrix.rust.feature }} -- -F warnings
       - name: Test
         if:
           always() && steps.build.outcome == 'success' && matrix.feature.name ==
@@ -121,7 +121,7 @@ jobs:
       - name: Documentation
         if: always() && steps.checkout.outcome == 'success'
         env:
-          RUSTDOCFLAGS: -D warnings
+          RUSTDOCFLAGS: -F warnings
         run:
           cargo -v doc --no-deps --document-private-items --workspace ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}

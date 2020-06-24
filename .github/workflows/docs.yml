@@ -41,7 +41,7 @@ jobs:
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page
         run:
-          cargo -vv doc --features nightly --no-deps --document-private-items
+          cargo -v doc --features nightly --no-deps --document-private-items
           --workspace
       - name: Deploy
         if: success()

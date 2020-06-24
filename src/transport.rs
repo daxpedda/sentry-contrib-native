@@ -77,25 +77,10 @@ pub trait TransportWorker {
         let mut builder = http::Request::builder();
 
         {
-            let headers = builder
-                .headers_mut()
-                .ok_or_else(|| "unable to mutate headers")?;
-            headers.insert(
-                "user-agent",
-                USER_AGENT
-                    .parse()
-                    .map_err(|_| "failed to parse user agent")?,
-            );
-            headers.insert(
-                "content-type",
-                ENVELOPE_MIME
-                    .parse()
-                    .map_err(|_| "failed to parse MIME type")?,
-            );
-            headers.insert(
-                "accept",
-                "*/*".parse().map_err(|_| "failed to parse accept")?,
-            );
+            let headers = builder.headers_mut().unwrap();
+            headers.insert("user-agent", USER_AGENT.parse().unwrap());
+            headers.insert("content-type", ENVELOPE_MIME.parse().unwrap());
+            headers.insert("accept", "*/*".parse().unwrap());
         }
 
         builder = builder.method("POST");

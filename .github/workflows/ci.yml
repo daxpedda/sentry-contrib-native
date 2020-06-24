@@ -30,7 +30,7 @@ jobs:
           key: cargo-audit
       - name: Install cargo-audit
         id: install
-        run: cargo -v install cargo-audit
+        run: cargo -vv install cargo-audit
       - name: Checkout
         uses: actions/checkout@v2
       - name: Audit
@@ -94,8 +94,8 @@ jobs:
       - name: Get sentry-native commit
         id: sentry_native
         run:
-          echo ::set-output name=version::$(git submodule status | cut -d ' ' -f
-          2)
+          echo "::set-output name=version::$(git submodule status | cut -d ' '
+          -f 2)"
       - name: Cache sentry-native
         uses: actions/cache@v2
         with:
@@ -106,11 +106,11 @@ jobs:
       - name: Build
         id: build
         run:
-          cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+          cargo -vv build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Clippy
         if: always() && steps.checkout.outcome == 'success'
         run:
-          cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
+          cargo clippy -vv --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -D warnings
       - name: Test
         if:
@@ -118,13 +118,13 @@ jobs:
           '--features test'
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+        run: cargo -vv test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.checkout.outcome == 'success'
         env:
           RUSTDOCFLAGS: -D warnings
         run:
-          cargo -v doc --no-deps --document-private-items --workspace ${{
+          cargo -vv doc --no-deps --document-private-items --workspace ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'
@@ -157,7 +157,7 @@ jobs:
           key: cargo-audit
       - name: Install cargo-audit
         id: install
-        run: cargo -v install cargo-audit
+        run: cargo -vv install cargo-audit
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -236,8 +236,8 @@ jobs:
       - name: Get sentry-native commit
         id: sentry_native
         run:
-          echo ::set-output name=version::$(git submodule status | cut -d ' ' -f
-          2)
+          echo "::set-output name=version::$(git submodule status | cut -d ' '
+          -f 2)"
       - name: Cache sentry-native
         uses: actions/cache@v2
         with:
@@ -248,11 +248,11 @@ jobs:
       - name: Build
         id: build
         run:
-          cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+          cargo -vv build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Clippy
         if: always() && steps.checkout.outcome == 'success'
         run:
-          cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
+          cargo clippy -vv --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -F warnings
       - name: Test
         if:
@@ -260,13 +260,13 @@ jobs:
           '--features test'
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+        run: cargo -vv test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.checkout.outcome == 'success'
         env:
           RUSTDOCFLAGS: -F warnings
         run:
-          cargo -v doc --no-deps --document-private-items --workspace ${{
+          cargo -vv doc --no-deps --document-private-items --workspace ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'

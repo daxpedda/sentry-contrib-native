@@ -29,8 +29,8 @@ jobs:
       - name: Get sentry-native commit
         id: sentry_native
         run:
-          echo ::set-output name=version::$(git submodule status | cut -d ' ' -f
-          2)
+          echo "::set-output name=version::$(git submodule status | cut -d ' '
+          -f 2)"
       - name: Cache sentry-native
         uses: actions/cache@v2
         with:
@@ -42,7 +42,7 @@ jobs:
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page
         run:
-          cargo -v doc --features nightly --no-deps --document-private-items
+          cargo -vv doc --features nightly --no-deps --document-private-items
           --workspace
       - name: Deploy
         if: success()

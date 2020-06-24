@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SENTRY_NATIVE_INSTALL: ~/sentry-native
+      SENTRY_NATIVE_INSTALL: $HOME/sentry-native
 
     steps:
       - name: Install Rust
@@ -34,7 +34,7 @@ jobs:
       - name: Cache sentry-native
         uses: actions/cache@v2
         with:
-          path: ~/sentry-native
+          path: $HOME/sentry-native
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version
             }}-default_transport

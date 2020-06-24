@@ -4,7 +4,7 @@
 
 use std::{convert::TryFrom, os::raw::c_void};
 
-/// The request your [`Transporter`] is expected to send.
+/// The request your [`TransportWorker`] is expected to send.
 pub type SentryRequest = http::Request<Envelope>;
 
 /// From sentry.h, but only present as a preprocessor define :(
@@ -104,9 +104,8 @@ pub struct Transport {
 }
 
 impl Transport {
-    /// Creates a new Transport for Sentry using your provided [`Transporter`]
-    /// implementation. It's required to by [`Send`] and [`Sync`] as requests
-    /// can come at any time.
+    /// Creates a new Transport for Sentry using your provided [`TransportWorker`]
+    /// implementation.
     #[must_use]
     pub fn new(worker: Box<dyn TransportWorker>) -> Box<Self> {
         let inner = unsafe { sys::transport_new(Some(Self::send_function)) };

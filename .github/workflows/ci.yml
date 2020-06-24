@@ -75,7 +75,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      SENTRY_NATIVE_INSTALL: "${{ env.HOME }}/sentry-native"
+      SENTRY_NATIVE_INSTALL: "~/sentry-native"
 
     steps:
       - name: Install Rust
@@ -216,7 +216,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     env:
-      SENTRY_NATIVE_INSTALL: "${{ env.HOME }}/sentry-native"
+      SENTRY_NATIVE_INSTALL: "~/sentry-native"
 
     steps:
       - name: Install Rust

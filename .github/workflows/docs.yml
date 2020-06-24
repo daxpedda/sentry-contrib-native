@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SENTRY_NATIVE_INSTALL: "${{ env.HOME }}/sentry-native"
+      SENTRY_NATIVE_INSTALL: "~/sentry-native"
 
     steps:
       - name: Install Rust

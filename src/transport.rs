@@ -89,9 +89,7 @@ pub trait TransportWorker {
         let envelope = Envelope::try_from(envelope)?;
         builder = builder.header("content-length", envelope.as_ref().len());
 
-        builder
-            .body(envelope)
-            .map_err(|_| "failed to build HTTP request")
+        builder.body(envelope).unwrap()
     }
 }
 

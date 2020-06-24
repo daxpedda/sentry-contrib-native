@@ -113,7 +113,8 @@ jobs:
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
         id: build
-        run: cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+        run:
+          cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Clippy
         if: always() && steps.build.outcome == 'success'
         run:
@@ -130,7 +131,8 @@ jobs:
         if: always() && steps.build.outcome == 'success'
         env:
           RUSTDOCFLAGS: -F warnings
-        run: cargo -v doc --no-deps --document-private-items --workspace ${{
+        run:
+          cargo -v doc --no-deps --document-private-items --workspace ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'
@@ -261,7 +263,8 @@ jobs:
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
         id: build
-        run: cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+        run:
+          cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Clippy
         if: always() && steps.build.outcome == 'success'
         run:
@@ -278,7 +281,8 @@ jobs:
         if: always() && steps.build.outcome == 'success'
         env:
           RUSTDOCFLAGS: -F warnings
-        run: cargo -v doc --no-deps --document-private-items --workspace ${{
+        run:
+          cargo -v doc --no-deps --document-private-items --workspace ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'

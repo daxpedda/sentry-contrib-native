@@ -11,9 +11,6 @@ jobs:
   docs:
     runs-on: ubuntu-latest
 
-    env:
-      SENTRY_NATIVE_INSTALL: "~/sentry-native"
-
     steps:
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
@@ -38,6 +35,8 @@ jobs:
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version
             }}-default_transport
+      - name: Set SENTRY_NATIVE_INSTALL
+        run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Documentation
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page

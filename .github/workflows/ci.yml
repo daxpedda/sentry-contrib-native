@@ -74,9 +74,6 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    env:
-      SENTRY_NATIVE_INSTALL: "~/sentry-native"
-
     steps:
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
@@ -103,6 +100,8 @@ jobs:
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
             matrix.feature.cache }}
+      - name: Set SENTRY_NATIVE_INSTALL
+        run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
         id: build
         run:
@@ -215,9 +214,6 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    env:
-      SENTRY_NATIVE_INSTALL: "~/sentry-native"
-
     steps:
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
@@ -245,6 +241,8 @@ jobs:
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
             matrix.feature.cache }}
+      - name: Set SENTRY_NATIVE_INSTALL
+        run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
         id: build
         run:

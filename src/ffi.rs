@@ -31,7 +31,6 @@ impl CPath for PathBuf {
         #[cfg(windows)]
         let mut path: Vec<_> = self.into_os_string().encode_wide().collect();
         #[cfg(not(windows))]
-        #[allow(clippy::cast_possible_wrap)]
         let mut path: Vec<_> = self
             .into_os_string()
             .into_vec()

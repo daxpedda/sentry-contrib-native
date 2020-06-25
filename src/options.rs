@@ -1,5 +1,7 @@
 //! Sentry options implementation.
 
+#[cfg(feature = "custom-transport")]
+use crate::Transport;
 use crate::{CPath, CToR, Error, Level, RToC, Value};
 use once_cell::sync::{Lazy, OnceCell};
 #[cfg(feature = "test")]
@@ -140,17 +142,9 @@ impl Options {
     /// Sets a transport.
     ///
     /// # Examples
-    /// ```
-    /// # use sentry_contrib_native::{Options, Transport, SentryRequest};
-    /// let mut options = Options::new();
-    /// options.set_transport(Transport::new(Box::new(move |req: SentryRequest| {
-    ///     let (parts, body) = req.into_parts();
-    ///     println!("Sending request {:#?} to Sentry", parts);
-    ///     Ok(())
-    /// })));
-    /// ```
+    /// TODO
     #[cfg(feature = "custom-transport")]
-    pub fn set_transport(&mut self, transport: Box<crate::transport::Transport>) {
+    pub fn set_transport(&mut self, transport: Box<Transport>) {
         unsafe {
             sys::options_set_transport(self.as_mut(), transport.inner);
             // Sending in the transport passes ownership to Sentry, so we leak

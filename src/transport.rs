@@ -1,15 +1,16 @@
-//! Contains types for creating custom transports that the underlying sentry-native
-//! library can use to send data to your upstream Sentry service in lieue of
-//! the built-in transports provided by the sentry-native library itself
+//! Contains types for creating custom transports that the underlying
+//! sentry-native library can use to send data to your upstream Sentry service
+//! in lieue of the built-in transports provided by the sentry-native library
+//! itself.
 
-use std::{convert::TryFrom, os::raw::c_void};
+use http::{HeaderValue, Request};
+use std::{os::raw::c_void, time::Duration};
+use sys::SDK_USER_AGENT;
 
 /// The request your [`TransportWorker`] is expected to send.
-pub type SentryRequest = http::Request<Envelope>;
+pub type SentryRequest = Request<Envelope>;
 
-/// From sentry.h, but only present as a preprocessor define :(
-pub const USER_AGENT: &str = "sentry.native/0.3.2";
-/// The MIME type for Sentry envelopes
+/// The MIME type for Sentry envelopes.
 pub const ENVELOPE_MIME: &str = "application/x-sentry-envelope";
 /// Version of the Sentry API we can communicate with, AFAICT this is just
 /// hardcoded into sentry-native, so...two can play at that game!
@@ -17,22 +18,23 @@ pub const API_VERSION: i8 = 7;
 
 /// The return from [`TransportWorker::shutdown`], which determines if we tell
 /// the Sentry SDK if we were able to send all requests to the remote service
-/// or not in the time allotted
+/// or not in the time allotted.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Copy, Clone)]
 pub enum TransportShutdown {
-    /// The custom transport was able to send all requests in the time specified
+    /// The custom transport was able to send all requests in the time
+    /// specified.
     Success,
-    /// One or more requests could be sent in the specified time frame
+    /// One or more requests could not be sent in the specified time frame.
     TimedOut,
 }
 
 /// Trait used to define your own transport that Sentry can use to send events
-/// to a Sentry service
+/// to a Sentry service.
 #[allow(clippy::module_name_repetitions)]
 pub trait TransportWorker {
     /// Starts up the transport worker, with the options that were used to
-    /// create the Sentry SDK
+    /// create the Sentry SDK.
     fn startup(&self, dsn: Dsn, debug: bool);
 
     /// Sends the specified Envelope to a Sentry service.
@@ -44,10 +46,11 @@ pub trait TransportWorker {
     /// Shuts down the transport worker. The worker should try to flush all
     /// of the pending requests to Sentry before shutdown. If the worker is
     /// successfully able to empty its queue and shutdown before the specified
-    /// timeout duration, it should return [`WorkerShutdown::Success`].
-    fn shutdown(&self, timeout: std::time::Duration) -> TransportShutdown;
+    /// timeout duration, it should return [`WorkerShutdown::Success`],
+    /// otherwise it should return [`WorkerShutdown::TimedOut`].
+    fn shutdown(&self, timeout: Duration) -> TransportShutdown;
 
-    /// Constructs an HTTP request for the provided [`sys::Envelope`] with the
+    /// Constructs a HTTP request for the provided [`sys::Envelope`] with the
     /// DSN that was registered with the SDK.
     ///
     /// The return value has all of the necessary pieces of data to create a
@@ -58,35 +61,28 @@ pub trait TransportWorker {
     /// * The body of the request
     ///
     /// The `content-length` header is already set for you, though some HTTP
-    /// clients will automatically set it for you in some cases, which should
-    /// be fine.
+    /// clients will automatically overwrite it, which should be fine.
     ///
-    /// The `body` in the request is a [`Envelope`], which implements `AsRef<[u8]`
-    /// to retrieve the actual bytes that should be sent as the body
+    /// The `body` in the request is an [`Envelope`], which implements
+    /// `AsRef<[u8]>` to retrieve the actual bytes that should be sent as the
+    /// body.
     ///
     /// # Errors
     /// Can fail if the envelope can't be serialized, or there is an invalid
-    /// header value
-    fn convert_to_request(
-        dsn: &Dsn,
-        envelope: PostedEnvelope,
-    ) -> Result<SentryRequest, &'static str>
+    /// header value.
+    #[must_use]
+    fn convert_to_request(dsn: &Dsn, envelope: PostedEnvelope) -> SentryRequest
     where
         Self: Sized,
     {
-        let mut builder = http::Request::builder();
-
-        {
-            let headers = builder.headers_mut().unwrap();
-            headers.insert("user-agent", USER_AGENT.parse().unwrap());
-            headers.insert("content-type", ENVELOPE_MIME.parse().unwrap());
-            headers.insert("accept", "*/*".parse().unwrap());
-        }
-
-        builder = builder.method("POST");
+        let mut builder = Request::builder()
+            .header("user-agent", HeaderValue::from_static(SDK_USER_AGENT))
+            .header("content-type", HeaderValue::from_static(ENVELOPE_MIME))
+            .header("accept", HeaderValue::from_static("*/*"))
+            .method("POST");
         builder = dsn.build_req(builder);
 
-        let envelope = Envelope::try_from(envelope)?;
+        let envelope = Envelope::from(envelope);
         builder = builder.header("content-length", envelope.as_ref().len());
 
         builder.body(envelope).unwrap()
@@ -94,7 +90,8 @@ pub trait TransportWorker {
 }
 
 /// Holds the state for your custom transport. The lifetime of this state is
-/// handled by the underlying Sentry library, which is why you only get a `Box<>`
+/// handled by the underlying Sentry library, which is why you only get a
+/// `Box<>`
 pub struct Transport {
     /// The inner transport that our state is attached to
     pub(crate) inner: *mut sys::Transport,
@@ -104,8 +101,8 @@ pub struct Transport {
 }
 
 impl Transport {
-    /// Creates a new Transport for Sentry using your provided [`TransportWorker`]
-    /// implementation.
+    /// Creates a new Transport for Sentry using your provided
+    /// [`TransportWorker`] implementation.
     #[must_use]
     pub fn new(worker: Box<dyn TransportWorker>) -> Box<Self> {
         let inner = unsafe { sys::transport_new(Some(Self::send_function)) };
@@ -279,23 +276,16 @@ impl Drop for Envelope {
     }
 }
 
-impl TryFrom<PostedEnvelope> for Envelope {
-    type Error = &'static str;
-
-    fn try_from(pe: PostedEnvelope) -> Result<Self, Self::Error> {
+impl From<PostedEnvelope> for Envelope {
+    fn from(pe: PostedEnvelope) -> Self {
         unsafe {
             let mut envelope_size = 0;
             let serialized_envelope = sys::envelope_serialize(pe.0, &mut envelope_size);
 
-            // I assume the serialization can fail
-            if envelope_size == 0 || serialized_envelope.is_null() {
-                return Err("failed to serialize envelope");
-            }
-
-            Ok(Self {
+            Self {
                 data: serialized_envelope,
                 len: envelope_size,
-            })
+            }
         }
     }
 }
@@ -348,7 +338,7 @@ impl std::str::FromStr for Dsn {
                     "Sentry sentry_key={}, sentry_version={}, sentry_client={}",
                     dsn_url.username(),
                     API_VERSION,
-                    USER_AGENT
+                    SDK_USER_AGENT
                 );
 
                 let uri = format!(
@@ -384,7 +374,7 @@ mod test {
                 "https://o209016.ingest.sentry.io/api/0123456/envelope/"
             );
             let headers = builder.headers_ref().unwrap();
-            assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, USER_AGENT));
+            assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, SDK_USER_AGENT));
         }
 
         {
@@ -399,7 +389,7 @@ mod test {
                 "http://192.168.1.1/api/0123456/envelope/"
             );
             let headers = builder.headers_ref().unwrap();
-            assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, USER_AGENT));
+            assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, SDK_USER_AGENT));
         }
     }
 }

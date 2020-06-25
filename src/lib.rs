@@ -30,7 +30,7 @@ use ffi::{CPath, CToR, RToC};
 #[cfg(feature = "custom-transport")]
 pub use http;
 use object::{Map, Object};
-use options::{global_read, global_write, BEFORE_SEND};
+use options::{global_read, global_write, Ownership, BEFORE_SEND};
 pub use options::{BeforeSend, Options, Shutdown};
 pub use panic::set_hook;
 use std::{
@@ -41,9 +41,7 @@ use std::{
 };
 use thiserror::Error;
 #[cfg(feature = "custom-transport")]
-pub use transport::{
-    Dsn, PostedEnvelope, SentryRequest, Transport, TransportShutdown, TransportWorker,
-};
+pub use transport::{Dsn, PostedEnvelope, SentryRequest, Transport, TransportShutdown};
 pub use user::User;
 pub use value::Value;
 

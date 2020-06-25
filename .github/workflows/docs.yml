@@ -22,7 +22,9 @@ jobs:
           ref: master
           submodules: recursive
       - name: Install curl
-        run: sudo apt install libcurl4-openssl-dev
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev
       - name: Get sentry-native commit
         id: sentry_native
         run:

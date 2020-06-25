@@ -89,7 +89,9 @@ jobs:
         if:
           matrix.os == 'ubuntu-latest' && matrix.feature.transport ==
           'default_transport'
-        run: sudo apt install libcurl4-openssl-dev
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev
       - name: Get sentry-native commit
         id: sentry_native
         run:
@@ -237,7 +239,9 @@ jobs:
         if:
           matrix.os == 'ubuntu-latest' && matrix.feature.transport ==
           'default_transport'
-        run: sudo apt install libcurl4-openssl-dev
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev
       - name: Get sentry-native commit
         id: sentry_native
         run:

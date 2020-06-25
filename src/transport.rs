@@ -3,8 +3,13 @@
 //! in lieue of the built-in transports provided by the sentry-native library
 //! itself.
 
+use crate::{Options, Ownership};
 use http::{HeaderValue, Request};
-use std::{os::raw::c_void, time::Duration};
+use std::{
+    mem::{self, ManuallyDrop},
+    os::raw::c_void,
+    time::Duration,
+};
 use sys::SDK_USER_AGENT;
 
 /// The request your [`TransportWorker`] is expected to send.
@@ -31,24 +36,23 @@ pub enum TransportShutdown {
 
 /// Trait used to define your own transport that Sentry can use to send events
 /// to a Sentry service.
-#[allow(clippy::module_name_repetitions)]
-pub trait TransportWorker {
+pub trait Transport {
     /// Starts up the transport worker, with the options that were used to
     /// create the Sentry SDK.
-    fn startup(&self, dsn: Dsn, debug: bool);
+    fn startup(&mut self, dsn: &Options);
 
     /// Sends the specified Envelope to a Sentry service.
     ///
     /// It is **highly** recommended to not block in this method, but rather
     /// to enqueue the worker to another thread.
-    fn send(&self, envelope: PostedEnvelope);
+    fn send(&mut self, envelope: PostedEnvelope);
 
     /// Shuts down the transport worker. The worker should try to flush all
     /// of the pending requests to Sentry before shutdown. If the worker is
     /// successfully able to empty its queue and shutdown before the specified
     /// timeout duration, it should return [`WorkerShutdown::Success`],
     /// otherwise it should return [`WorkerShutdown::TimedOut`].
-    fn shutdown(&self, timeout: Duration) -> TransportShutdown;
+    fn shutdown(&mut self, timeout: Duration) -> TransportShutdown;
 
     /// Constructs a HTTP request for the provided [`sys::Envelope`] with the
     /// DSN that was registered with the SDK.
@@ -89,147 +93,44 @@ pub trait TransportWorker {
     }
 }
 
-/// Holds the state for your custom transport. The lifetime of this state is
-/// handled by the underlying Sentry library, which is why you only get a
-/// `Box<>`
-pub struct Transport {
-    /// The inner transport that our state is attached to
-    pub(crate) inner: *mut sys::Transport,
-    /// The user's [`TransportWorker`] that's actually responsible for sendin
-    /// requests to a remote Sentry service
-    worker: Option<Box<dyn TransportWorker>>,
+/// The function registered with [`sys::transport_new`] when the SDK wishes
+/// to send an envelope to Sentry
+pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
+    let state = state as *mut Box<dyn Transport>;
+    let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
+    let envelope = PostedEnvelope(envelope);
+
+    state.send(envelope);
 }
 
-impl Transport {
-    /// Creates a new Transport for Sentry using your provided
-    /// [`TransportWorker`] implementation.
-    #[must_use]
-    pub fn new(worker: Box<dyn TransportWorker>) -> Box<Self> {
-        let inner = unsafe { sys::transport_new(Some(Self::send_function)) };
+/// The function registered with [`sys::transport_set_startup_func`] to
+/// start our transport so that we can being sending requests to Sentry
+pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
+    let state = state as *mut Box<dyn Transport>;
+    let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
+    let options = Options::from_sys(Ownership::Borrowed(options));
 
-        unsafe {
-            let ret = Box::new(Self {
-                inner,
-                worker: Some(worker),
-            });
+    state.startup(&options);
+}
 
-            let ptr = ret.into_raw();
-            sys::transport_set_state(inner, ptr);
-            sys::transport_set_startup_func(inner, Some(Self::startup));
-            sys::transport_set_shutdown_func(inner, Some(Self::shutdown));
-            sys::transport_set_free_func(inner, Some(Self::free));
+/// The function registered with [`sys::transport_set_shutdown_func`] which
+/// will attempt to flush all of the outstanding requests via the transport,
+/// and shutdown the worker thread, before the specified timeout is reached
+pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> bool {
+    let state = state as *mut Box<dyn Transport>;
+    let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
+    let timeout = Duration::from_millis(timeout);
 
-            Self::from_raw(ptr)
-        }
-    }
-
-    /// Convert ourselves into a state pointer, and prevents deallocating
-    #[inline]
-    fn into_raw(self: Box<Self>) -> *mut c_void {
-        Box::into_raw(self) as *mut _
-    }
-
-    /// Convert a state pointer back into a Box
-    #[inline]
-    fn from_raw(state: *mut c_void) -> Box<Self> {
-        unsafe { Box::from_raw(state as *mut _) }
-    }
-
-    /// The function registered with [`sys::transport_new`] when the SDK wishes
-    /// to send an envelope to Sentry
-    extern "C" fn send_function(envelope: *mut sys::Envelope, state: *mut c_void) {
-        let s = Self::from_raw(state);
-        let envelope = PostedEnvelope(envelope);
-
-        if let Some(q) = &s.worker {
-            q.send(envelope);
-        }
-
-        s.into_raw();
-    }
-
-    /// The function registered with [`sys::transport_set_startup_hook`] to
-    /// start our transport so that we can being sending requests to Sentry
-    extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
-        let s = Self::from_raw(state);
-
-        if let Some(imp) = &s.worker {
-            unsafe {
-                let dsn = sys::options_get_dsn(options);
-                let debug = sys::options_get_debug(options) == 1;
-
-                if dsn.is_null() {
-                    if debug {
-                        eprintln!("[sentry-contrib-native]: DSN is null");
-                    }
-
-                    s.into_raw();
-                    return;
-                }
-
-                let dsn = std::ffi::CStr::from_ptr(dsn);
-
-                match dsn.to_str() {
-                    Ok(dsn_url) => match dsn_url.parse() {
-                        Ok(dsn) => {
-                            imp.startup(dsn, debug);
-                        }
-                        Err(err) => {
-                            if debug {
-                                eprintln!("[sentry-contrib-native]: Failed to parse DSN: {}", err);
-                            }
-                        }
-                    },
-                    Err(err) => {
-                        if debug {
-                            eprintln!(
-                                "[sentry-contrib-native]: DSN url has invalid UTF-8: {}",
-                                err
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        s.into_raw();
-    }
-
-    /// The function registered with [`sys::transport_set_shutdown_func`] which
-    /// will attempt to flush all of the outstanding requests via the transport,
-    /// and shutdown the worker thread, before the specified timeout is reached
-    extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> bool {
-        let mut s = Self::from_raw(state);
-
-        let sent_all = match s.worker.take() {
-            Some(worker) => match worker.shutdown(std::time::Duration::from_millis(timeout)) {
-                TransportShutdown::Success => true,
-                TransportShutdown::TimedOut => false,
-            },
-            None => true,
-        };
-
-        s.into_raw();
-
-        sent_all
-    }
-
-    /// The function registered with [`sys::transport_set_free_func`] that
-    /// actually frees our state
-    extern "C" fn free(state: *mut c_void) {
-        let mut s = Self::from_raw(state);
-        s.inner = std::ptr::null_mut();
+    match state.shutdown(timeout) {
+        TransportShutdown::Success => true,
+        TransportShutdown::TimedOut => false,
     }
 }
 
-impl Drop for Transport {
-    fn drop(&mut self) {
-        unsafe {
-            if !self.inner.is_null() {
-                sys::transport_free(self.inner);
-            }
-        }
-    }
+/// The function registered with [`sys::transport_set_free_func`] that
+/// actually frees our state
+pub extern "C" fn free(state: *mut c_void) {
+    mem::drop(unsafe { Box::from_raw(state as *mut Box<dyn Transport>) });
 }
 
 /// Wrapper for the raw Envelope that we should send to Sentry

@@ -1,7 +1,7 @@
 //! Sentry options implementation.
 
 #[cfg(feature = "custom-transport")]
-use crate::Transport;
+use crate::{transport, Transport};
 use crate::{CPath, CToR, Error, Level, RToC, Value};
 use once_cell::sync::{Lazy, OnceCell};
 #[cfg(feature = "test")]
@@ -46,7 +46,7 @@ pub fn global_write() -> RwLockWriteGuard<'static, bool> {
 /// ```
 pub struct Options {
     /// Raw Sentry options.
-    raw: Option<*mut sys::Options>,
+    raw: Option<Ownership>,
     /// Storing a fake database path to make documentation tests and examples
     /// work without polluting the file system.
     #[cfg(feature = "test")]
@@ -54,6 +54,15 @@ pub struct Options {
     /// Storing [`Options::set_before_send`] data to properly deallocate it
     /// later.
     before_send: Option<Box<Box<dyn BeforeSend>>>,
+}
+
+/// Represents the ownership status of [`Options`].
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Ownership {
+    /// [`Options`] is owned.
+    Owned(*mut sys::Options),
+    /// [`Options`] is borrowed.
+    Borrowed(*const sys::Options),
 }
 
 unsafe impl Send for Options {}
@@ -86,8 +95,11 @@ impl Debug for Options {
 
 impl Drop for Options {
     fn drop(&mut self) {
-        if let Some(option) = self.raw.take() {
-            unsafe { sys::options_free(option) };
+        if let Some(options) = self.raw.take() {
+            match options {
+                Ownership::Owned(options) => unsafe { sys::options_free(options) },
+                Ownership::Borrowed(_) => (),
+            }
         }
     }
 }
@@ -101,7 +113,7 @@ impl PartialEq for Options {
 impl Eq for Options {}
 
 impl Options {
-    /// Crates new Sentry client options.
+    /// Creates new Sentry client options.
     ///
     /// # Examples
     /// ```
@@ -110,9 +122,15 @@ impl Options {
     /// ```
     #[must_use]
     pub fn new() -> Self {
+        Self::from_sys(Ownership::Owned(unsafe { sys::options_new() }))
+    }
+
+    /// Creates new [`Options`] from a [`sys::Options`] wrapped in
+    /// [`Ownership`].
+    pub(crate) fn from_sys(options: Ownership) -> Self {
         #[cfg_attr(not(feature = "test"), allow(unused_mut))]
         let mut options = Self {
-            raw: Some(unsafe { sys::options_new() }),
+            raw: Some(options),
             #[cfg(feature = "test")]
             database_path: None,
             before_send: None,
@@ -131,12 +149,18 @@ impl Options {
 
     /// Yields a pointer to [`sys::Options`], ownership is retained.
     fn as_ref(&self) -> *const sys::Options {
-        self.raw.expect("use after free")
+        match self.raw.expect("use after free") {
+            Ownership::Owned(options) => options,
+            Ownership::Borrowed(options) => options,
+        }
     }
 
     /// Yields a mutable pointer to [`sys::Options`], ownership is retained.
     fn as_mut(&mut self) -> *mut sys::Options {
-        self.raw.expect("use after free")
+        match self.raw.expect("use after free") {
+            Ownership::Owned(options) => options,
+            Ownership::Borrowed(_) => panic!("can't mutably borrow options"),
+        }
     }
 
     /// Sets a transport.
@@ -144,12 +168,16 @@ impl Options {
     /// # Examples
     /// TODO
     #[cfg(feature = "custom-transport")]
-    pub fn set_transport(&mut self, transport: Box<Transport>) {
+    pub fn set_transport<B: Into<Box<T>>, T: Transport>(&mut self, transport: B) {
+        let data = Box::into_raw(Box::<Box<dyn Transport>>::new(transport.into()));
+
         unsafe {
-            sys::options_set_transport(self.as_mut(), transport.inner);
-            // Sending in the transport passes ownership to Sentry, so we leak
-            // and let it call the appropriate startup/shutdown functions
-            Box::leak(transport);
+            let transport = sys::transport_new(Some(transport::send));
+            sys::transport_set_state(transport, data as _);
+            sys::transport_set_startup_func(transport, Some(transport::startup));
+            sys::transport_set_shutdown_func(transport, Some(transport::shutdown));
+            sys::transport_set_free_func(transport, Some(transport::free));
+            sys::options_set_transport(self.as_mut(), transport);
         }
     }
 
@@ -688,7 +716,7 @@ impl Options {
             panic!("already initialized Sentry once")
         }
 
-        match unsafe { sys::init(self.raw.unwrap()) } {
+        match unsafe { sys::init(self.as_mut()) } {
             0 => {
                 *lock = true;
                 // init has taken ownership now

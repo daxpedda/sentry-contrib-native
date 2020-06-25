@@ -1,5 +1,5 @@
-use parking_lot::{Condvar, Mutex};
-use sentry::PostedEnvelope;
+/*use parking_lot::{Condvar, Mutex};
+use sentry::{Event, PostedEnvelope};
 use sentry_contrib_native as sentry;
 use std::sync::Arc;
 use tokio::sync::mpsc;
@@ -188,5 +188,10 @@ fn main() -> Result<(), String> {
         .init()
         .map_err(|e| format!("Failed to initialize Sentry: {}", e))?;
 
+    Event::new().capture();
+
     Ok(())
 }
+*/
+
+fn main() {}

@@ -14,7 +14,7 @@ async fn send_sentry_request(
     req: sentry::SentryRequest,
 ) -> Result<(), String> {
     let (parts, body) = req.into_parts();
-    let uri = parts.uri.to_string();
+    //let uri = parts.uri.to_string();
 
     // Sentry should only give us POST requests to send
     if parts.method != http::Method::POST {
@@ -86,16 +86,11 @@ impl sentry::TransportWorker for ReqwestTransport {
                         // Dequeue and send events until we are asked to shut down
                         while let Some(envelope) = rx.recv().await {
                             // Convert the envelope into an HTTP request
-                            match Self::convert_to_request(&dsn, envelope) {
-                                Ok(req) => match send_sentry_request(&client, req).await {
-                                    Ok(_) => eprintln!("successfully sent sentry envelope"),
-                                    Err(err) => {
-                                        eprintln!("failed to send sentry envelope: {}", err)
-                                    }
-                                },
-                                Err(err) => {
-                                    eprintln!("failed to convert Sentry request: {}", err);
-                                }
+                            let req = Self::convert_to_request(&dsn, envelope);
+
+                            match send_sentry_request(&client, req).await {
+                                Ok(_) => eprintln!("successfully sent sentry envelope"),
+                                Err(err) => eprintln!("failed to send sentry envelope: {}", err),
                             }
                         }
 

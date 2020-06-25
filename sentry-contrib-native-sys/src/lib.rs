@@ -14,6 +14,9 @@ use std::{
 #[allow(non_camel_case_types)]
 type c_wchar = u16;
 
+/// SDK Version
+pub const SDK_USER_AGENT: &str = "sentry.native/0.3.4";
+
 /// The Sentry Client Options.
 ///
 /// See <https://docs.sentry.io/error-reporting/configuration/>
@@ -99,10 +102,10 @@ pub enum UserConsent {
 /// This represents an interface for user-defined transports.
 ///
 /// Transports are responsible for sending envelopes to sentry and are the last
-/// step in the event pipeline. A transport has the following hooks, all of which
-/// take the user provided `state` as last parameter. The transport state needs
-/// to be set with `sentry_transport_set_state` and typically holds handles and
-/// other information that can be reused across requests.
+/// step in the event pipeline. A transport has the following hooks, all of
+/// which take the user provided `state` as last parameter. The transport state
+/// needs to be set with `sentry_transport_set_state` and typically holds
+/// handles and other information that can be reused across requests.
 ///
 /// * `send_func`: This function will take ownership of an envelope, and is
 ///   responsible for freeing it via `sentry_envelope_free`.
@@ -111,8 +114,8 @@ pub enum UserConsent {
 /// * `shutdown_func`: Instructs the transport to flush its queue and shut down.
 ///   This hook receives a millisecond-resolution `timeout` parameter and should
 ///   return `true` when the transport was flushed and shut down successfully.
-///   In case of `false`, sentry will log an error, but continue with freeing the
-///   transport.
+///   In case of `false`, sentry will log an error, but continue with freeing
+///   the transport.
 /// * `free_func`: Frees the transports `state`. This hook might be called even
 ///   though `shudown_func` returned `false` previously.
 ///
@@ -350,9 +353,9 @@ extern "C" {
 
     /// Sets the transport shutdown hook.
     ///
-    /// This hook will receive a millisecond-resolution timeout; it should return
-    /// `true` in case all the pending envelopes have been sent within the timeout,
-    /// or `false` if the timeout was hit.
+    /// This hook will receive a millisecond-resolution timeout; it should
+    /// return `true` in case all the pending envelopes have been sent
+    /// within the timeout, or `false` if the timeout was hit.
     #[link_name = "sentry_transport_set_shutdown_func"]
     pub fn transport_set_shutdown_func(
         transport: *mut Transport,

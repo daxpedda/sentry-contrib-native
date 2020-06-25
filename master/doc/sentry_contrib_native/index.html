@@ -100,6 +100,18 @@ with that: <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="ident">std</span>::<span class="ident">panic</span>::<span class="ident">set_hook</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">sentry_contrib_native</span>::<span class="ident">shutdown</span>()));</pre></div>
+<h2 id="platform-support" class="section-header"><a href="#platform-support">Platform support</a></h2>
+<p>Currently the following systems are tested with CI:</p>
+<ul>
+<li>x86_64-unknown-linux-gnu</li>
+<li>x86_64-apple-darwin</li>
+<li>x86_64-pc-windows-msvc</li>
+</ul>
+<p>See the <a href="https://github.com/daxpedda/sentry-contrib-native/actions">CI itself</a>
+for more detailed information. See
+<a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
+for more platform and feature support details there, this crate doesn't do
+anything fancy, so we mostly rely on <code>sentry-native</code> for support.</p>
 <h2 id="build" class="section-header"><a href="#build">Build</a></h2>
 <p>This crate relies on
 <a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
@@ -116,7 +128,17 @@ for more details.</p>
 <ul>
 <li><strong>default-transport</strong> - <strong>Enabled by default</strong>, will use <code>winhttp</code> on Windows
 and <code>curl</code> everywhere else as the default transport.</li>
-<li><strong>test</strong> - Corrects testing for documentation tests and examples.</li>
+<li><strong>test</strong> - Corrects testing for documentation tests and examples.
+<ul>
+<li>Automatically sets the DSN to the <code>SENTRY_DSN</code> environment variable, no
+matter what is set through <code>Options::set_dsn</code>.</li>
+<li>Automatically sets the database path to the <code>OUT_DIR</code> environment variable,
+no matter what is set through <code>Options::set_database_path</code>.</li>
+<li>Automatically puts the crashhandler path to the correct path, taking into
+account <code>SENTRY_NATIVE_INSTALL</code>, no matter what is set through
+<code>Options::set_handler_path</code>.</li>
+</ul>
+</li>
 <li><strong>nightly</strong> - Enables full documentation through
 <a href="https://doc.rust-lang.org/unstable-book/language-features/external-doc.html"><code>feature(external_doc)</code></a>.</li>
 </ul>

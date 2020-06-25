@@ -8,11 +8,11 @@ on:
     branches-ignore:
       - gh-pages
   schedule:
-    - cron: "0 0 * * *"
+    - cron: 0 0 * * *
 
 jobs:
   cargo-audit:
-    if: github.event_name != "schedule"
+    if: github.event_name != 'schedule'
 
     runs-on: ubuntu-latest
 
@@ -37,7 +37,7 @@ jobs:
         run: cargo audit -D
 
   prettier:
-    if: github.event_name != "schedule"
+    if: github.event_name != 'schedule'
 
     runs-on: ubuntu-latest
 
@@ -50,7 +50,7 @@ jobs:
         run: npx prettier -l .
 
   ci:
-    if: github.event_name != "schedule"
+    if: github.event_name != 'schedule'
 
     strategy:
       fail-fast: false
@@ -84,9 +84,9 @@ jobs:
         id: checkout
         uses: actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: recursive
       - name: Install curl
-        if: matrix.os == "ubuntu-latest"
+        if: matrix.os == 'ubuntu-latest'
         run: sudo apt install libcurl4-openssl-dev
       - name: Get sentry-native commit
         id: sentry_native
@@ -107,31 +107,31 @@ jobs:
         run:
           cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Clippy
-        if: always() && steps.checkout.outcome == "success"
+        if: always() && steps.checkout.outcome == 'success'
         run:
           cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -F warnings
       - name: Test
         if:
-          always() && steps.build.outcome == "success" && matrix.feature.name ==
-          "--features test"
+          always() && steps.build.outcome == 'success' && matrix.feature.name ==
+          '--features test'
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Documentation
-        if: always() && steps.checkout.outcome == "success"
+        if: always() && steps.checkout.outcome == 'success'
         env:
           RUSTDOCFLAGS: -F warnings
         run:
           cargo -v doc --no-deps --document-private-items --workspace ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
-        if: always() && steps.checkout.outcome == "success"
+        if: always() && steps.checkout.outcome == 'success'
         continue-on-error: ${{ matrix.rust.continue-on-error }}
         run: cargo fmt -v --all -- --check
 
   schedule-cargo-audit:
-    if: github.event_name == "schedule"
+    if: github.event_name == 'schedule'
 
     strategy:
       fail-fast: false
@@ -170,7 +170,7 @@ jobs:
           --ignore RUSTSEC-2019-0031
 
   schedule-prettier:
-    if: github.event_name == "schedule"
+    if: github.event_name == 'schedule'
 
     strategy:
       fail-fast: false
@@ -192,7 +192,7 @@ jobs:
         run: npx prettier -l .
 
   schedule-ci:
-    if: github.event_name == "schedule"
+    if: github.event_name == 'schedule'
 
     strategy:
       fail-fast: false
@@ -230,9 +230,9 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ matrix.branch }}
-          submodules: "recursive"
+          submodules: recursive
       - name: Install curl
-        if: matrix.os == "ubuntu-latest"
+        if: matrix.os == 'ubuntu-latest'
         run: sudo apt install libcurl4-openssl-dev
       - name: Get sentry-native commit
         id: sentry_native
@@ -253,25 +253,25 @@ jobs:
         run:
           cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Clippy
-        if: always() && steps.checkout.outcome == "success"
+        if: always() && steps.checkout.outcome == 'success'
         run:
           cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -F warnings
       - name: Test
         if:
-          always() && steps.build.outcome == "success" && matrix.feature.name ==
-          "--features test"
+          always() && steps.build.outcome == 'success' && matrix.feature.name ==
+          '--features test'
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Documentation
-        if: always() && steps.checkout.outcome == "success"
+        if: always() && steps.checkout.outcome == 'success'
         env:
           RUSTDOCFLAGS: -F warnings
         run:
           cargo -v doc --no-deps --document-private-items --workspace ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
-        if: always() && steps.checkout.outcome == "success"
+        if: always() && steps.checkout.outcome == 'success'
         continue-on-error: ${{ matrix.rust.continue-on-error }}
         run: cargo fmt -v --all -- --check

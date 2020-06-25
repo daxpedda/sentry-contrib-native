@@ -116,6 +116,20 @@ If you are using `panic = abort` make sure to let the panic handler call
 std::panic::set_hook(Box::new(|_| sentry_contrib_native::shutdown()));
 ```
 
+## Platform support
+
+Currently the following systems are tested with CI:
+
+- x86_64-unknown-linux-gnu
+- x86_64-apple-darwin
+- x86_64-pc-windows-msvc
+
+See the [CI itself](https://github.com/daxpedda/sentry-contrib-native/actions)
+for more detailed information. See
+[`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys)
+for more platform and feature support details there, this crate doesn't do
+anything fancy, so we mostly rely on `sentry-native` for support.
+
 ## Build
 
 This crate relies on
@@ -137,6 +151,13 @@ for more details.
 - **default-transport** - **Enabled by default**, will use `winhttp` on Windows
   and `curl` everywhere else as the default transport.
 - **test** - Corrects testing for documentation tests and examples.
+  - Automatically sets the DSN to the `SENTRY_DSN` environment variable, no
+    matter what is set through `Options::set_dsn`.
+  - Automatically sets the database path to the `OUT_DIR` environment variable,
+    no matter what is set through `Options::set_database_path`.
+  - Automatically puts the crashhandler path to the correct path, taking into
+    account `SENTRY_NATIVE_INSTALL`, no matter what is set through
+    `Options::set_handler_path`.
 - **nightly** - Enables full documentation through
   [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html).
 

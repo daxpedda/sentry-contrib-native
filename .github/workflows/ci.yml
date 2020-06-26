@@ -71,14 +71,21 @@ jobs:
         feature:
           - {
               name: --no-default-features --features custom-transport,
-              transport: no_transport,
+              cache: no_transport,
+              test: false,
               custom-transport: true,
             }
-          - { name: "", transport: default_transport, custom-transport: false }
+          - {
+              name: "",
+              cache: default_transport,
+              test: false,
+              custom-transport: false,
+            }
           - {
               name: "--features test,custom-transport",
+              cache: default_transport,
+              test: true,
               custom-transport: true,
-              transport: default_transport,
             }
         os:
           - ubuntu-latest
@@ -86,6 +93,9 @@ jobs:
           - windows-latest
 
     runs-on: ${{ matrix.os }}
+
+    env:
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
     steps:
       - name: Install Rust
@@ -116,7 +126,7 @@ jobs:
           path: ~/sentry-native
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
-            matrix.feature.transport }}
+            matrix.feature.cache }}
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
@@ -129,27 +139,17 @@ jobs:
           cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -F warnings
       - name: Test
-        if:
-          always() && steps.build.outcome == 'success' && matrix.feature.name ==
-          '--features test'
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        if: always() && steps.build.outcome == 'success' && matrix.feature.test
         run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Example
-        if:
-          always() && steps.build.outcome == 'success' && matrix.feature.name ==
-          '--features test'
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        if: always() && steps.build.outcome == 'success' && matrix.feature.test
         run:
           cargo -v run --example example ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
       - name: Custom transport example
         if:
-          always() && steps.build.outcome == 'success' && matrix.feature.name ==
-          '--features test' && matrix.feature.custom-transport
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          always() && steps.build.outcome == 'success' && matrix.feature.test &&
+          matrix.feature.custom-transport
         run:
           cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
@@ -243,14 +243,21 @@ jobs:
         feature:
           - {
               name: --no-default-features --features custom-transport,
-              transport: no_transport,
+              cache: no_transport,
+              test: false,
               custom-transport: true,
             }
-          - { name: "", transport: default_transport, custom-transport: false }
+          - {
+              name: "",
+              cache: default_transport,
+              test: false,
+              custom-transport: false,
+            }
           - {
               name: "--features test,custom-transport",
+              cache: default_transport,
+              test: true,
               custom-transport: true,
-              transport: default_transport,
             }
         os:
           - ubuntu-latest
@@ -261,6 +268,9 @@ jobs:
           #- release
 
     runs-on: ${{ matrix.os }}
+
+    env:
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
     steps:
       - name: Install Rust
@@ -292,7 +302,7 @@ jobs:
           path: ~/sentry-native
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
-            matrix.feature.transport }}
+            matrix.feature.cache }}
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
@@ -305,27 +315,17 @@ jobs:
           cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -F warnings
       - name: Test
-        if:
-          always() && steps.build.outcome == 'success' && matrix.feature.name ==
-          '--features test'
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        if: always() && steps.build.outcome == 'success' && matrix.feature.test
         run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Example
-        if:
-          always() && steps.build.outcome == 'success' && matrix.feature.name ==
-          '--features test'
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        if: always() && steps.build.outcome == 'success' && matrix.feature.test
         run:
           cargo -v run --example example ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
       - name: Custom transport example
         if:
-          always() && steps.build.outcome == 'success' && matrix.feature.name ==
-          '--features test' && matrix.feature.custom-transport
-        env:
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          always() && steps.build.outcome == 'success' && matrix.feature.test &&
+          matrix.feature.custom-transport
         run:
           cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}

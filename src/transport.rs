@@ -3,12 +3,11 @@
 //! in lieue of the built-in transports provided by the sentry-native library
 //! itself.
 
-use crate::{Options, Ownership, Value};
+use crate::{ffi, Options, Ownership, Value};
 use std::{
     mem::{self, ManuallyDrop},
     os::raw::{c_char, c_void},
-    panic::{self, AssertUnwindSafe},
-    process, slice,
+    slice,
     time::Duration,
 };
 pub use sys::SDK_USER_AGENT;
@@ -121,9 +120,7 @@ pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
     let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
     let envelope = RawEnvelope(envelope);
 
-    if panic::catch_unwind(AssertUnwindSafe(|| state.send(envelope))).is_err() {
-        process::abort()
-    }
+    ffi::catch(|| state.send(envelope))
 }
 
 /// The function registered with [`sys::transport_set_startup_func`] to
@@ -133,9 +130,7 @@ pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
     let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
     let options = Options::from_sys(Ownership::Borrowed(options));
 
-    if panic::catch_unwind(AssertUnwindSafe(|| state.startup(&options))).is_err() {
-        process::abort()
-    }
+    ffi::catch(|| state.startup(&options))
 }
 
 /// The function registered with [`sys::transport_set_shutdown_func`] which
@@ -146,22 +141,13 @@ pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> bool {
     let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
     let timeout = Duration::from_millis(timeout);
 
-    match panic::catch_unwind(AssertUnwindSafe(|| state.shutdown(timeout))) {
-        Ok(shutdown) => shutdown.into_raw(),
-        Err(_) => process::abort(),
-    }
+    ffi::catch(|| state.shutdown(timeout)).into_raw()
 }
 
 /// The function registered with [`sys::transport_set_free_func`] that
 /// actually frees our state
 pub extern "C" fn free(state: *mut c_void) {
-    let free = panic::catch_unwind(|| {
-        mem::drop(unsafe { Box::from_raw(state as *mut Box<dyn Transport>) })
-    });
-
-    if free.is_err() {
-        process::abort()
-    }
+    ffi::catch(|| mem::drop(unsafe { Box::from_raw(state as *mut Box<dyn Transport>) }))
 }
 
 /// Wrapper for the raw Envelope that we should send to Sentry

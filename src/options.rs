@@ -1,6 +1,6 @@
 //! Sentry options implementation.
 
-use crate::{transport, CPath, CToR, Error, Level, RToC, Transport, Value};
+use crate::{ffi, transport, CPath, CToR, Error, Level, RToC, Transport, Value};
 use once_cell::sync::{Lazy, OnceCell};
 #[cfg(feature = "test")]
 use std::{env, ffi::CString};
@@ -9,6 +9,7 @@ use std::{
     mem::{self, ManuallyDrop},
     os::raw::{c_char, c_void},
     path::PathBuf,
+    process,
     sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
@@ -884,9 +885,8 @@ extern "C" fn ffi_before_send(
 ) -> sys::Value {
     let mut before_send =
         ManuallyDrop::new(unsafe { Box::<Box<dyn BeforeSend>>::from_raw(closure as *mut _) });
-    before_send
-        .before_send(unsafe { Value::from_raw(event) })
-        .into_raw()
+
+    ffi::catch(|| before_send.before_send(unsafe { Value::from_raw(event) })).into_raw()
 }
 
 /// Closure type for [`Options::set_logger`].
@@ -922,19 +922,18 @@ extern "C" fn ffi_logger(level: i32, message: *const c_char, args: *mut c_void) 
         .as_ref()
         .ok()
         .and_then(|logger| logger.as_deref())
-        .expect("failed to get `LOGGER`");
+        .unwrap_or_else(|| process::abort());
 
-    let level = Level::from_raw(level);
+    let level = ffi::catch(|| Level::from_raw(level));
     let message = if let Ok(message) = unsafe { vsprintf::vsprintf(message, args) } {
         Message::Utf8(message)
     } else {
         Message::Raw(
-            unsafe { vsprintf::vsprintf_raw(message, args) }
-                .expect("failed to format logger string"),
+            unsafe { vsprintf::vsprintf_raw(message, args) }.unwrap_or_else(|_| process::abort()),
         )
     };
 
-    logger(level, message);
+    ffi::catch(|| logger(level, message));
 }
 
 #[test]

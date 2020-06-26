@@ -5,7 +5,9 @@ use std::os::windows::ffi::OsStrExt;
 use std::{
     ffi::{CStr, CString},
     os::raw::c_char,
+    panic::{self, AssertUnwindSafe},
     path::PathBuf,
+    process,
 };
 #[cfg(not(windows))]
 use std::{mem, os::unix::ffi::OsStringExt};
@@ -88,6 +90,14 @@ pub trait RToC {
 impl RToC for String {
     fn into_cstring(self) -> CString {
         CString::new(self).expect("found null byte")
+    }
+}
+
+/// Catch panics in FFI functions and abort instead.
+pub fn catch<R>(fun: impl FnOnce() -> R) -> R {
+    match panic::catch_unwind(AssertUnwindSafe(|| fun())) {
+        Ok(ret) => ret,
+        Err(_) => process::abort(),
     }
 }
 

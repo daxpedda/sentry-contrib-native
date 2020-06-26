@@ -59,8 +59,9 @@ impl Value {
         match unsafe { sys::value_get_type(raw_value) } {
             sys::ValueType::Null => Self::Null,
             sys::ValueType::Bool => match unsafe { sys::value_is_true(raw_value) } {
+                0 => Self::Bool(false),
                 1 => Self::Bool(true),
-                _ => Self::Bool(false),
+                error => unreachable!("{} couldn't be converted to a bool", error),
             },
             sys::ValueType::Int => Self::Int(unsafe { sys::value_as_int32(raw_value) }),
             sys::ValueType::Double => Self::Double(unsafe { sys::value_as_double(raw_value) }),

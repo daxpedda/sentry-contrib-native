@@ -1,8 +1,11 @@
 //! Sentry breadcrumb implementation.
 
+#[cfg(doc)]
+use crate::Event;
 use crate::{global_write, Object, RToC, Value};
 use std::{
     collections::BTreeMap,
+    ffi::CStr,
     ops::{Deref, DerefMut},
     ptr,
 };
@@ -38,11 +41,9 @@ impl Default for Breadcrumb {
 impl Object for Breadcrumb {
     fn into_parts(self) -> (sys::Value, BTreeMap<String, Value>) {
         let ty = self.ty.map(RToC::into_cstring);
-        let ty = ty.as_ref().map_or(ptr::null(), |ty| ty.as_ptr());
+        let ty = ty.as_deref().map_or(ptr::null(), CStr::as_ptr);
         let message = self.message.map(RToC::into_cstring);
-        let message = message
-            .as_ref()
-            .map_or(ptr::null(), |message| message.as_ptr());
+        let message = message.as_deref().map_or(ptr::null(), CStr::as_ptr);
 
         (unsafe { sys::value_new_breadcrumb(ty, message) }, self.map)
     }
@@ -80,11 +81,10 @@ impl Breadcrumb {
         }
     }
 
-    /// Adds the [`Breadcrumb`] to be sent in case of an
-    /// [`Event::capture`](crate::Event::capture).
+    /// Adds the [`Breadcrumb`] to be sent in case of an [`Event::capture`].
     ///
     /// # Panics
-    /// Panics if any [`String`] contains a null byte.
+    /// Panics if any [`String`] in `self` contains a null byte.
     ///
     /// # Examples
     /// ```
@@ -105,8 +105,6 @@ impl Breadcrumb {
 
 #[test]
 fn breadcrumb() {
-    Breadcrumb::new(Some("test".into()), Some("test".into())).add();
-
     let breadcrumb = Breadcrumb::new(Some("test".into()), Some("test".into()));
     assert_eq!(Some("test".into()), breadcrumb.ty);
     assert_eq!(Some("test".into()), breadcrumb.message);

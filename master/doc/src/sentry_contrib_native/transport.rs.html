@@ -425,6 +425,13 @@
 <span id="425">425</span>
 <span id="426">426</span>
 <span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Contains types for creating custom transports that the underlying</span>
 <span class="doccomment">//! sentry-native library can use to send data to your upstream Sentry service</span>
@@ -452,6 +459,7 @@
 
 <span class="doccomment">/// Sentry errors.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Error</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
     <span class="doccomment">/// Failed to parse DSN URL.</span>
@@ -480,6 +488,7 @@
 
 <span class="doccomment">/// The request your [`Transport`] is expected to send.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Request</span> <span class="op">=</span> <span class="ident">HttpRequest</span><span class="op">&lt;</span><span class="ident">Envelope</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// The MIME type for Sentry envelopes.</span>
@@ -609,6 +618,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// For more information see [`Envelope::into_request`].</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_request</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">dsn</span>: <span class="ident">Dsn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Request</span> {
         <span class="self">self</span>.<span class="ident">serialize</span>().<span class="ident">into_request</span>(<span class="ident">dsn</span>)
@@ -676,6 +686,7 @@
     <span class="doccomment">/// `AsRef&lt;[u8]&gt;` to retrieve the actual bytes that should be sent as the</span>
     <span class="doccomment">/// body.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_request</span>(<span class="self">self</span>, <span class="ident">dsn</span>: <span class="ident">Dsn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Request</span> {
         <span class="ident">HttpRequest</span>::<span class="ident">builder</span>()
@@ -700,6 +711,7 @@
 <span class="doccomment">/// Contains the pieces we need to send requests based on the DSN the user</span>
 <span class="doccomment">/// set on [`Options`]</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">Ord</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Dsn</span> {
     <span class="doccomment">/// The auth header value</span>
@@ -709,6 +721,7 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
 <span class="kw">impl</span> <span class="ident">Dsn</span> {
     <span class="doccomment">/// Creates a new [`Dsn`] from a [`str`].</span>
     <span class="doccomment">///</span>
@@ -801,6 +814,7 @@
 
 <span class="doccomment">/// [`Parts`] aquired from [`Dsn::into_parts`].</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">Ord</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Parts</span> {
     <span class="doccomment">/// The auth header value</span>
@@ -827,7 +841,7 @@
 
                 <span class="macro">assert_eq</span><span class="macro">!</span>(
                     <span class="ident">request</span>.<span class="ident">uri</span>(),
-                    <span class="string">&quot;https://o209016.ingest.sentry.io/api/0123456/enveloper/&quot;</span>
+                    <span class="string">&quot;https://o209016.ingest.sentry.io/api/0123456/envelope/&quot;</span>
                 );
                 <span class="kw">let</span> <span class="ident">headers</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">headers</span>();
                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">headers</span>.<span class="ident">get</span>(<span class="string">&quot;x-sentry-auth&quot;</span>).<span class="ident">unwrap</span>(), <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}&quot;</span>, <span class="ident">API_VERSION</span>, <span class="ident">SDK_USER_AGENT</span>));

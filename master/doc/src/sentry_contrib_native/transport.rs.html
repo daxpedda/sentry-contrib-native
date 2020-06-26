@@ -433,13 +433,19 @@
 <span id="433">433</span>
 <span id="434">434</span>
 <span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Contains types for creating custom transports that the underlying</span>
 <span class="doccomment">//! sentry-native library can use to send data to your upstream Sentry service</span>
 <span class="doccomment">//! in lieue of the built-in transports provided by the sentry-native library</span>
 <span class="doccomment">//! itself.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Options</span>, <span class="ident">Ownership</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Options</span>, <span class="ident">Ownership</span>, <span class="ident">Value</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">mem</span>::{<span class="self">self</span>, <span class="ident">ManuallyDrop</span>},
     <span class="ident">os</span>::<span class="ident">raw</span>::{<span class="ident">c_char</span>, <span class="ident">c_void</span>},
@@ -634,6 +640,12 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_request</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">dsn</span>: <span class="ident">Dsn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Request</span> {
         <span class="self">self</span>.<span class="ident">serialize</span>().<span class="ident">into_request</span>(<span class="ident">dsn</span>)
+    }
+
+    <span class="doccomment">/// Yields the event that is being sent in the form of a [`Value`].</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">event</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span> {
+        <span class="ident">Value</span>::<span class="ident">from_raw_borrowed</span>(<span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">envelope_get_event</span>(<span class="self">self</span>.<span class="number">0</span>) })
     }
 }
 

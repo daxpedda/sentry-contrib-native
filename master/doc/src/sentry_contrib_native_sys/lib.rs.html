@@ -662,6 +662,12 @@
 <span id="662">662</span>
 <span id="663">663</span>
 <span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy</span>::<span class="ident">all</span>, <span class="ident">clippy</span>::<span class="ident">nursery</span>, <span class="ident">clippy</span>::<span class="ident">pedantic</span>, <span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(
@@ -984,6 +990,12 @@
     <span class="doccomment">/// Frees an envelope.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_envelope_free&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">envelope_free</span>(<span class="ident">envelope</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Envelope</span>);
+
+    <span class="doccomment">/// Given an envelope returns the embedded event if there is one.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This returns a borrowed value to the event in the envelope.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_envelope_get_event&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">envelope_get_event</span>(<span class="ident">envelope</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Envelope</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Serializes the envelope.</span>
     <span class="doccomment">///</span>

@@ -74,18 +74,13 @@ fn main() -> Result<()> {
             let handler = if crashpad == "windows" {
                 println!("cargo:rustc-link-lib=dbghelp");
                 println!("cargo:rustc-link-lib=shlwapi");
-
-                if cfg!(feature = "default-transport") {
-                    println!("cargo:rustc-link-lib=winhttp");
-                }
+                println!("cargo:rustc-link-lib=winhttp");
 
                 "crashpad_handler.exe"
             } else {
                 println!("cargo:rustc-link-lib=framework=Foundation");
 
-                if cfg!(feature = "default-transport") {
-                    println!("cargo:rustc-link-lib=curl");
-                }
+                println!("cargo:rustc-link-lib=curl");
 
                 println!("cargo:rustc-link-lib=dylib=c++");
 

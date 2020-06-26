@@ -69,9 +69,17 @@ jobs:
               feature: --features nightly,
             }
         feature:
-          - { name: --no-default-features, transport: no_transport }
-          - { name: "", transport: default_transport }
-          - { name: --features test, transport: default_transport }
+          - {
+              name: --no-default-features --features custom-transport,
+              transport: no_transport,
+              custom-transport: true,
+            }
+          - { name: "", transport: default_transport, custom-transport: false }
+          - {
+              name: "--features test, custom-transport",
+              custom-transport: true,
+              transport: default_transport,
+            }
         os:
           - ubuntu-latest
           - macos-latest
@@ -127,6 +135,24 @@ jobs:
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+      - name: Example
+        if:
+          always() && steps.build.outcome == 'success' && matrix.feature.name ==
+          '--features test'
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run:
+          cargo -v run --example example ${{ matrix.feature.name }} ${{
+          matrix.rust.feature }}
+      - name: Custom transport example
+        if:
+          always() && steps.build.outcome == 'success' && matrix.feature.name ==
+          '--features test' && matrix.feature.custom-transport
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run:
+          cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
+          matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.build.outcome == 'success'
         env:
@@ -215,9 +241,17 @@ jobs:
               feature: --features nightly,
             }
         feature:
-          - { name: --no-default-features, transport: no_transport }
-          - { name: "", transport: default_transport }
-          - { name: --features test, transport: default_transport }
+          - {
+              name: --no-default-features --features custom-transport,
+              transport: no_transport,
+              custom-transport: true,
+            }
+          - { name: "", transport: default_transport, custom-transport: false }
+          - {
+              name: "--features test, custom-transport",
+              custom-transport: true,
+              transport: default_transport,
+            }
         os:
           - ubuntu-latest
           - macos-latest
@@ -277,6 +311,24 @@ jobs:
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+      - name: Example
+        if:
+          always() && steps.build.outcome == 'success' && matrix.feature.name ==
+          '--features test'
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run:
+          cargo -v run --example example ${{ matrix.feature.name }} ${{
+          matrix.rust.feature }}
+      - name: Custom transport example
+        if:
+          always() && steps.build.outcome == 'success' && matrix.feature.name ==
+          '--features test' && matrix.feature.custom-transport
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run:
+          cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
+          matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.build.outcome == 'success'
         env:

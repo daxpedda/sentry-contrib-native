@@ -1,8 +1,6 @@
 //! Sentry options implementation.
 
-#[cfg(feature = "custom-transport")]
-use crate::{transport, Transport};
-use crate::{CPath, CToR, Error, Level, RToC, Value};
+use crate::{transport, CPath, CToR, Error, Level, RToC, Transport, Value};
 use once_cell::sync::{Lazy, OnceCell};
 #[cfg(feature = "test")]
 use std::{env, ffi::CString};
@@ -138,10 +136,12 @@ impl Options {
 
         #[cfg(feature = "test")]
         {
-            // will be set up properly for us inside those functions
-            options.set_database_path(".sentry-native");
-            options.set_handler_path("");
-            options.set_dsn("");
+            if let Some(Ownership::Owned(_)) = options.raw {
+                // will be set up properly for us inside those functions
+                options.set_database_path(".sentry-native");
+                options.set_handler_path("");
+                options.set_dsn("");
+            }
         }
 
         options
@@ -159,7 +159,7 @@ impl Options {
     fn as_mut(&mut self) -> *mut sys::Options {
         match self.raw.expect("use after free") {
             Ownership::Owned(options) => options,
-            Ownership::Borrowed(_) => panic!("can't mutably borrow options"),
+            Ownership::Borrowed(_) => panic!("can't mutably borrow `Options`"),
         }
     }
 
@@ -167,7 +167,6 @@ impl Options {
     ///
     /// # Examples
     /// TODO
-    #[cfg(feature = "custom-transport")]
     pub fn set_transport<B: Into<Box<T>>, T: Transport>(&mut self, transport: B) {
         let data = Box::into_raw(Box::<Box<dyn Transport>>::new(transport.into()));
 
@@ -236,14 +235,14 @@ impl Options {
     #[must_use]
     pub fn dsn(&self) -> Option<&str> {
         #[cfg(feature = "test")]
-        return self
-            .database_path
-            .as_ref()
-            .map(|database_path| database_path.to_str().expect("invalid UTF-8"));
-        #[cfg(not(feature = "test"))]
-        unsafe {
-            sys::options_get_dsn(self.as_ref()).as_str()
+        if let Some(Ownership::Owned(_)) = self.raw {
+            return self
+                .database_path
+                .as_ref()
+                .map(|database_path| database_path.to_str().expect("invalid UTF-8"));
         }
+
+        unsafe { sys::options_get_dsn(self.as_ref()).as_str() }
     }
 
     /// Sets the sample rate, which should be a double between `0.0` and `1.0`.
@@ -891,7 +890,7 @@ extern "C" fn ffi_before_send(
 }
 
 /// Closure type for [`Options::set_logger`].
-type Logger = dyn Fn(Level, Message) + Send + Sync;
+type Logger = dyn Fn(Level, Message) + 'static + Send + Sync;
 
 /// Globally stored closure for [`Options::set_logger`].
 static LOGGER: Lazy<RwLock<Option<Box<Logger>>>> = Lazy::new(|| RwLock::new(None));

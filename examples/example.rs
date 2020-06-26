@@ -1,3 +1,13 @@
+#![warn(
+    clippy::all,
+    clippy::missing_docs_in_private_items,
+    clippy::nursery,
+    clippy::pedantic,
+    missing_docs
+)]
+
+//!
+
 use anyhow::Result;
 use sentry::Options;
 use sentry_contrib_native as sentry;

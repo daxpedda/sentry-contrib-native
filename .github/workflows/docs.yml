@@ -43,8 +43,8 @@ jobs:
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page
         run:
-          cargo -v doc --features nightly --no-deps --document-private-items
-          --workspace
+          cargo -v doc --features custom-transport,nightly --no-deps
+          --document-private-items --workspace
       - name: Deploy
         if: success()
         uses: JamesIves/github-pages-deploy-action@releases/v3

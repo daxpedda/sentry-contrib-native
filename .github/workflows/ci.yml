@@ -76,7 +76,7 @@ jobs:
             }
           - { name: "", transport: default_transport, custom-transport: false }
           - {
-              name: "--features test, custom-transport",
+              name: "--features test,custom-transport",
               custom-transport: true,
               transport: default_transport,
             }
@@ -248,7 +248,7 @@ jobs:
             }
           - { name: "", transport: default_transport, custom-transport: false }
           - {
-              name: "--features test, custom-transport",
+              name: "--features test,custom-transport",
               custom-transport: true,
               transport: default_transport,
             }

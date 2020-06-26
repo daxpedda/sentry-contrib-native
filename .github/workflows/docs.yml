@@ -34,9 +34,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/sentry-native
-          key:
-            ${{ runner.os }}-${{ steps.sentry_native.outputs.version
-            }}-default_transport
+          key: ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-true
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Documentation

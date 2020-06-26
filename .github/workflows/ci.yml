@@ -71,20 +71,20 @@ jobs:
         feature:
           - {
               name: --no-default-features --features custom-transport,
-              cache: no_transport,
               test: false,
+              default-transport: false,
               custom-transport: true,
             }
           - {
               name: "",
-              cache: default_transport,
               test: false,
+              default-transport: true,
               custom-transport: false,
             }
           - {
               name: "--features test,custom-transport",
-              cache: default_transport,
               test: true,
+              default-transport: true,
               custom-transport: true,
             }
         os:
@@ -109,9 +109,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install curl
-        if:
-          matrix.os == 'ubuntu-latest' && matrix.feature.transport ==
-          'default_transport'
+        if: matrix.os == 'ubuntu-latest' && matrix.feature.default-transport
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev
@@ -126,7 +124,7 @@ jobs:
           path: ~/sentry-native
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
-            matrix.feature.cache }}
+            matrix.feature.default-transport }}
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
@@ -243,20 +241,20 @@ jobs:
         feature:
           - {
               name: --no-default-features --features custom-transport,
-              cache: no_transport,
               test: false,
+              default-transport: false,
               custom-transport: true,
             }
           - {
               name: "",
-              cache: default_transport,
               test: false,
+              default-transport: true,
               custom-transport: false,
             }
           - {
               name: "--features test,custom-transport",
-              cache: default_transport,
               test: true,
+              default-transport: true,
               custom-transport: true,
             }
         os:
@@ -285,9 +283,7 @@ jobs:
           ref: ${{ matrix.branch }}
           submodules: recursive
       - name: Install curl
-        if:
-          matrix.os == 'ubuntu-latest' && matrix.feature.transport ==
-          'default_transport'
+        if: matrix.os == 'ubuntu-latest' && matrix.feature.default-transport
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev
@@ -302,7 +298,7 @@ jobs:
           path: ~/sentry-native
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
-            matrix.feature.cache }}
+            matrix.feature.default-transport }}
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build

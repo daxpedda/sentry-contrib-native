@@ -14,23 +14,29 @@
 
 #[macro_use]
 mod object;
+mod before_send;
 mod breadcrumb;
 mod event;
 mod ffi;
+mod logger;
 mod options;
 mod panic;
 mod transport;
 mod user;
 mod value;
 
+pub use before_send::BeforeSend;
+use before_send::{sentry_contrib_native_before_send, Data as BeforeSendData, BEFORE_SEND};
 pub use breadcrumb::Breadcrumb;
 pub use event::{Event, Interface, Uuid};
 use ffi::{CPath, CToR, RToC};
 #[cfg(feature = "custom-transport")]
 pub use http;
+pub use logger::Message;
+use logger::{sentry_contrib_native_logger, LOGGER};
 use object::{Map, Object};
-use options::{global_read, global_write, Ownership, BEFORE_SEND};
-pub use options::{BeforeSend, Options, Shutdown};
+use options::{global_read, global_write, Ownership};
+pub use options::{Options, Shutdown};
 pub use panic::set_hook;
 use std::{
     convert::Infallible,

@@ -1,15 +1,16 @@
 //! Sentry options implementation.
 
-use crate::{ffi, transport, CPath, CToR, Error, Level, RToC, Transport, Value};
-use once_cell::sync::{Lazy, OnceCell};
+use crate::{
+    sentry_contrib_native_before_send, sentry_contrib_native_logger, transport, BeforeSend,
+    BeforeSendData, CPath, CToR, Error, Level, Message, RToC, Transport, BEFORE_SEND, LOGGER,
+};
+use once_cell::sync::Lazy;
 #[cfg(feature = "test")]
 use std::{env, ffi::CString};
 use std::{
-    fmt::{Debug, Display, Formatter, Result as FmtResult},
-    mem::{self, ManuallyDrop},
-    os::raw::{c_char, c_void},
+    fmt::{Debug, Formatter, Result as FmtResult},
+    mem,
     path::PathBuf,
-    process,
     sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
@@ -46,13 +47,13 @@ pub fn global_write() -> RwLockWriteGuard<'static, bool> {
 pub struct Options {
     /// Raw Sentry options.
     raw: Option<Ownership>,
-    /// Storing a fake database path to make documentation tests and examples
-    /// work without polluting the file system.
+    /// Storing a fake dsn to make documentation tests and examples work without
+    /// polluting the file system.
     #[cfg(feature = "test")]
-    database_path: Option<CString>,
+    dsn: Option<CString>,
     /// Storing [`Options::set_before_send`] data to properly deallocate it
     /// later.
-    before_send: Option<Box<Box<dyn BeforeSend>>>,
+    before_send: Option<BeforeSendData>,
 }
 
 /// Represents the ownership status of [`Options`].
@@ -78,7 +79,7 @@ impl Debug for Options {
         let mut debug = fmt.debug_struct("Options");
         debug.field("raw", &self.raw);
         #[cfg(feature = "test")]
-        debug.field("database_path", &self.database_path);
+        debug.field("database_path", &self.dsn);
         debug
             .field(
                 "before_send",
@@ -131,7 +132,7 @@ impl Options {
         let mut options = Self {
             raw: Some(options),
             #[cfg(feature = "test")]
-            database_path: None,
+            dsn: None,
             before_send: None,
         };
 
@@ -196,7 +197,13 @@ impl Options {
         let fun = Box::into_raw(Box::<Box<dyn BeforeSend>>::new(before_send.into()));
         self.before_send = Some(unsafe { Box::from_raw(fun) });
 
-        unsafe { sys::options_set_before_send(self.as_mut(), Some(ffi_before_send), fun as _) }
+        unsafe {
+            sys::options_set_before_send(
+                self.as_mut(),
+                Some(sentry_contrib_native_before_send),
+                fun as _,
+            )
+        }
     }
 
     /// Sets the DSN.
@@ -213,7 +220,7 @@ impl Options {
     pub fn set_dsn<S: Into<String>>(&mut self, dsn: S) {
         #[cfg(feature = "test")]
         let dsn = {
-            self.database_path = Some(dsn.into().into_cstring());
+            self.dsn = Some(dsn.into().into_cstring());
             env::var("SENTRY_DSN")
                 .expect("tests require a valid `SENTRY_DSN` environment variable")
                 .into_cstring()
@@ -238,7 +245,7 @@ impl Options {
         #[cfg(feature = "test")]
         if let Some(Ownership::Owned(_)) = self.raw {
             return self
-                .database_path
+                .dsn
                 .as_ref()
                 .map(|database_path| database_path.to_str().expect("invalid UTF-8"));
         }
@@ -492,7 +499,7 @@ impl Options {
         logger: B,
     ) {
         *LOGGER.write().expect("failed to set `LOGGER`") = Some(logger.into());
-        unsafe { sys::options_set_logger(self.as_mut(), Some(ffi_logger)) }
+        unsafe { sys::options_set_logger(self.as_mut(), Some(sentry_contrib_native_logger)) }
     }
 
     /// Enables or disabled user consent requirements for uploads.
@@ -822,122 +829,10 @@ impl Shutdown {
     }
 }
 
-/// Store [`Options::set_before_send`] data to properly allocate later.
-#[allow(clippy::type_complexity)]
-pub static BEFORE_SEND: OnceCell<Mutex<Option<Box<Box<dyn BeforeSend>>>>> = OnceCell::new();
-
-/// Trait to help pass data to [`Options::set_before_send`].
-///
-/// # Examples
-/// ```
-/// # use sentry_contrib_native::{BeforeSend, Options, Value};
-/// # fn main() -> anyhow::Result<()> {
-/// struct Filter {
-///     filtered: usize,
-/// };
-///
-/// impl BeforeSend for Filter {
-///     fn before_send(&mut self, value: Value) -> Value {
-///         self.filtered += 1;
-///         // do something with the value and then return it
-///         value
-///     }
-/// }
-///
-/// let mut options = Options::new();
-/// options.set_before_send(Filter { filtered: 0 });
-/// let _shutdown = options.init()?;
-/// # Ok(()) }
-/// ```
-pub trait BeforeSend: 'static + Send + Sync {
-    /// Before send callback.
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_contrib_native::{BeforeSend, Value};
-    /// struct Filter {
-    ///     filtered: usize,
-    /// };
-    ///
-    /// impl BeforeSend for Filter {
-    ///     fn before_send(&mut self, value: Value) -> Value {
-    ///         self.filtered += 1;
-    ///         // do something with the value and then return it
-    ///         value
-    ///     }
-    /// }
-    /// ```
-    fn before_send(&mut self, value: Value) -> Value;
-}
-
-impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
-    fn before_send(&mut self, value: Value) -> Value {
-        self(value)
-    }
-}
-
-/// Function to give [`Options::set_before_send`] which in turn calls user
-/// defined one.
-extern "C" fn ffi_before_send(
-    event: sys::Value,
-    _hint: *mut c_void,
-    closure: *mut c_void,
-) -> sys::Value {
-    let mut before_send =
-        ManuallyDrop::new(unsafe { Box::<Box<dyn BeforeSend>>::from_raw(closure as *mut _) });
-
-    ffi::catch(|| before_send.before_send(unsafe { Value::from_raw(event) })).into_raw()
-}
-
-/// Closure type for [`Options::set_logger`].
-type Logger = dyn Fn(Level, Message) + 'static + Send + Sync;
-
-/// Globally stored closure for [`Options::set_logger`].
-static LOGGER: Lazy<RwLock<Option<Box<Logger>>>> = Lazy::new(|| RwLock::new(None));
-
-/// Message received for custom logger.
-#[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
-pub enum Message {
-    /// Message could be parsed into a valid UTF-8 [`String`].
-    Utf8(String),
-    /// Message could not be parsed into a valid UTF-8 [`String`] and is
-    /// returned as a `Vec<u8>`.
-    Raw(Vec<u8>),
-}
-
-impl Display for Message {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self {
-            Self::Utf8(text) => write!(f, "{}", text),
-            Self::Raw(raw) => write!(f, "{}", String::from_utf8_lossy(raw)),
-        }
-    }
-}
-
-/// Function to give [`Options::set_logger`] which in turn calls user
-/// defined one.
-extern "C" fn ffi_logger(level: i32, message: *const c_char, args: *mut c_void) {
-    let lock = LOGGER.read();
-    let logger = lock
-        .as_ref()
-        .ok()
-        .and_then(|logger| logger.as_deref())
-        .unwrap_or_else(|| process::abort());
-
-    let level = ffi::catch(|| Level::from_raw(level));
-    let message = if let Ok(message) = unsafe { vsprintf::vsprintf(message, args) } {
-        Message::Utf8(message)
-    } else {
-        Message::Raw(
-            unsafe { vsprintf::vsprintf_raw(message, args) }.unwrap_or_else(|_| process::abort()),
-        )
-    };
-
-    ffi::catch(|| logger(level, message));
-}
-
 #[test]
 fn options() -> anyhow::Result<()> {
+    use crate::Value;
+
     struct Filter;
 
     impl BeforeSend for Filter {
@@ -994,61 +889,6 @@ fn options() -> anyhow::Result<()> {
     options.set_database_path(".sentry-native");
 
     options.set_system_crash_reporter(true);
-
-    Ok(())
-}
-
-#[cfg(test)]
-#[rusty_fork::test_fork]
-fn before_send() -> anyhow::Result<()> {
-    use crate::Event;
-    use std::cell::RefCell;
-
-    thread_local! {
-        static COUNTER: RefCell<usize> = RefCell::new(0);
-    }
-
-    struct Filter {
-        counter: usize,
-    }
-
-    impl BeforeSend for Filter {
-        fn before_send(&mut self, value: Value) -> Value {
-            self.counter += 1;
-            value
-        }
-    }
-
-    impl Drop for Filter {
-        fn drop(&mut self) {
-            COUNTER.with(|counter| *counter.borrow_mut() = self.counter)
-        }
-    }
-
-    let mut options = Options::new();
-    options.set_before_send(Filter { counter: 0 });
-    let shutdown = options.init()?;
-
-    Event::new().capture();
-    Event::new().capture();
-    Event::new().capture();
-
-    shutdown.shutdown();
-
-    COUNTER.with(|counter| assert_eq!(3, *counter.borrow()));
-
-    Ok(())
-}
-
-#[cfg(test)]
-#[rusty_fork::test_fork]
-fn logger() -> anyhow::Result<()> {
-    let mut options = Options::new();
-    options.set_debug(true);
-    options.set_logger(|level, message| {
-        println!("[{}]: {}", level, message);
-    });
-    options.init()?;
 
     Ok(())
 }

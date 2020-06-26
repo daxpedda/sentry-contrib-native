@@ -7,6 +7,7 @@
 )]
 #![cfg_attr(
     feature = "nightly",
+    feature(doc_cfg),
     feature(external_doc),
     doc(include = "../README.md")
 )]
@@ -77,6 +78,7 @@ pub enum Error {
     Fingerprints,
     /// Failed at custom transport.
     #[cfg(feature = "custom-transport")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
     #[error("failed at custom transport")]
     Transport(#[from] TransportError),
 }

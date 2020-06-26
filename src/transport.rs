@@ -24,6 +24,7 @@ use ::{
 
 /// Sentry errors.
 #[cfg(feature = "custom-transport")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
 #[derive(Debug, Error, PartialEq)]
 pub enum Error {
     /// Failed to parse DSN URL.
@@ -52,6 +53,7 @@ impl From<Infallible> for Error {
 
 /// The request your [`Transport`] is expected to send.
 #[cfg(feature = "custom-transport")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
 pub type Request = HttpRequest<Envelope>;
 
 /// The MIME type for Sentry envelopes.
@@ -181,6 +183,7 @@ impl RawEnvelope {
     ///
     /// For more information see [`Envelope::into_request`].
     #[cfg(feature = "custom-transport")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
     #[must_use]
     pub fn to_request(&self, dsn: Dsn) -> Request {
         self.serialize().into_request(dsn)
@@ -248,6 +251,7 @@ impl Envelope {
     /// `AsRef<[u8]>` to retrieve the actual bytes that should be sent as the
     /// body.
     #[cfg(feature = "custom-transport")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
     #[must_use]
     pub fn into_request(self, dsn: Dsn) -> Request {
         HttpRequest::builder()
@@ -272,6 +276,7 @@ impl From<RawEnvelope> for Envelope {
 /// Contains the pieces we need to send requests based on the DSN the user
 /// set on [`Options`]
 #[cfg(feature = "custom-transport")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Dsn {
     /// The auth header value
@@ -281,6 +286,7 @@ pub struct Dsn {
 }
 
 #[cfg(feature = "custom-transport")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
 impl Dsn {
     /// Creates a new [`Dsn`] from a [`str`].
     ///
@@ -373,6 +379,7 @@ impl TryFrom<&str> for Dsn {
 
 /// [`Parts`] aquired from [`Dsn::into_parts`].
 #[cfg(feature = "custom-transport")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Parts {
     /// The auth header value
@@ -399,7 +406,7 @@ fn dsn() -> anyhow::Result<()> {
 
                 assert_eq!(
                     request.uri(),
-                    "https://o209016.ingest.sentry.io/api/0123456/enveloper/"
+                    "https://o209016.ingest.sentry.io/api/0123456/envelope/"
                 );
                 let headers = request.headers();
                 assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, SDK_USER_AGENT));

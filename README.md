@@ -160,7 +160,9 @@ for more details.
     account `SENTRY_NATIVE_INSTALL`, no matter what is set through
     `Options::set_handler_path`.
 - **nightly** - Enables full documentation through
-  [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html).
+  [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html)
+  and
+  [`feature(doc_cfg)`](https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html).
 
 ## Deployment
 

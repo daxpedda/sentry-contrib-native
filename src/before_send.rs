@@ -40,6 +40,12 @@ pub static BEFORE_SEND: OnceCell<Mutex<Option<Data>>> = OnceCell::new();
 pub trait BeforeSend: 'static + Send + Sync {
     /// Before send callback.
     ///
+    /// # Safety
+    /// It is **highly** recommended to avoid any unwinding, e.g. panicking,
+    /// inside this function, as Rust considers unwinding through the C ABI as
+    /// undefined behaviour. Nevertheless this function will try to catch any
+    /// panics and [`abort`] if any occured.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{BeforeSend, Value};

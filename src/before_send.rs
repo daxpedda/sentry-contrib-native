@@ -40,11 +40,13 @@ pub static BEFORE_SEND: OnceCell<Mutex<Option<Data>>> = OnceCell::new();
 pub trait BeforeSend: 'static + Send + Sync {
     /// Before send callback.
     ///
-    /// # Safety
-    /// It is **highly** recommended to avoid any unwinding, e.g. panicking,
-    /// inside this function, as Rust considers unwinding through the C ABI as
-    /// undefined behaviour. Nevertheless this function will try to catch any
-    /// panics and [`abort`] if any occured.
+    /// # Notes
+    /// The caller of this function will catch any unwinding panics and
+    /// [`abort`] if any occured.
+    ///
+    /// # Panics
+    /// Panics if any [`String`] in the returning [`Value`] contains a null
+    /// byte.
     ///
     /// # Examples
     /// ```
@@ -64,18 +66,6 @@ pub trait BeforeSend: 'static + Send + Sync {
     fn before_send(&mut self, value: Value) -> Value;
 }
 
-/// This implementation makes it possible to just use a closure as a parameter to
-/// [`Options::set_before_send`].
-///
-/// # Examples
-/// ```
-/// # use sentry_contrib_native::Options;
-/// let mut options = Options::new();
-/// options.set_before_send(|value| {
-///     // do something with the value and then return it
-///     value
-/// });
-/// ```
 impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
     fn before_send(&mut self, value: Value) -> Value {
         self(value)
@@ -88,7 +78,7 @@ impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
 /// This function is thread-safe. It is only called by [`Event::capture`] which
 /// is limited by a [`Mutex`].
 ///
-/// This function will try to catch any panics and [`abort`] if any occured.
+/// This function will catch any unwinding panics and [`abort`] if any occured.
 #[allow(clippy::module_name_repetitions)]
 pub extern "C" fn sentry_contrib_native_before_send(
     event: sys::Value,
@@ -98,7 +88,11 @@ pub extern "C" fn sentry_contrib_native_before_send(
     let mut before_send =
         ManuallyDrop::new(unsafe { Box::<Box<dyn BeforeSend>>::from_raw(closure as *mut _) });
 
-    ffi::catch(|| before_send.before_send(unsafe { Value::from_raw(event) })).into_raw()
+    ffi::catch(|| {
+        before_send
+            .before_send(unsafe { Value::from_raw(event) })
+            .into_raw()
+    })
 }
 
 #[cfg(test)]

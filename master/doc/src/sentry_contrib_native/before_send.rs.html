@@ -121,23 +121,29 @@
 <span id="121">121</span>
 <span id="122">122</span>
 <span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! Implementation details for</span>
-<span class="doccomment">//! [`Options::set_before_send`](crate::Options::set_before_send).</span>
+<span class="doccomment">//! Implementation details for [`Options::set_before_send`].</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">ffi</span>, <span class="ident">Value</span>};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Event</span>, <span class="ident">Options</span>};
 <span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::<span class="ident">OnceCell</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">abort</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>::<span class="ident">ManuallyDrop</span>, <span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_void</span>, <span class="ident">sync</span>::<span class="ident">Mutex</span>};
 
 <span class="doccomment">/// How global [`BeforeSend`] data is stored.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Data</span> <span class="op">=</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">BeforeSend</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-<span class="doccomment">/// Store [`Options::set_before_send`](crate::Options::set_before_send) data to</span>
-<span class="doccomment">/// properly allocate later.</span>
+<span class="doccomment">/// Store [`Options::set_before_send`] data to properly deallocate later.</span>
 <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">BEFORE_SEND</span>: <span class="ident">OnceCell</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Data</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceCell</span>::<span class="ident">new</span>();
 
-<span class="doccomment">/// Trait to help pass data to</span>
-<span class="doccomment">/// [`Options::set_before_send`](crate::Options::set_before_send).</span>
+<span class="doccomment">/// Trait to help pass data to [`Options::set_before_send`].</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
@@ -187,9 +193,13 @@
     }
 }
 
-<span class="doccomment">/// Function to give</span>
-<span class="doccomment">/// [`Options::set_before_send`](crate::Options::set_before_send) which in turn</span>
-<span class="doccomment">/// calls user defined one.</span>
+<span class="doccomment">/// Function to give [`Options::set_before_send`], which in turn calls the user</span>
+<span class="doccomment">/// defined one.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This function is thread-safe. It is only called by [`Event::capture`] which</span>
+<span class="doccomment">/// is limited by a [`Mutex`].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This function will try to catch any panics and [`abort`] if any occured.</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">module_name_repetitions</span>)]</span>
 <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">sentry_contrib_native_before_send</span>(
     <span class="ident">event</span>: <span class="ident">sys</span>::<span class="ident">Value</span>,

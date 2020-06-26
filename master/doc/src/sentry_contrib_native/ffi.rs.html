@@ -198,6 +198,16 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! FFI helper types to communicate with `sentry-native`.</span>
 
@@ -206,7 +216,9 @@
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">ffi</span>::{<span class="ident">CStr</span>, <span class="ident">CString</span>},
     <span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_char</span>,
+    <span class="ident">panic</span>::{<span class="self">self</span>, <span class="ident">AssertUnwindSafe</span>},
     <span class="ident">path</span>::<span class="ident">PathBuf</span>,
+    <span class="ident">process</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">windows</span>))]</span>
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">os</span>::<span class="ident">unix</span>::<span class="ident">ffi</span>::<span class="ident">OsStringExt</span>};
@@ -289,6 +301,14 @@
 <span class="kw">impl</span> <span class="ident">RToC</span> <span class="kw">for</span> <span class="ident">String</span> {
     <span class="kw">fn</span> <span class="ident">into_cstring</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CString</span> {
         <span class="ident">CString</span>::<span class="ident">new</span>(<span class="self">self</span>).<span class="ident">expect</span>(<span class="string">&quot;found null byte&quot;</span>)
+    }
+}
+
+<span class="doccomment">/// Catch panics in FFI functions and abort instead.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">catch</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">fun</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span> {
+    <span class="kw">match</span> <span class="ident">panic</span>::<span class="ident">catch_unwind</span>(<span class="ident">AssertUnwindSafe</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">fun</span>())) {
+        <span class="prelude-val">Ok</span>(<span class="ident">ret</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ret</span>,
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">process</span>::<span class="ident">abort</span>(),
     }
 }
 

@@ -1188,11 +1188,10 @@
 <span id="1188">1188</span>
 <span id="1189">1189</span>
 <span id="1190">1190</span>
-<span id="1191">1191</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry options implementation.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">transport</span>, <span class="ident">CPath</span>, <span class="ident">CToR</span>, <span class="ident">Error</span>, <span class="ident">Level</span>, <span class="ident">RToC</span>, <span class="ident">Transport</span>, <span class="ident">Value</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">ffi</span>, <span class="ident">transport</span>, <span class="ident">CPath</span>, <span class="ident">CToR</span>, <span class="ident">Error</span>, <span class="ident">Level</span>, <span class="ident">RToC</span>, <span class="ident">Transport</span>, <span class="ident">Value</span>};
 <span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::{<span class="ident">Lazy</span>, <span class="ident">OnceCell</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">env</span>, <span class="ident">ffi</span>::<span class="ident">CString</span>};
@@ -1201,6 +1200,7 @@
     <span class="ident">mem</span>::{<span class="self">self</span>, <span class="ident">ManuallyDrop</span>},
     <span class="ident">os</span>::<span class="ident">raw</span>::{<span class="ident">c_char</span>, <span class="ident">c_void</span>},
     <span class="ident">path</span>::<span class="ident">PathBuf</span>,
+    <span class="ident">process</span>,
     <span class="ident">sync</span>::{<span class="ident">Mutex</span>, <span class="ident">RwLock</span>, <span class="ident">RwLockReadGuard</span>, <span class="ident">RwLockWriteGuard</span>},
 };
 
@@ -2076,9 +2076,8 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">sys</span>::<span class="ident">Value</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">before_send</span> <span class="op">=</span>
         <span class="ident">ManuallyDrop</span>::<span class="ident">new</span>(<span class="kw">unsafe</span> { <span class="ident">Box</span>::<span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">BeforeSend</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">from_raw</span>(<span class="ident">closure</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>) });
-    <span class="ident">before_send</span>
-        .<span class="ident">before_send</span>(<span class="kw">unsafe</span> { <span class="ident">Value</span>::<span class="ident">from_raw</span>(<span class="ident">event</span>) })
-        .<span class="ident">into_raw</span>()
+
+    <span class="ident">ffi</span>::<span class="ident">catch</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">before_send</span>.<span class="ident">before_send</span>(<span class="kw">unsafe</span> { <span class="ident">Value</span>::<span class="ident">from_raw</span>(<span class="ident">event</span>) })).<span class="ident">into_raw</span>()
 }
 
 <span class="doccomment">/// Closure type for [`Options::set_logger`].</span>
@@ -2114,19 +2113,18 @@
         .<span class="ident">as_ref</span>()
         .<span class="ident">ok</span>()
         .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">logger</span><span class="op">|</span> <span class="ident">logger</span>.<span class="ident">as_deref</span>())
-        .<span class="ident">expect</span>(<span class="string">&quot;failed to get `LOGGER`&quot;</span>);
+        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">process</span>::<span class="ident">abort</span>());
 
-    <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="ident">level</span>);
+    <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">catch</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="ident">level</span>));
     <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">vsprintf</span>::<span class="ident">vsprintf</span>(<span class="ident">message</span>, <span class="ident">args</span>) } {
         <span class="ident">Message</span>::<span class="ident">Utf8</span>(<span class="ident">message</span>)
     } <span class="kw">else</span> {
         <span class="ident">Message</span>::<span class="ident">Raw</span>(
-            <span class="kw">unsafe</span> { <span class="ident">vsprintf</span>::<span class="ident">vsprintf_raw</span>(<span class="ident">message</span>, <span class="ident">args</span>) }
-                .<span class="ident">expect</span>(<span class="string">&quot;failed to format logger string&quot;</span>),
+            <span class="kw">unsafe</span> { <span class="ident">vsprintf</span>::<span class="ident">vsprintf_raw</span>(<span class="ident">message</span>, <span class="ident">args</span>) }.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">process</span>::<span class="ident">abort</span>()),
         )
     };
 
-    <span class="ident">logger</span>(<span class="ident">level</span>, <span class="ident">message</span>);
+    <span class="ident">ffi</span>::<span class="ident">catch</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">logger</span>(<span class="ident">level</span>, <span class="ident">message</span>));
 }
 
 <span class="attribute">#[<span class="ident">test</span>]</span>

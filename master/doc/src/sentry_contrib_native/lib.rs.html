@@ -726,6 +726,12 @@
 <span id="726">726</span>
 <span id="727">727</span>
 <span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -743,23 +749,29 @@
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">mod</span> <span class="ident">object</span>;
+<span class="kw">mod</span> <span class="ident">before_send</span>;
 <span class="kw">mod</span> <span class="ident">breadcrumb</span>;
 <span class="kw">mod</span> <span class="ident">event</span>;
 <span class="kw">mod</span> <span class="ident">ffi</span>;
+<span class="kw">mod</span> <span class="ident">logger</span>;
 <span class="kw">mod</span> <span class="ident">options</span>;
 <span class="kw">mod</span> <span class="ident">panic</span>;
 <span class="kw">mod</span> <span class="ident">transport</span>;
 <span class="kw">mod</span> <span class="ident">user</span>;
 <span class="kw">mod</span> <span class="ident">value</span>;
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">before_send</span>::<span class="ident">BeforeSend</span>;
+<span class="kw">use</span> <span class="ident">before_send</span>::{<span class="ident">sentry_contrib_native_before_send</span>, <span class="ident">Data</span> <span class="kw">as</span> <span class="ident">BeforeSendData</span>, <span class="ident">BEFORE_SEND</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">breadcrumb</span>::<span class="ident">Breadcrumb</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">event</span>::{<span class="ident">Event</span>, <span class="ident">Interface</span>, <span class="ident">Uuid</span>};
 <span class="kw">use</span> <span class="ident">ffi</span>::{<span class="ident">CPath</span>, <span class="ident">CToR</span>, <span class="ident">RToC</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">http</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">logger</span>::<span class="ident">Message</span>;
+<span class="kw">use</span> <span class="ident">logger</span>::{<span class="ident">sentry_contrib_native_logger</span>, <span class="ident">LOGGER</span>};
 <span class="kw">use</span> <span class="ident">object</span>::{<span class="ident">Map</span>, <span class="ident">Object</span>};
-<span class="kw">use</span> <span class="ident">options</span>::{<span class="ident">global_read</span>, <span class="ident">global_write</span>, <span class="ident">Ownership</span>, <span class="ident">BEFORE_SEND</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">options</span>::{<span class="ident">BeforeSend</span>, <span class="ident">Options</span>, <span class="ident">Shutdown</span>};
+<span class="kw">use</span> <span class="ident">options</span>::{<span class="ident">global_read</span>, <span class="ident">global_write</span>, <span class="ident">Ownership</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">options</span>::{<span class="ident">Options</span>, <span class="ident">Shutdown</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">panic</span>::<span class="ident">set_hook</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">convert</span>::<span class="ident">Infallible</span>,

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Message","Message received for custom logger."]],"fn":[["sentry_contrib_native_logger","Function to give `Options::set_logger` which in turn calls user defined one."]],"static":[["LOGGER","Globally stored closure for `Options::set_logger`."]],"type":[["Logger","Closure type for `Options::set_logger`."]]});

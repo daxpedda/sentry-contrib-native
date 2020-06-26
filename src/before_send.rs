@@ -1,19 +1,20 @@
-//! Implementation details for
-//! [`Options::set_before_send`](crate::Options::set_before_send).
+//! Implementation details for [`Options::set_before_send`].
 
 use crate::{ffi, Value};
+#[cfg(doc)]
+use crate::{Event, Options};
 use once_cell::sync::OnceCell;
+#[cfg(doc)]
+use std::process::abort;
 use std::{mem::ManuallyDrop, os::raw::c_void, sync::Mutex};
 
 /// How global [`BeforeSend`] data is stored.
 pub type Data = Box<Box<dyn BeforeSend>>;
 
-/// Store [`Options::set_before_send`](crate::Options::set_before_send) data to
-/// properly allocate later.
+/// Store [`Options::set_before_send`] data to properly deallocate later.
 pub static BEFORE_SEND: OnceCell<Mutex<Option<Data>>> = OnceCell::new();
 
-/// Trait to help pass data to
-/// [`Options::set_before_send`](crate::Options::set_before_send).
+/// Trait to help pass data to [`Options::set_before_send`].
 ///
 /// # Examples
 /// ```
@@ -63,9 +64,13 @@ impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
     }
 }
 
-/// Function to give
-/// [`Options::set_before_send`](crate::Options::set_before_send) which in turn
-/// calls user defined one.
+/// Function to give [`Options::set_before_send`], which in turn calls the user
+/// defined one.
+///
+/// This function is thread-safe. It is only called by [`Event::capture`] which
+/// is limited by a [`Mutex`].
+///
+/// This function will try to catch any panics and [`abort`] if any occured.
 #[allow(clippy::module_name_repetitions)]
 pub extern "C" fn sentry_contrib_native_before_send(
     event: sys::Value,

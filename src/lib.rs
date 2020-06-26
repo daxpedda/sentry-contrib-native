@@ -199,6 +199,11 @@ pub fn shutdown() {
             .expect("failed to deallocate `BEFORE_SEND`")
             .take();
     }
+
+    LOGGER
+        .write()
+        .expect("failed to deallocate `LOGGER`")
+        .take();
 }
 
 /// Clears the internal module cache.

@@ -732,6 +732,11 @@
 <span id="732">732</span>
 <span id="733">733</span>
 <span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -934,6 +939,11 @@
             .<span class="ident">expect</span>(<span class="string">&quot;failed to deallocate `BEFORE_SEND`&quot;</span>)
             .<span class="ident">take</span>();
     }
+
+    <span class="ident">LOGGER</span>
+        .<span class="ident">write</span>()
+        .<span class="ident">expect</span>(<span class="string">&quot;failed to deallocate `LOGGER`&quot;</span>)
+        .<span class="ident">take</span>();
 }
 
 <span class="doccomment">/// Clears the internal module cache.</span>

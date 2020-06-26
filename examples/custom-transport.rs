@@ -1,120 +1,134 @@
-/*use parking_lot::{Condvar, Mutex};
-use sentry::{Event, PostedEnvelope};
+#![warn(
+    clippy::all,
+    //clippy::missing_docs_in_private_items,
+    clippy::nursery,
+    clippy::pedantic,
+    missing_docs
+)]
+
+//!
+
+use anyhow::{anyhow, bail, Result};
+use parking_lot::{Condvar, Mutex};
+use reqwest::Client;
+use sentry::{
+    http::Method, Dsn, Event, Options, RawEnvelope, Request, Transport as SentryTransport,
+    TransportShutdown,
+};
 use sentry_contrib_native as sentry;
-use std::sync::Arc;
-use tokio::sync::mpsc;
+use std::{slice, str::FromStr, sync::Arc, time::Duration};
+use tokio::{
+    runtime::Handle,
+    sync::mpsc::{self, Sender},
+    task,
+};
 
 struct TransportState {
-    tx: mpsc::Sender<PostedEnvelope>,
+    sender: Sender<RawEnvelope>,
     shutdown: Arc<(Mutex<()>, Condvar)>,
 }
 
-async fn send_sentry_request(
-    client: &reqwest::Client,
-    req: sentry::SentryRequest,
-) -> Result<(), String> {
+async fn send_sentry_request(client: &Client, req: Request) -> Result<()> {
     let (parts, body) = req.into_parts();
-    //let uri = parts.uri.to_string();
+    let uri = parts.uri.to_string();
 
     // Sentry should only give us POST requests to send
-    if parts.method != http::Method::POST {
-        return Err(format!(
+    if parts.method != Method::POST {
+        bail!(
             "Sentry SDK is trying to send an unexpected request of '{}'",
             parts.method
-        ));
+        )
     }
 
-    let rb = client.post(&parts.uri.to_string());
+    let rb = client.post(&uri);
 
-    // We cheat so that we don't have to copy all of the bytes of the body
+    // we cheat so that we don't have to copy all of the bytes of the body
     // into a new buffer, but we have to fake that the slice is static, which
     // should be ok since we only need that buffer until the request is finished
     #[allow(unsafe_code)]
     let buffer = unsafe {
-        let buf = body.as_ref();
-        std::slice::from_raw_parts::<'static, u8>(buf.as_ptr(), buf.len())
+        let buf = body.as_bytes();
+        slice::from_raw_parts::<'static, _>(buf.as_ptr(), buf.len())
     };
 
-    let res = rb
+    let response = rb
         .headers(parts.headers)
-        .body(reqwest::Body::from(buffer))
+        .body(buffer)
         .send()
         .await
-        .map_err(|e| format!("Failed to send Sentry request: {}", e))?;
+        .map_err(|e| anyhow!("Failed to send Sentry request: {}", e))?;
 
-    res.error_for_status()
-        .map_err(|e| format!("Received error response from Sentry: {}", e))?;
+    response
+        .error_for_status()
+        .map_err(|e| anyhow!("Received error response from Sentry: {}", e))?;
     Ok(())
 }
 
-// We can implement our own transport for Sentry data so that we don't pull in
+// we can implement our own transport for Sentry data so that we don't pull in
 // C dependencies (COUGH OPENSSL COUGH) that we don't want
-struct ReqwestTransport {
-    /// We don't currently use custom certs or proxies, so we can just use the
+struct Transport {
+    /// we don't currently use custom certs or proxies, so we can just use the
     /// same client that the rest of ark uses, if we do start doing that, we
     /// would need to build the client based on the options during startup()
-    client: reqwest::Client,
-    inner: Mutex<Option<TransportState>>,
-    rt: tokio::runtime::Handle,
+    client: Client,
+    inner: Option<TransportState>,
+    rt: Handle,
 }
 
-impl ReqwestTransport {
-    fn new(client: reqwest::Client, rt: tokio::runtime::Handle) -> Self {
+impl Transport {
+    const fn new(client: Client, rt: Handle) -> Self {
         Self {
             client,
-            inner: Mutex::new(None),
+            inner: None,
             rt,
         }
     }
 }
 
-impl sentry::TransportWorker for ReqwestTransport {
-    fn startup(&self, dsn: sentry::Dsn, _debug: bool) {
-        let mut inner = self.inner.lock();
-        match *inner {
-            Some(_) => {
-                eprintln!("sentry transport has already been started!");
-            }
-            None => {
-                let (tx, mut rx) = mpsc::channel(1024);
-                let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
-                let tshutdown = shutdown.clone();
-                let client = self.client.clone();
+impl SentryTransport for Transport {
+    fn startup(&mut self, options: &Options) {
+        if self.inner.is_some() {
+            eprintln!("sentry transport has already been started!");
+        } else {
+            let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
+            let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
+            self.inner = Some(TransportState {
+                sender,
+                shutdown: shutdown.clone(),
+            });
+            let client = self.client.clone();
+            let dsn = Dsn::from_str(options.dsn().expect("no DSN found")).expect("invalid DSN");
 
-                self.rt.enter(|| {
-                    tokio::spawn(async move {
-                        // Dequeue and send events until we are asked to shut down
-                        while let Some(envelope) = rx.recv().await {
-                            // Convert the envelope into an HTTP request
-                            let req = Self::convert_to_request(&dsn, envelope);
+            self.rt.enter(|| {
+                tokio::spawn(async move {
+                    // dequeue and send events until we are asked to shut down
+                    while let Some(envelope) = receiver.recv().await {
+                        // convert the envelope into an HTTP request
+                        let req = envelope.to_request(dsn.clone());
 
-                            match send_sentry_request(&client, req).await {
-                                Ok(_) => eprintln!("successfully sent sentry envelope"),
-                                Err(err) => eprintln!("failed to send sentry envelope: {}", err),
-                            }
+                        match send_sentry_request(&client, req).await {
+                            Ok(_) => eprintln!("successfully sent sentry envelope"),
+                            Err(err) => eprintln!("failed to send sentry envelope: {}", err),
                         }
+                    }
 
-                        // Shutting down, signal the condition variable that we've
-                        // finished sending everything, so that we can tell the
-                        // SDK about whether we've sent it all before their timeout
-                        let (lock, cvar) = &*tshutdown;
-                        let _shutdown = lock.lock();
-                        cvar.notify_one();
-                    });
+                    // shutting down, signal the condition variable that we've
+                    // finished sending everything, so that we can tell the
+                    // SDK about whether we've sent it all before their timeout
+                    let (lock, cvar) = &*shutdown;
+                    let _shutdown_lock = lock.lock();
+                    cvar.notify_one();
                 });
-
-                *inner = Some(TransportState { tx, shutdown });
-            }
+            });
         }
     }
 
-    fn send(&self, envelope: PostedEnvelope) {
-        let inner = self.inner.lock();
-        if let Some(inner) = &*inner {
-            let mut tx = inner.tx.clone();
+    fn send(&mut self, envelope: RawEnvelope) {
+        if let Some(inner) = &self.inner {
+            let mut sender = inner.sender.clone();
             self.rt.enter(|| {
-                tokio::task::spawn(async move {
-                    if let Err(err) = tx.send(envelope).await {
+                task::spawn(async move {
+                    if let Err(err) = sender.send(envelope).await {
                         eprintln!("failed to send envelope to send queue: {}", err);
                     }
                 });
@@ -122,42 +136,36 @@ impl sentry::TransportWorker for ReqwestTransport {
         }
     }
 
-    fn shutdown(&self, timeout: std::time::Duration) -> sentry::TransportShutdown {
-        // Drop the sender so that the background thread will exit once
+    fn shutdown(&mut self, timeout: Duration) -> TransportShutdown {
+        // drop the sender so that the background thread will exit once
         // it has dequeued and processed all the envelopes we have enqueued
-        let inner = self.inner.lock().take();
-
-        match inner {
+        match self.inner.take() {
             Some(inner) => {
-                drop(inner.tx);
+                drop(inner.sender);
 
-                // Wait for the condition variable to notify that the thread has shutdown
+                // wait for the condition variable to notify that the thread has shutdown
                 let (lock, cvar) = &*inner.shutdown;
                 let mut shutdown = lock.lock();
                 let result = cvar.wait_for(&mut shutdown, timeout);
 
                 if result.timed_out() {
-                    sentry::TransportShutdown::TimedOut
+                    TransportShutdown::TimedOut
                 } else {
-                    sentry::TransportShutdown::Success
+                    TransportShutdown::Success
                 }
             }
-            None => sentry::TransportShutdown::Success,
+            None => TransportShutdown::Success,
         }
     }
 }
 
-fn main() -> Result<(), String> {
+fn main() -> Result<()> {
     let mut options = sentry::Options::new();
 
-    // Setting a DSN is absolutely required to use custom transports
+    // setting a DSN is absolutely required to use custom transports
     options.set_dsn("https://1234abcd@your.sentry.service.com/1234");
 
-    // This debug flag is supplied to our custom transport if we want to eg
-    // print debug information etc just as the underlying SDK does
-    options.set_debug(true);
-
-    // Setup a runtime, if you're using tokio or some other async runtime to
+    // setup a runtime, if you're using tokio or some other async runtime to
     // send requests, you'll need to pass the handle to your transport so that
     // you can actually spawn tasks correctly, since the calls are going to
     // come on threads created by the C lib itself and won't have a runtime
@@ -167,31 +175,25 @@ fn main() -> Result<(), String> {
         .enable_all()
         .thread_name("sentry-tokio")
         .build()
-        .map_err(|e| format!("Failed to create tokio runtime: {}", e))?;
+        .expect("failed to create tokio runtime");
 
-    // In this case we are creating a client just for the transport, but in
+    // in this case we are creating a client just for the transport, but in
     // a real app it is likely you would have this configured for other things
-    // and just reuse it for Sentry. If you are using proxies are custom certs
-    // with Sentry, you could also configure it here, or during startup, using
-    // the options you set
-    let client = reqwest::Client::new();
+    // and just reuse it for Sentry
+    // if you are using proxies or custom certs with Sentry, you could also
+    // configure it here, or during startup, using the options you set
+    let client = Client::new();
 
-    // Actually registers our custom transport so that the SDK will use that to
+    // actually registers our custom transport so that the SDK will use that to
     // send requests to your Sentry service, rather than the built in transports
     // that come with the SDK
-    options.set_transport(sentry::Transport::new(Box::new(ReqwestTransport::new(
-        client,
-        runtime.handle().clone(),
-    ))));
+    options.set_transport(Transport::new(client, runtime.handle().clone()));
 
-    let _shutdown = options
-        .init()
-        .map_err(|e| format!("Failed to initialize Sentry: {}", e))?;
+    let _shutdown = options.init().expect("failed to initialize Sentry");
 
+    Event::new().capture();
+    Event::new().capture();
     Event::new().capture();
 
     Ok(())
 }
-*/
-
-fn main() {}

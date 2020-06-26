@@ -19,7 +19,6 @@ mod event;
 mod ffi;
 mod options;
 mod panic;
-#[cfg(feature = "custom-transport")]
 mod transport;
 mod user;
 mod value;
@@ -41,7 +40,11 @@ use std::{
 };
 use thiserror::Error;
 #[cfg(feature = "custom-transport")]
-pub use transport::{Dsn, PostedEnvelope, SentryRequest, Transport, TransportShutdown};
+pub use transport::{Dsn, Error as TransportError, Parts, Request};
+pub use transport::{
+    Envelope, RawEnvelope, Shutdown as TransportShutdown, Transport, API_VERSION, ENVELOPE_MIME,
+    SDK_USER_AGENT,
+};
 pub use user::User;
 pub use value::Value;
 
@@ -66,6 +69,10 @@ pub enum Error {
     /// List of fingerprints is too long.
     #[error("list of fingerprints is too long")]
     Fingerprints,
+    /// Failed at custom transport.
+    #[cfg(feature = "custom-transport")]
+    #[error("failed at custom transport")]
+    Transport(#[from] TransportError),
 }
 
 impl From<Infallible> for Error {

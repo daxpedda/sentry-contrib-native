@@ -137,7 +137,7 @@ fn before_send() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
+/*#[cfg(test)]
 #[rusty_fork::test_fork]
 #[should_panic]
 fn catch_panic() -> anyhow::Result<()> {
@@ -150,4 +150,4 @@ fn catch_panic() -> anyhow::Result<()> {
     Event::new().capture();
 
     Ok(())
-}
+}*/

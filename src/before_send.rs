@@ -64,6 +64,18 @@ pub trait BeforeSend: 'static + Send + Sync {
     fn before_send(&mut self, value: Value) -> Value;
 }
 
+/// This implementation makes it possible to just use a closure as a parameter to
+/// [`Options::set_before_send`].
+///
+/// # Examples
+/// ```
+/// # use sentry_contrib_native::Options;
+/// let mut options = Options::new();
+/// options.set_before_send(|value| {
+///     // do something with the value and then return it
+///     value
+/// });
+/// ```
 impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
     fn before_send(&mut self, value: Value) -> Value {
         self(value)
@@ -92,9 +104,7 @@ pub extern "C" fn sentry_contrib_native_before_send(
 #[cfg(test)]
 #[rusty_fork::test_fork]
 fn before_send() -> anyhow::Result<()> {
-    use crate::{Options, Value};
-
-    use crate::Event;
+    use crate::{Event, Options, Value};
     use std::cell::RefCell;
 
     thread_local! {
@@ -129,6 +139,21 @@ fn before_send() -> anyhow::Result<()> {
     shutdown.shutdown();
 
     COUNTER.with(|counter| assert_eq!(3, *counter.borrow()));
+
+    Ok(())
+}
+
+#[cfg(test)]
+#[rusty_fork::test_fork]
+#[should_panic]
+fn catch_panic() -> anyhow::Result<()> {
+    use crate::{Event, Options};
+
+    let mut options = Options::new();
+    options.set_before_send(|_| panic!("this is a test"));
+    let _shutdown = options.init()?;
+
+    Event::new().capture();
 
     Ok(())
 }

@@ -320,6 +320,12 @@ extern "C" {
     #[link_name = "sentry_envelope_free"]
     pub fn envelope_free(envelope: *mut Envelope);
 
+    /// Given an envelope returns the embedded event if there is one.
+    ///
+    /// This returns a borrowed value to the event in the envelope.
+    #[link_name = "sentry_envelope_get_event"]
+    pub fn envelope_get_event(envelope: *const Envelope) -> Value;
+
     /// Serializes the envelope.
     ///
     /// The return value needs to be freed with `sentry_string_free()`.

@@ -46,39 +46,29 @@ impl Value {
     /// `raw_value` or take ownership of it.
     #[allow(unused_unsafe)]
     pub(crate) unsafe fn from_raw(raw_value: sys::Value) -> Self {
+        unsafe {
+            let value = Self::from_raw_borrowed(raw_value);
+            sys::value_decref(raw_value);
+            value
+        }
+    }
+
+    /// Creates a [`Value`] from [`sys::Value`]. This will **not** deallocate
+    /// the given `raw_value`.
+    pub(crate) fn from_raw_borrowed(raw_value: sys::Value) -> Self {
         match unsafe { sys::value_get_type(raw_value) } {
-            sys::ValueType::Null => {
-                unsafe { sys::value_decref(raw_value) };
-                Self::Null
-            }
-            sys::ValueType::Bool => {
-                let value = match unsafe { sys::value_is_true(raw_value) } {
-                    0 => Self::Bool(false),
-                    1 => Self::Bool(true),
-                    error => unreachable!("{} couldn't be converted to a bool", error),
-                };
-                unsafe { sys::value_decref(raw_value) };
-                value
-            }
-            sys::ValueType::Int => {
-                let value = Self::Int(unsafe { sys::value_as_int32(raw_value) });
-                unsafe { sys::value_decref(raw_value) };
-                value
-            }
-            sys::ValueType::Double => {
-                let value = Self::Double(unsafe { sys::value_as_double(raw_value) });
-                unsafe { sys::value_decref(raw_value) };
-                value
-            }
-            sys::ValueType::String => {
-                let value = Self::String(
-                    unsafe { sys::value_as_string(raw_value).as_str() }
-                        .expect("invalid pointer")
-                        .to_owned(),
-                );
-                unsafe { sys::value_decref(raw_value) };
-                value
-            }
+            sys::ValueType::Null => Self::Null,
+            sys::ValueType::Bool => match unsafe { sys::value_is_true(raw_value) } {
+                1 => Self::Bool(true),
+                _ => Self::Bool(false),
+            },
+            sys::ValueType::Int => Self::Int(unsafe { sys::value_as_int32(raw_value) }),
+            sys::ValueType::Double => Self::Double(unsafe { sys::value_as_double(raw_value) }),
+            sys::ValueType::String => Self::String(
+                unsafe { sys::value_as_string(raw_value).as_str() }
+                    .expect("invalid pointer")
+                    .to_owned(),
+            ),
             sys::ValueType::List => {
                 let mut list = Vec::new();
 
@@ -88,17 +78,16 @@ impl Value {
                     })
                 }
 
-                unsafe { sys::value_decref(raw_value) };
                 Self::List(list)
             }
             sys::ValueType::Object => {
                 let mut size_out = 0;
 
                 let msg_raw = unsafe { sys::value_to_msgpack(raw_value, &mut size_out) };
-                unsafe { sys::value_decref(raw_value) };
 
                 let mut msg = unsafe { slice::from_raw_parts(msg_raw as _, size_out) };
                 let value = decode::read_value(&mut msg).expect("message pack decoding failed");
+
                 unsafe { sys::free(msg_raw as _) };
 
                 let map = value.into_value();

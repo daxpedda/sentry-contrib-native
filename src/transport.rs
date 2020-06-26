@@ -3,7 +3,7 @@
 //! in lieue of the built-in transports provided by the sentry-native library
 //! itself.
 
-use crate::{Options, Ownership};
+use crate::{Options, Ownership, Value};
 use std::{
     mem::{self, ManuallyDrop},
     os::raw::{c_char, c_void},
@@ -198,6 +198,12 @@ impl RawEnvelope {
     #[must_use]
     pub fn to_request(&self, dsn: Dsn) -> Request {
         self.serialize().into_request(dsn)
+    }
+
+    /// Yields the event that is being sent in the form of a [`Value`].
+    #[must_use]
+    pub fn event(&self) -> Value {
+        Value::from_raw_borrowed(unsafe { sys::envelope_get_event(self.0) })
     }
 }
 

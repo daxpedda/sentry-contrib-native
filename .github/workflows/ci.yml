@@ -70,20 +70,13 @@ jobs:
             }
         feature:
           - {
-              name: --no-default-features --features custom-transport,
-              test: false,
+              name: "--no-default-features --features custom-transport",
               default-transport: false,
               custom-transport: true,
             }
+          - { name: "", default-transport: true, custom-transport: false }
           - {
-              name: "",
-              test: false,
-              default-transport: true,
-              custom-transport: false,
-            }
-          - {
-              name: "--features test,custom-transport",
-              test: true,
+              name: "--features custom-transport",
               default-transport: true,
               custom-transport: true,
             }
@@ -136,27 +129,29 @@ jobs:
         run:
           cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -F warnings
-      - name: Test
-        if: always() && steps.build.outcome == 'success' && matrix.feature.test
-        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
-      - name: Example
-        if: always() && steps.build.outcome == 'success' && matrix.feature.test
-        run:
-          cargo -v run --example example ${{ matrix.feature.name }} ${{
-          matrix.rust.feature }}
-      - name: Custom transport example
-        if:
-          always() && steps.build.outcome == 'success' && matrix.feature.test &&
-          matrix.feature.custom-transport
-        run:
-          cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
-          matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.build.outcome == 'success'
         env:
           RUSTDOCFLAGS: -F warnings
         run:
           cargo -v doc --no-deps --document-private-items --workspace ${{
+          matrix.feature.name }} ${{ matrix.rust.feature }}
+      - name: Test
+        if: always() && steps.build.outcome == 'success'
+        run:
+          cargo -v test --features test ${{ matrix.feature.name }} ${{
+          matrix.rust.feature }}
+      - name: Example
+        if: always() && steps.build.outcome == 'success'
+        run:
+          cargo -v run --example example --features test ${{ matrix.feature.name
+          }} ${{ matrix.rust.feature }}
+      - name: Custom transport example
+        if:
+          always() && steps.build.outcome == 'success' &&
+          matrix.feature.custom-transport
+        run:
+          cargo -v run --example custom-transport --features test ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'
@@ -240,20 +235,13 @@ jobs:
             }
         feature:
           - {
-              name: --no-default-features --features custom-transport,
-              test: false,
+              name: "--no-default-features --features custom-transport",
               default-transport: false,
               custom-transport: true,
             }
+          - { name: "", default-transport: true, custom-transport: false }
           - {
-              name: "",
-              test: false,
-              default-transport: true,
-              custom-transport: false,
-            }
-          - {
-              name: "--features test,custom-transport",
-              test: true,
+              name: "--features custom-transport",
               default-transport: true,
               custom-transport: true,
             }
@@ -310,27 +298,29 @@ jobs:
         run:
           cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
           matrix.rust.feature }} -- -F warnings
-      - name: Test
-        if: always() && steps.build.outcome == 'success' && matrix.feature.test
-        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
-      - name: Example
-        if: always() && steps.build.outcome == 'success' && matrix.feature.test
-        run:
-          cargo -v run --example example ${{ matrix.feature.name }} ${{
-          matrix.rust.feature }}
-      - name: Custom transport example
-        if:
-          always() && steps.build.outcome == 'success' && matrix.feature.test &&
-          matrix.feature.custom-transport
-        run:
-          cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
-          matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.build.outcome == 'success'
         env:
           RUSTDOCFLAGS: -F warnings
         run:
           cargo -v doc --no-deps --document-private-items --workspace ${{
+          matrix.feature.name }} ${{ matrix.rust.feature }}
+      - name: Test
+        if: always() && steps.build.outcome == 'success'
+        run:
+          cargo -v test --features test ${{ matrix.feature.name }} ${{
+          matrix.rust.feature }}
+      - name: Example
+        if: always() && steps.build.outcome == 'success'
+        run:
+          cargo -v run --example example --features test ${{ matrix.feature.name
+          }} ${{ matrix.rust.feature }}
+      - name: Custom transport example
+        if:
+          always() && steps.build.outcome == 'success' &&
+          matrix.feature.custom-transport
+        run:
+          cargo -v run --example custom-transport --features test ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'

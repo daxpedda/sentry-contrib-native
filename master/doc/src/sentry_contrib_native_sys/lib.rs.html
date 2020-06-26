@@ -560,6 +560,108 @@
 <span id="560">560</span>
 <span id="561">561</span>
 <span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy</span>::<span class="ident">all</span>, <span class="ident">clippy</span>::<span class="ident">nursery</span>, <span class="ident">clippy</span>::<span class="ident">pedantic</span>, <span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(
@@ -576,6 +678,9 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="kw">type</span> <span class="ident">c_wchar</span> <span class="op">=</span> <span class="ident">u16</span>;
+
+<span class="doccomment">/// SDK Version</span>
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SDK_USER_AGENT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;sentry.native/0.3.4&quot;</span>;
 
 <span class="doccomment">/// The Sentry Client Options.</span>
 <span class="doccomment">///</span>
@@ -659,12 +764,57 @@
     <span class="ident">Revoked</span> <span class="op">=</span> <span class="number">0</span>,
 }
 
+<span class="doccomment">/// This represents an interface for user-defined transports.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Transports are responsible for sending envelopes to sentry and are the last</span>
+<span class="doccomment">/// step in the event pipeline. A transport has the following hooks, all of</span>
+<span class="doccomment">/// which take the user provided `state` as last parameter. The transport state</span>
+<span class="doccomment">/// needs to be set with `sentry_transport_set_state` and typically holds</span>
+<span class="doccomment">/// handles and other information that can be reused across requests.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// * `send_func`: This function will take ownership of an envelope, and is</span>
+<span class="doccomment">///   responsible for freeing it via `sentry_envelope_free`.</span>
+<span class="doccomment">/// * `startup_func`: This hook will be called by sentry and instructs the</span>
+<span class="doccomment">///   transport to initialize itself.</span>
+<span class="doccomment">/// * `shutdown_func`: Instructs the transport to flush its queue and shut down.</span>
+<span class="doccomment">///   This hook receives a millisecond-resolution `timeout` parameter and should</span>
+<span class="doccomment">///   return `true` when the transport was flushed and shut down successfully.</span>
+<span class="doccomment">///   In case of `false`, sentry will log an error, but continue with freeing</span>
+<span class="doccomment">///   the transport.</span>
+<span class="doccomment">/// * `free_func`: Frees the transports `state`. This hook might be called even</span>
+<span class="doccomment">///   though `shudown_func` returned `false` previously.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The transport interface might be extended in the future with hooks to flush</span>
+<span class="doccomment">/// its internal queue without shutting down, and to dump its internal queue to</span>
+<span class="doccomment">/// disk in case of a hard crash.</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Transport</span>([<span class="ident">u8</span>; <span class="number">0</span>]);
+
+<span class="doccomment">/// A Sentry Envelope.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The Envelope is an abstract type which represents a payload being sent to</span>
+<span class="doccomment">/// sentry. It can contain one or more items, typically an Event.</span>
+<span class="doccomment">/// See &lt;https://develop.sentry.dev/sdk/envelopes/&gt;</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Envelope</span>([<span class="ident">u8</span>; <span class="number">0</span>]);
+
 <span class="doccomment">/// Type of the callback for modifying events.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventFunction</span> <span class="op">=</span>
     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">event</span>: <span class="ident">Value</span>, <span class="ident">hint</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>, <span class="ident">closure</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
 
 <span class="doccomment">/// Type of the callback for logging debug events.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">LoggerFunction</span> <span class="op">=</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">level</span>: <span class="ident">i32</span>, <span class="ident">message</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">args</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>);
+
+<span class="doccomment">/// Type of callback for sending envelopes to a Sentry service</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SendEnvelopeFunction</span> <span class="op">=</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">envelope</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Envelope</span>, <span class="ident">state</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>);
+
+<span class="doccomment">/// Type of the callback for starting up a custom transport</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">StartupFunction</span> <span class="op">=</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">options</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>, <span class="ident">state</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>);
+
+<span class="doccomment">/// Type of the callback for shutting down a custom transport</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ShutdownFunction</span> <span class="op">=</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">timeout</span>: <span class="ident">u64</span>, <span class="ident">state</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>;
 
 <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
     <span class="doccomment">/// Releases memory allocated from the underlying allocator.</span>
@@ -831,6 +981,56 @@
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_uuid_as_string&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">uuid_as_string</span>(<span class="ident">uuid</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Uuid</span>, <span class="ident">str</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_char</span>);
 
+    <span class="doccomment">/// Frees an envelope.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_envelope_free&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">envelope_free</span>(<span class="ident">envelope</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Envelope</span>);
+
+    <span class="doccomment">/// Serializes the envelope.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The return value needs to be freed with `sentry_string_free()`.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_envelope_serialize&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">envelope_serialize</span>(<span class="ident">envelope</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Envelope</span>, <span class="ident">size</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+
+    <span class="doccomment">/// Creates a new transport with an initial `send_func`.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_transport_new&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transport_new</span>(<span class="ident">send_func</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SendEnvelopeFunction</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Transport</span>;
+
+    <span class="doccomment">/// Sets the transport `state`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If the state is owned by the transport and needs to be freed, use</span>
+    <span class="doccomment">/// `transport_set_free_func` to set an appropriate hook.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_transport_set_state&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transport_set_state</span>(<span class="ident">transport</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Transport</span>, <span class="ident">state</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>);
+
+    <span class="doccomment">/// Sets the transport hook to free the transport `state`.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_transport_set_free_func&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transport_set_free_func</span>(
+        <span class="ident">transport</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Transport</span>,
+        <span class="ident">free_func</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">state</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>)<span class="op">&gt;</span>,
+    );
+
+    <span class="doccomment">/// Sets the transport startup hook.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_transport_set_startup_func&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transport_set_startup_func</span>(
+        <span class="ident">transport</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Transport</span>,
+        <span class="ident">startup_func</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">StartupFunction</span><span class="op">&gt;</span>,
+    );
+
+    <span class="doccomment">/// Sets the transport shutdown hook.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This hook will receive a millisecond-resolution timeout; it should</span>
+    <span class="doccomment">/// return `true` in case all the pending envelopes have been sent</span>
+    <span class="doccomment">/// within the timeout, or `false` if the timeout was hit.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_transport_set_shutdown_func&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transport_set_shutdown_func</span>(
+        <span class="ident">transport</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Transport</span>,
+        <span class="ident">shutdown_func</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ShutdownFunction</span><span class="op">&gt;</span>,
+    );
+
+    <span class="doccomment">/// Generic way to free a transport.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_transport_free&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transport_free</span>(<span class="ident">transport</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Transport</span>);
+
     <span class="doccomment">/// Creates a new options struct.</span>
     <span class="doccomment">/// Can be freed with `sentry_options_free`.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_new&quot;</span>]</span>
@@ -839,6 +1039,10 @@
     <span class="doccomment">/// Deallocates previously allocated Sentry options.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_free&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_free</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Options</span>);
+
+    <span class="doccomment">/// Sets a transport.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_set_transport&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_set_transport</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Options</span>, <span class="ident">transport</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Transport</span>);
 
     <span class="doccomment">/// Sets the before send callback.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_set_before_send&quot;</span>]</span>

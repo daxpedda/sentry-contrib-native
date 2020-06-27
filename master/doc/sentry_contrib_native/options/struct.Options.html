@@ -37,7 +37,7 @@
 <h1 id="examples-3" class="section-header"><a href="#examples-3">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
-<span class="ident">options</span>.<span class="ident">set_before_send</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> {
+<span class="ident">options</span>.<span class="ident">set_before_send</span>(<span class="op">|</span><span class="kw-2">mut</span> <span class="ident">value</span><span class="op">|</span> {
     <span class="comment">// do something with the value and then return it</span>
     <span class="ident">value</span>
 });</pre></div>

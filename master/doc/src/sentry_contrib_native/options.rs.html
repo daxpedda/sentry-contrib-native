@@ -1284,7 +1284,7 @@
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// # use sentry_contrib_native::Options;</span>
     <span class="doccomment">/// let mut options = Options::new();</span>
-    <span class="doccomment">/// options.set_before_send(|value| {</span>
+    <span class="doccomment">/// options.set_before_send(|mut value| {</span>
     <span class="doccomment">///     // do something with the value and then return it</span>
     <span class="doccomment">///     value</span>
     <span class="doccomment">/// });</span>

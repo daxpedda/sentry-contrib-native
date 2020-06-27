@@ -50,7 +50,7 @@ development inluding PR's.</li>
 
 <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="comment">// set up panic handler</span>
-    <span class="ident">sentry</span>::<span class="ident">set_hook</span>(<span class="prelude-val">None</span>);
+    <span class="ident">sentry</span>::<span class="ident">set_hook</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
     <span class="comment">// start Sentry</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
     <span class="ident">options</span>.<span class="ident">set_dsn</span>(<span class="string">&quot;your-sentry-dsn.com&quot;</span>);
@@ -254,7 +254,7 @@ to a Sentry service.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.set_context.html" title='sentry_contrib_native::set_context fn'>set_context</a></td><td class='docblock-short'><p>Sets a context object.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.set_extra.html" title='sentry_contrib_native::set_extra fn'>set_extra</a></td><td class='docblock-short'><p>Sets extra information.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.set_fingerprint.html" title='sentry_contrib_native::set_fingerprint fn'>set_fingerprint</a></td><td class='docblock-short'><p>Sets the event fingerprint.</p>
-</td></tr><tr class='module-item'><td><a class="fn" href="fn.set_hook.html" title='sentry_contrib_native::set_hook fn'>set_hook</a></td><td class='docblock-short'><p>Panic handler to send an event with the current stacktrace to Sentry.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.set_hook.html" title='sentry_contrib_native::set_hook fn'>set_hook</a></td><td class='docblock-short'><p>Panic handler to send an <a href="../sentry_contrib_native/struct.Event.html" title="`Event`"><code>Event</code></a> with the current stacktrace to Sentry.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.set_level.html" title='sentry_contrib_native::set_level fn'>set_level</a></td><td class='docblock-short'><p>Sets the event level.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.set_tag.html" title='sentry_contrib_native::set_tag fn'>set_tag</a></td><td class='docblock-short'><p>Sets a tag.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.set_transaction.html" title='sentry_contrib_native::set_transaction fn'>set_transaction</a></td><td class='docblock-short'><p>Sets the transaction.</p>

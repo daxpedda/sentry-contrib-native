@@ -73,28 +73,30 @@ struct Transport {
     /// same client that the rest of ark uses, if we do start doing that, we
     /// would need to build the client based on the options during startup()
     client: Client,
-    inner: Option<TransportState>,
+    inner: Mutex<Option<TransportState>>,
     rt: Handle,
 }
 
 impl Transport {
-    const fn new(client: Client, rt: Handle) -> Self {
+    fn new(client: Client, rt: Handle) -> Self {
         Self {
             client,
-            inner: None,
+            inner: Mutex::new(None),
             rt,
         }
     }
 }
 
 impl SentryTransport for Transport {
-    fn startup(&mut self, options: &Options) {
-        if self.inner.is_some() {
+    fn startup(&self, options: &Options) {
+        let mut inner = self.inner.lock();
+
+        if inner.is_some() {
             eprintln!("sentry transport has already been started!");
         } else {
             let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
             let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
-            self.inner = Some(TransportState {
+            *inner = Some(TransportState {
                 sender,
                 shutdown: shutdown.clone(),
             });
@@ -125,8 +127,8 @@ impl SentryTransport for Transport {
         }
     }
 
-    fn send(&mut self, envelope: RawEnvelope) {
-        if let Some(inner) = &self.inner {
+    fn send(&self, envelope: RawEnvelope) {
+        if let Some(inner) = &*self.inner.lock() {
             let mut sender = inner.sender.clone();
             self.rt.enter(|| {
                 task::spawn(async move {
@@ -138,10 +140,10 @@ impl SentryTransport for Transport {
         }
     }
 
-    fn shutdown(&mut self, timeout: Duration) -> TransportShutdown {
+    fn shutdown(&self, timeout: Duration) -> TransportShutdown {
         // drop the sender so that the background thread will exit once
         // it has dequeued and processed all the envelopes we have enqueued
-        match self.inner.take() {
+        match self.inner.lock().take() {
             Some(inner) => {
                 drop(inner.sender);
 

@@ -90,13 +90,13 @@ pub trait Transport: 'static + Send + Sync {
     /// Starts up the transport worker, with the options that were used to
     /// create the Sentry SDK.
     #[allow(unused_variables)]
-    fn startup(&mut self, options: &Options) {}
+    fn startup(&self, options: &Options) {}
 
     /// Sends the specified Envelope to a Sentry service.
     ///
     /// It is **highly** recommended to not block in this method, but rather
     /// to enqueue the worker to another thread.
-    fn send(&mut self, envelope: RawEnvelope);
+    fn send(&self, envelope: RawEnvelope);
 
     /// Shuts down the transport worker. The worker should try to flush all
     /// of the pending requests to Sentry before shutdown. If the worker is
@@ -104,13 +104,13 @@ pub trait Transport: 'static + Send + Sync {
     /// timeout duration, it should return [`Shutdown::Success`],
     /// otherwise it should return [`Shutdown::TimedOut`].
     #[allow(unused_variables)]
-    fn shutdown(&mut self, timeout: Duration) -> Shutdown {
+    fn shutdown(&self, timeout: Duration) -> Shutdown {
         Shutdown::Success
     }
 }
 
 impl<T: Fn(RawEnvelope) + 'static + Send + Sync> Transport for T {
-    fn send(&mut self, envelope: RawEnvelope) {
+    fn send(&self, envelope: RawEnvelope) {
         self(envelope)
     }
 }
@@ -119,7 +119,7 @@ impl<T: Fn(RawEnvelope) + 'static + Send + Sync> Transport for T {
 /// to send an envelope to Sentry
 pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
     let state = state as *mut Box<dyn Transport>;
-    let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
+    let state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
     let envelope = RawEnvelope(envelope);
 
     ffi::catch(|| state.send(envelope))
@@ -129,7 +129,7 @@ pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
 /// start our transport so that we can being sending requests to Sentry
 pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
     let state = state as *mut Box<dyn Transport>;
-    let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
+    let state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
     let options = Options::from_sys(Ownership::Borrowed(options));
 
     ffi::catch(|| state.startup(&options))
@@ -140,7 +140,7 @@ pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
 /// and shutdown the worker thread, before the specified timeout is reached
 pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> bool {
     let state = state as *mut Box<dyn Transport>;
-    let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
+    let state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
     let timeout = Duration::from_millis(timeout);
 
     ffi::catch(|| state.shutdown(timeout)).into_raw()
@@ -396,7 +396,7 @@ fn dsn() -> anyhow::Result<()> {
     struct Parser;
 
     impl Transport for Parser {
-        fn send(&mut self, envelope: RawEnvelope) {
+        fn send(&self, envelope: RawEnvelope) {
             {
                 let dsn = Dsn::new(
                     "https://a0b1c2d3e4f5678910abcdeffedcba12@o209016.ingest.sentry.io/0123456",

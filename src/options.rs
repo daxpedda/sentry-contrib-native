@@ -836,7 +836,7 @@ fn options() -> anyhow::Result<()> {
     struct Filter;
 
     impl BeforeSend for Filter {
-        fn before_send(&mut self, value: Value) -> Value {
+        fn before_send(&self, value: Value) -> Value {
             value
         }
     }

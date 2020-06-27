@@ -56,27 +56,24 @@ pub trait BeforeSend: 'static + Send + Sync {
     /// };
     ///
     /// impl BeforeSend for Filter {
-    ///     fn before_send(&mut self, value: Value) -> Value {
+    ///     fn before_send(&self, value: Value) -> Value {
     ///         self.filtered += 1;
     ///         // do something with the value and then return it
     ///         value
     ///     }
     /// }
     /// ```
-    fn before_send(&mut self, value: Value) -> Value;
+    fn before_send(&self, value: Value) -> Value;
 }
 
 impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
-    fn before_send(&mut self, value: Value) -> Value {
+    fn before_send(&self, value: Value) -> Value {
         self(value)
     }
 }
 
 /// Function to give [`Options::set_before_send`], which in turn calls the user
 /// defined one.
-///
-/// This function is thread-safe. It is only called by [`Event::capture`] which
-/// is limited by a [`Mutex`].
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
 #[allow(clippy::module_name_repetitions)]
@@ -85,8 +82,8 @@ pub extern "C" fn sentry_contrib_native_before_send(
     _hint: *mut c_void,
     closure: *mut c_void,
 ) -> sys::Value {
-    let mut before_send =
-        ManuallyDrop::new(unsafe { Box::<Box<dyn BeforeSend>>::from_raw(closure as *mut _) });
+    let before_send =
+        ManuallyDrop::new(unsafe { Box::<Box<dyn BeforeSend>>::from_raw(closure as _) });
 
     ffi::catch(|| {
         before_send
@@ -99,31 +96,36 @@ pub extern "C" fn sentry_contrib_native_before_send(
 #[rusty_fork::test_fork]
 fn before_send() -> anyhow::Result<()> {
     use crate::{Event, Options, Value};
-    use std::cell::RefCell;
+    use std::{
+        cell::RefCell,
+        sync::atomic::{AtomicUsize, Ordering},
+    };
 
     thread_local! {
         static COUNTER: RefCell<usize> = RefCell::new(0);
     }
 
     struct Filter {
-        counter: usize,
+        counter: AtomicUsize,
     }
 
     impl BeforeSend for Filter {
-        fn before_send(&mut self, value: Value) -> Value {
-            self.counter += 1;
+        fn before_send(&self, value: Value) -> Value {
+            self.counter.fetch_add(1, Ordering::SeqCst);
             value
         }
     }
 
     impl Drop for Filter {
         fn drop(&mut self) {
-            COUNTER.with(|counter| *counter.borrow_mut() = self.counter)
+            COUNTER.with(|counter| *counter.borrow_mut() = *self.counter.get_mut())
         }
     }
 
     let mut options = Options::new();
-    options.set_before_send(Filter { counter: 0 });
+    options.set_before_send(Filter {
+        counter: AtomicUsize::new(0),
+    });
     let shutdown = options.init()?;
 
     Event::new().capture();

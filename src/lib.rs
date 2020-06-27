@@ -63,7 +63,7 @@ pub enum Error {
     SampleRateRange,
     /// Failed to initialize Sentry.
     #[error("failed to initialize Sentry")]
-    Init(Options),
+    Init,
     /// Failed to remove value from list by index.
     #[error("failed to remove value from list by index")]
     ListRemove,

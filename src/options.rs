@@ -4,6 +4,8 @@ use crate::{
     sentry_contrib_native_before_send, sentry_contrib_native_logger, transport, BeforeSend,
     BeforeSendData, CPath, CToR, Error, Level, Message, RToC, Transport, BEFORE_SEND, LOGGER,
 };
+#[cfg(doc)]
+use crate::{shutdown, user_consent_give, user_consent_revoke, Event};
 use once_cell::sync::Lazy;
 #[cfg(doc)]
 use std::process::abort;
@@ -18,13 +20,10 @@ use std::{
 
 /// Global lock for the following purposes:
 /// - Prevent [`Options::init`] from being called twice.
-/// - Fix some use-after-free bugs in `sentry-native` that can happen when
-///   shutdown is called while other functions are still accessing global
-///   options. Hopefully this will be fixed upstream in the future, see
+/// - Fix some null-dereferncing bugs in `sentry-native` that can happen when
+///   shutdown is called while other functions are still accessing options.
+///   Hopefully this will be fixed upstream in the future, see
 ///   <https://github.com/getsentry/sentry-native/issues/280>.
-/// - [`Event::capture`](crate::Event::capture) uses mutable global data passed
-///   to [`Options::set_before_send`], which would otherwise need a seperate
-///   [`Mutex`] to do safely.
 static GLOBAL_LOCK: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
 
 /// Convenience function to get a read lock on `GLOBAL_LOCK`.
@@ -49,17 +48,16 @@ pub fn global_write() -> RwLockWriteGuard<'static, bool> {
 pub struct Options {
     /// Raw Sentry options.
     raw: Option<Ownership>,
-    /// Storing a fake dsn to make documentation tests and examples work without
-    /// polluting the file system.
+    /// Storing a fake DSN to make documentation tests and examples work.
     #[cfg(feature = "test")]
     dsn: Option<CString>,
-    /// Storing [`Options::set_before_send`] data to properly deallocate it
-    /// later.
+    /// Storing [`Options::set_before_send`] data to save it globally on
+    /// [`Options::init`] and properly deallocate it on [`shutdown`].
     before_send: Option<BeforeSendData>,
 }
 
 /// Represents the ownership status of [`Options`].
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub enum Ownership {
     /// [`Options`] is owned.
     Owned(*mut sys::Options),
@@ -81,7 +79,7 @@ impl Debug for Options {
         let mut debug = fmt.debug_struct("Options");
         debug.field("raw", &self.raw);
         #[cfg(feature = "test")]
-        debug.field("database_path", &self.dsn);
+        debug.field("dsn", &self.dsn);
         debug
             .field(
                 "before_send",
@@ -97,18 +95,15 @@ impl Debug for Options {
 
 impl Drop for Options {
     fn drop(&mut self) {
-        if let Some(options) = self.raw.take() {
-            match options {
-                Ownership::Owned(options) => unsafe { sys::options_free(options) },
-                Ownership::Borrowed(_) => (),
-            }
+        if let Some(Ownership::Owned(options)) = self.raw.take() {
+            unsafe { sys::options_free(options) }
         }
     }
 }
 
 impl PartialEq for Options {
-    fn eq(&self, other: &Self) -> bool {
-        self.raw == other.raw
+    fn eq(&self, _: &Self) -> bool {
+        false
     }
 }
 
@@ -161,17 +156,30 @@ impl Options {
 
     /// Yields a mutable pointer to [`sys::Options`], ownership is retained.
     fn as_mut(&mut self) -> *mut sys::Options {
-        match self.raw.expect("use after free") {
-            Ownership::Owned(options) => options,
-            Ownership::Borrowed(_) => panic!("can't mutably borrow `Options`"),
+        if let Ownership::Owned(options) = self.raw.expect("use after free") {
+            options
+        } else {
+            unreachable!("can't mutably borrow `Options`")
         }
     }
 
-    /// Sets a transport.
+    /// Sets a custom transport. This only affects events sent through
+    /// [`Event::capture`], not the crash handler.
+    ///
+    /// # Notes
+    /// Unwinding panics of functions in `transport` will be cought and
+    /// [`abort`] will be called if any occured.
     ///
     /// # Examples
-    /// TODO
-    pub fn set_transport<B: Into<Box<T>>, T: Transport>(&mut self, transport: B) {
+    /// ```
+    /// # use sentry_contrib_native::{Options, RawEnvelope};
+    /// let mut options = Options::new();
+    /// options.set_transport(|envelope: RawEnvelope| {
+    ///     println!("Event to be sent: {:?}", envelope.event())
+    /// });
+    /// ```
+    /// See [`Transport`] for more detailed examples.
+    pub fn set_transport<T: Into<Box<T>> + Transport>(&mut self, transport: T) {
         let data = Box::into_raw(Box::<Box<dyn Transport>>::new(transport.into()));
 
         unsafe {
@@ -180,11 +188,12 @@ impl Options {
             sys::transport_set_startup_func(transport, Some(transport::startup));
             sys::transport_set_shutdown_func(transport, Some(transport::shutdown));
             sys::transport_set_free_func(transport, Some(transport::free));
-            sys::options_set_transport(self.as_mut(), transport);
+            sys::options_set_transport(self.as_mut(), transport)
         }
     }
 
-    /// Sets the before send callback.
+    /// Sets a callback that is triggered before sending an event through
+    /// [`Event::capture`].
     ///
     /// # Notes
     /// Unwinding panics of functions in `before_send` will be cought and
@@ -224,16 +233,17 @@ impl Options {
     /// options.set_dsn("yourdsn.com");
     /// ```
     pub fn set_dsn<S: Into<String>>(&mut self, dsn: S) {
+        let dsn = dsn.into().into_cstring();
+
         #[cfg(feature = "test")]
         let dsn = {
-            self.dsn = Some(dsn.into().into_cstring());
+            self.dsn = Some(dsn);
             env::var("SENTRY_DSN")
                 .expect("tests require a valid `SENTRY_DSN` environment variable")
                 .into_cstring()
         };
-        #[cfg(not(feature = "test"))]
-        let dsn = dsn.into().into_cstring();
-        unsafe { sys::options_set_dsn(self.as_mut(), dsn.as_ptr()) };
+
+        unsafe { sys::options_set_dsn(self.as_mut(), dsn.as_ptr()) }
     }
 
     /// Gets the DSN.
@@ -253,15 +263,15 @@ impl Options {
             return self
                 .dsn
                 .as_ref()
-                .map(|database_path| database_path.to_str().expect("invalid UTF-8"));
+                .map(|dsn| dsn.to_str().expect("invalid UTF-8"));
         }
 
         unsafe { sys::options_get_dsn(self.as_ref()).as_str() }
     }
 
-    /// Sets the sample rate, which should be a double between `0.0` and `1.0`.
-    /// Sentry will randomly discard any event that is captured using
-    /// [`Event`](crate::Event) when a sample rate < 1 is set.
+    /// Sets the sample rate, which should be a [`f64`] between `0.0` and `1.0`.
+    /// Sentry will randomly discard any event that is captured using [`Event`]
+    /// when a sample rate < 1.0 is set.
     ///
     /// # Errors
     /// Fails with [`Error::SampleRateRange`] if `sample_rate` is smaller than
@@ -313,7 +323,7 @@ impl Options {
     /// ```
     pub fn set_release<S: Into<String>>(&mut self, release: S) {
         let release = release.into().into_cstring();
-        unsafe { sys::options_set_release(self.as_mut(), release.as_ptr()) };
+        unsafe { sys::options_set_release(self.as_mut(), release.as_ptr()) }
     }
 
     /// Gets the release.
@@ -344,7 +354,7 @@ impl Options {
     /// ```
     pub fn set_environment<S: Into<String>>(&mut self, environment: S) {
         let environment = environment.into().into_cstring();
-        unsafe { sys::options_set_environment(self.as_mut(), environment.as_ptr()) };
+        unsafe { sys::options_set_environment(self.as_mut(), environment.as_ptr()) }
     }
 
     /// Gets the environment.
@@ -374,8 +384,8 @@ impl Options {
     /// options.set_distribution("release-pgo");
     /// ```
     pub fn set_distribution<S: Into<String>>(&mut self, distribution: S) {
-        let dist = distribution.into().into_cstring();
-        unsafe { sys::options_set_dist(self.as_mut(), dist.as_ptr()) };
+        let distribution = distribution.into().into_cstring();
+        unsafe { sys::options_set_dist(self.as_mut(), distribution.as_ptr()) }
     }
 
     /// Gets the distribution.
@@ -406,7 +416,7 @@ impl Options {
     /// ```
     pub fn set_http_proxy<S: Into<String>>(&mut self, proxy: S) {
         let proxy = proxy.into().into_cstring();
-        unsafe { sys::options_set_http_proxy(self.as_mut(), proxy.as_ptr()) };
+        unsafe { sys::options_set_http_proxy(self.as_mut(), proxy.as_ptr()) }
     }
 
     /// Returns the configured http proxy.
@@ -424,7 +434,7 @@ impl Options {
         unsafe { sys::options_get_http_proxy(self.as_ref()).as_str() }
     }
 
-    /// Configures the path to a file containing ssl certificates for
+    /// Configures the path to a file containing SSL certificates for
     /// verification.
     ///
     /// # Panics
@@ -438,10 +448,10 @@ impl Options {
     /// ```
     pub fn set_ca_certs<S: Into<String>>(&mut self, path: S) {
         let path = path.into().into_cstring();
-        unsafe { sys::options_set_ca_certs(self.as_mut(), path.as_ptr()) };
+        unsafe { sys::options_set_ca_certs(self.as_mut(), path.as_ptr()) }
     }
 
-    /// Returns the configured path for ca certificates.
+    /// Returns the configured path for CA certificates.
     ///
     /// # Examples
     /// ```
@@ -466,7 +476,7 @@ impl Options {
     /// ```
     pub fn set_debug(&mut self, debug: bool) {
         let debug = debug.into();
-        unsafe { sys::options_set_debug(self.as_mut(), debug) };
+        unsafe { sys::options_set_debug(self.as_mut(), debug) }
     }
 
     /// Returns the current value of the debug flag.
@@ -482,16 +492,17 @@ impl Options {
     #[must_use]
     pub fn debug(&self) -> bool {
         match unsafe { sys::options_get_debug(self.as_ref()) } {
+            0 => false,
             1 => true,
-            _ => false,
+            error => unreachable!("{} couldn't be converted to a bool", error),
         }
     }
 
-    /// Sets the Sentry logger function.
-    /// Used for logging debug events when the `debug` option is set to true.
+    /// Sets a callback that is used for logging purposes when
+    /// [`Options::debug`] is `true`.
     ///
     /// # Notes
-    /// Unwinding panics of functions in `logger` will be cought and [`abort`]
+    /// Unwinding panics in `logger` will be cought and [`abort`]
     /// will be called if any occured.
     ///
     /// # Examples
@@ -504,9 +515,9 @@ impl Options {
     ///     println!("[{}]: {}", level, message);
     /// });
     /// ```
-    pub fn set_logger<B: Into<Box<L>>, L: Fn(Level, Message) + 'static + Send + Sync>(
+    pub fn set_logger<L: Into<Box<L>> + Fn(Level, Message) + 'static + Send + Sync>(
         &mut self,
-        logger: B,
+        logger: L,
     ) {
         *LOGGER.write().expect("failed to set `LOGGER`") = Some(logger.into());
         unsafe { sys::options_set_logger(self.as_mut(), Some(sentry_contrib_native_logger)) }
@@ -515,9 +526,8 @@ impl Options {
     /// Enables or disabled user consent requirements for uploads.
     ///
     /// This disables uploads until the user has given the consent to the SDK.
-    /// Consent itself is given with
-    /// [`user_consent_give`](crate::user_consent_give) and
-    /// [`user_consent_revoke`](crate::user_consent_revoke).
+    /// Consent itself is given with [`user_consent_give`] and revoked with
+    /// [`user_consent_revoke`].
     ///
     /// # Examples
     /// ```
@@ -543,8 +553,9 @@ impl Options {
     #[must_use]
     pub fn require_user_consent(&self) -> bool {
         match unsafe { sys::options_get_require_user_consent(self.as_ref()) } {
+            0 => false,
             1 => true,
-            _ => false,
+            error => unreachable!("{} couldn't be converted to a bool", error),
         }
     }
 
@@ -579,8 +590,9 @@ impl Options {
     #[must_use]
     pub fn symbolize_stacktraces(&self) -> bool {
         match unsafe { sys::options_get_symbolize_stacktraces(self.as_ref()) } {
+            0 => false,
             1 => true,
-            _ => false,
+            error => unreachable!("{} couldn't be converted to a bool", error),
         }
     }
 
@@ -606,7 +618,7 @@ impl Options {
         #[cfg(not(windows))]
         unsafe {
             sys::options_add_attachment(self.as_mut(), name.as_ptr(), path.as_ptr())
-        };
+        }
     }
 
     /// Sets the path to the crashpad handler if the crashpad backend is used.
@@ -648,7 +660,7 @@ impl Options {
         #[cfg(not(windows))]
         unsafe {
             sys::options_set_handler_path(self.as_mut(), path.as_ptr())
-        };
+        }
     }
 
     /// Sets the path to the Sentry database directory.
@@ -659,7 +671,7 @@ impl Options {
     ///
     /// The path defaults to `.sentry-native` in the current working directory,
     /// will be created if it does not exist, and will be resolved to an
-    /// absolute path inside of `sentry_init`.
+    /// absolute path inside of [`Options::init`].
     ///
     /// It is recommended that library users set an explicit absolute path,
     /// depending on their apps runtime directory.
@@ -711,13 +723,16 @@ impl Options {
 
     /// Initializes the Sentry SDK with the specified options. Make sure to
     /// capture the resulting [`Shutdown`], this makes sure to automatically
-    /// call [`shutdown`](crate::shutdown) when it drops.
+    /// call [`shutdown`] when it drops.
     ///
     /// # Errors
     /// Fails with [`Error::Init`] if Sentry couldn't initialize - should only
     /// occur in these situations:
     /// - Fails to create database directory.
     /// - Fails to lock database directory.
+    ///
+    /// # Panics
+    /// Panics if `init` was already called once before.
     ///
     /// # Examples
     /// ```
@@ -729,15 +744,21 @@ impl Options {
     pub fn init(mut self) -> Result<Shutdown, Error> {
         let mut lock = global_write();
 
+        // make sure we aren't initializing Sentry twice
         if *lock {
             panic!("already initialized Sentry once")
         }
 
-        match unsafe { sys::init(self.as_mut()) } {
+        // disolve `Options`, `sys::init` is going to take ownership now
+        let options = if let Ownership::Owned(options) = self.raw.take().expect("use after free") {
+            options
+        } else {
+            unreachable!("can't mutably borrow `Options`")
+        };
+
+        match unsafe { sys::init(options) } {
             0 => {
                 *lock = true;
-                // init has taken ownership now
-                self.raw.take().expect("use after free");
 
                 // store `before_send` data so we can deallocate it later
                 if let Some(before_send) = self.before_send.take() {
@@ -751,7 +772,7 @@ impl Options {
 
                 Ok(Shutdown)
             }
-            _ => Err(Error::Init(self)),
+            _ => Err(Error::Init),
         }
     }
 }
@@ -774,7 +795,7 @@ impl Options {
 ///     // Sentry client will automatically shutdown because `Shutdown` is leaving context
 /// }
 /// ```
-#[derive(Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Shutdown;
 
 impl Drop for Shutdown {
@@ -841,7 +862,13 @@ impl Shutdown {
 
 #[test]
 fn options() -> anyhow::Result<()> {
-    use crate::Value;
+    use crate::{RawEnvelope, Value};
+
+    struct CustomTransport;
+
+    impl Transport for CustomTransport {
+        fn send(&self, _: RawEnvelope) {}
+    }
 
     struct Filter;
 
@@ -852,6 +879,9 @@ fn options() -> anyhow::Result<()> {
     }
 
     let mut options = Options::new();
+
+    options.set_transport(|_| {});
+    options.set_transport(CustomTransport);
 
     options.set_before_send(|value| value);
     options.set_before_send(Filter);
@@ -899,6 +929,16 @@ fn options() -> anyhow::Result<()> {
     options.set_database_path(".sentry-native");
 
     options.set_system_crash_reporter(true);
+
+    Ok(())
+}
+
+#[cfg(test)]
+#[rusty_fork::test_fork(timeout_ms = 5000)]
+#[should_panic]
+fn options_fail() -> anyhow::Result<()> {
+    Options::new().init()?;
+    Options::new().init()?;
 
     Ok(())
 }

@@ -4,6 +4,7 @@ use crate::{global_read, CToR, Level, Object, RToC, Value};
 use std::{
     cmp::Ordering,
     collections::BTreeMap,
+    ffi::CStr,
     fmt::{Display, Formatter, Result},
     hash::{Hash, Hasher},
     ops::{Deref, DerefMut},
@@ -26,13 +27,13 @@ use std::{
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Event {
     /// Event interface.
-    interface: Interface,
+    pub interface: Interface,
     /// Event content.
-    map: BTreeMap<String, Value>,
+    pub map: BTreeMap<String, Value>,
 }
 
 /// Sentry event interface.
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Interface {
     /// Plain interface.
     Event,
@@ -63,9 +64,7 @@ impl Object for Event {
                 text,
             } => {
                 let logger = logger.map(RToC::into_cstring);
-                let logger = logger
-                    .as_ref()
-                    .map_or(ptr::null(), |logger| logger.as_ptr());
+                let logger = logger.as_deref().map_or(ptr::null(), CStr::as_ptr);
                 let text = text.into_cstring();
 
                 unsafe { sys::value_new_message_event(level.into_raw(), logger, text.as_ptr()) }
@@ -141,7 +140,7 @@ impl Event {
             .expect("failed to get stacktrace")
     }
 
-    /// Adds a stacktrace to the [`Event`].
+    /// Adds a stacktrace with `len` instruction pointers to the [`Event`].
     ///
     /// # Examples
     /// ```
@@ -154,8 +153,8 @@ impl Event {
         self.insert("threads".into(), Self::stacktrace(len).into());
     }
 
-    /// Adds an exception to the [`Event`] along with a stacktrace. As a
-    /// workaround for <https://github.com/getsentry/sentry-native/issues/235>,
+    /// Adds an exception to the [`Event`] along with a stacktrace with `len`
+    /// instruction pointers. As a workaround for <https://github.com/getsentry/sentry-native/issues/235>,
     /// the stacktrace is moved to the `exception` object so that it shows up
     /// correctly in Sentry.
     ///
@@ -187,7 +186,7 @@ impl Event {
     /// Sends the [`Event`].
     ///
     /// # Panics
-    /// Panics if any [`String`] contains a null byte.
+    /// Panics if any [`String`] in `self` contains a null byte.
     ///
     /// # Examples
     /// ```
@@ -221,12 +220,6 @@ impl Event {
 #[derive(Debug, Copy, Clone)]
 pub struct Uuid(sys::Uuid);
 
-impl PartialEq for Uuid {
-    fn eq(&self, other: &Self) -> bool {
-        self.as_bytes() == other.as_bytes()
-    }
-}
-
 impl Default for Uuid {
     fn default() -> Self {
         Self::new()
@@ -247,23 +240,29 @@ impl Display for Uuid {
     }
 }
 
+impl PartialEq for Uuid {
+    fn eq(&self, other: &Self) -> bool {
+        self.into_bytes() == other.into_bytes()
+    }
+}
+
 impl Eq for Uuid {}
 
 impl PartialOrd for Uuid {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.as_bytes().partial_cmp(&other.as_bytes())
+        self.into_bytes().partial_cmp(&other.into_bytes())
     }
 }
 
 impl Ord for Uuid {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.as_bytes().cmp(&other.as_bytes())
+        self.into_bytes().cmp(&other.into_bytes())
     }
 }
 
 impl Hash for Uuid {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.as_bytes().hash(state);
+        self.into_bytes().hash(state);
     }
 }
 
@@ -300,10 +299,10 @@ impl Uuid {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Uuid;
-    /// assert_eq!([0; 16], Uuid::new().as_bytes());
+    /// assert_eq!([0; 16], Uuid::new().into_bytes());
     /// ```
     #[must_use]
-    pub const fn as_bytes(self) -> [c_char; 16] {
+    pub const fn into_bytes(self) -> [c_char; 16] {
         self.0.bytes
     }
 }
@@ -316,7 +315,7 @@ impl From<[c_char; 16]> for Uuid {
 
 impl From<Uuid> for [c_char; 16] {
     fn from(value: Uuid) -> Self {
-        value.as_bytes()
+        value.into_bytes()
     }
 }
 
@@ -325,7 +324,7 @@ fn event() -> anyhow::Result<()> {
     let event = Event::new();
 
     if let Interface::Message { .. } = event.interface {
-        unreachable!()
+        unreachable!("event is incorrectly a message")
     }
 
     event.capture();
@@ -342,17 +341,19 @@ fn event() -> anyhow::Result<()> {
         assert_eq!(&Some("test".into()), logger);
         assert_eq!("test", text);
     } else {
-        unreachable!()
+        unreachable!("event is incorrectly plain")
     }
 
     event.capture();
 
     let mut event = Event::new();
     event.add_stacktrace(0);
+    assert!(event.get("threads").is_some());
     event.capture();
 
     let mut event = Event::new_message(Level::Debug, None, "test");
     event.add_stacktrace(0);
+    assert!(event.get("threads").is_some());
     event.capture();
 
     let mut event = Event::new();

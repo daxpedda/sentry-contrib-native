@@ -1,11 +1,12 @@
 //! Sentry object implementation, represents common functionality between
-//! [`Map`](crate::Map), [`Breadcrumb`](crate::Breadcrumb),
-//! [`Event`](crate::Event), and [`User`](crate::User).
+//! [`Map`], [`Breadcrumb`], [`Event`], and [`User`].
 
+#[cfg(doc)]
+use crate::{Breadcrumb, Event, User};
 use crate::{RToC, Value};
 use std::collections::BTreeMap;
 
-/// Private trait methods of [`Object`].
+/// Implementation details of [`Object`].
 pub trait Object {
     /// Destructure [`Object`] into a raw [`sys::Value`] and a [`BTreeMap`] to
     /// add data to it.
@@ -20,7 +21,6 @@ pub trait Object {
 
         for (key, value) in map {
             let key = key.into_cstring();
-            let value = value;
 
             match unsafe { sys::value_set_by_key(raw, key.as_ptr(), value.into_raw()) } {
                 0 => (),

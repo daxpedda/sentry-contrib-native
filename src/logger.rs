@@ -66,7 +66,7 @@ pub extern "C" fn sentry_contrib_native_logger(
         )
     };
 
-    ffi::catch(|| logger(level, message));
+    ffi::catch(|| logger(level, message))
 }
 
 #[cfg(test)]

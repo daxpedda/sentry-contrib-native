@@ -262,7 +262,7 @@ impl Ord for Uuid {
 
 impl Hash for Uuid {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.into_bytes().hash(state);
+        self.into_bytes().hash(state)
     }
 }
 

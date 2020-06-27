@@ -96,9 +96,7 @@ impl Breadcrumb {
 
         {
             let _lock = global_write();
-            unsafe {
-                sys::add_breadcrumb(breadcrumb);
-            }
+            unsafe { sys::add_breadcrumb(breadcrumb) }
         }
     }
 }
@@ -108,5 +106,5 @@ fn breadcrumb() {
     let breadcrumb = Breadcrumb::new(Some("test".into()), Some("test".into()));
     assert_eq!(Some("test".into()), breadcrumb.ty);
     assert_eq!(Some("test".into()), breadcrumb.message);
-    breadcrumb.add();
+    breadcrumb.add()
 }

@@ -13,13 +13,12 @@
 )]
 #![cfg_attr(not(feature = "nightly"), doc = "")]
 
-#[macro_use]
-mod object;
 mod before_send;
 mod breadcrumb;
 mod event;
 mod ffi;
 mod logger;
+mod object;
 mod options;
 mod panic;
 mod transport;
@@ -564,7 +563,7 @@ pub fn set_level(level: Level) {
 /// TODO
 pub fn start_session() {
     let _lock = global_read();
-    unsafe { sys::start_session() };
+    unsafe { sys::start_session() }
 }
 
 /// Ends a session.
@@ -573,7 +572,7 @@ pub fn start_session() {
 /// TODO
 pub fn end_session() {
     let _lock = global_read();
-    unsafe { sys::end_session() };
+    unsafe { sys::end_session() }
 }
 
 #[test]

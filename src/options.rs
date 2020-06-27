@@ -7,10 +7,10 @@ use crate::{
 #[cfg(doc)]
 use crate::{shutdown, user_consent_give, user_consent_revoke, Event};
 use once_cell::sync::Lazy;
+#[cfg(feature = "test")]
+use std::env;
 #[cfg(doc)]
 use std::process::abort;
-#[cfg(feature = "test")]
-use std::{env, ffi::CString};
 use std::{
     fmt::{Debug, Formatter, Result as FmtResult},
     mem,
@@ -50,7 +50,7 @@ pub struct Options {
     raw: Option<Ownership>,
     /// Storing a fake DSN to make documentation tests and examples work.
     #[cfg(feature = "test")]
-    dsn: Option<CString>,
+    dsn: Option<String>,
     /// Storing [`Options::set_before_send`] data to save it globally on
     /// [`Options::init`] and properly deallocate it on [`shutdown`].
     before_send: Option<BeforeSendData>,
@@ -139,7 +139,10 @@ impl Options {
                 // will be set up properly for us inside those functions
                 options.set_database_path(".sentry-native");
                 options.set_handler_path("");
-                options.set_dsn("");
+                options.set_dsn(
+                    &env::var("SENTRY_DSN")
+                        .expect("tests require a valid `SENTRY_DSN` environment variable"),
+                )
             }
         }
 
@@ -233,16 +236,15 @@ impl Options {
     /// options.set_dsn("yourdsn.com");
     /// ```
     pub fn set_dsn<S: Into<String>>(&mut self, dsn: S) {
-        let dsn = dsn.into().into_cstring();
-
         #[cfg(feature = "test")]
         let dsn = {
-            self.dsn = Some(dsn);
+            self.dsn = Some(dsn.into());
             env::var("SENTRY_DSN")
                 .expect("tests require a valid `SENTRY_DSN` environment variable")
                 .into_cstring()
         };
-
+        #[cfg(not(feature = "test"))]
+        let dsn = dsn.into().into_cstring();
         unsafe { sys::options_set_dsn(self.as_mut(), dsn.as_ptr()) }
     }
 
@@ -260,10 +262,7 @@ impl Options {
     pub fn dsn(&self) -> Option<&str> {
         #[cfg(feature = "test")]
         if let Some(Ownership::Owned(_)) = self.raw {
-            return self
-                .dsn
-                .as_ref()
-                .map(|dsn| dsn.to_str().expect("invalid UTF-8"));
+            return self.dsn.as_deref();
         }
 
         unsafe { sys::options_get_dsn(self.as_ref()).as_str() }
@@ -946,6 +945,7 @@ fn options_fail() -> anyhow::Result<()> {
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 30000)]
 fn threaded_stress() -> anyhow::Result<()> {
+    use crate::test;
     use std::{
         convert::TryFrom,
         sync::{Arc, Mutex, MutexGuard},
@@ -984,6 +984,8 @@ fn threaded_stress() -> anyhow::Result<()> {
 
         Arc::try_unwrap(options).unwrap().into_inner().unwrap()
     }
+
+    test::set_hook();
 
     let options = spawns(vec![
         |mut options, _| options.set_before_send(|value| value),
@@ -1040,15 +1042,21 @@ fn threaded_stress() -> anyhow::Result<()> {
         },
     ]);
 
-    options.init()?;
+    options.init()?.shutdown();
+
+    test::verify_panics();
+
     Ok(())
 }
 
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 30000)]
 fn sync() -> anyhow::Result<()> {
+    use crate::test;
     use anyhow::{anyhow, Result};
     use std::{sync::Arc, thread};
+
+    test::set_hook();
 
     let mut options = Options::new();
     options.set_debug(true);
@@ -1067,14 +1075,17 @@ fn sync() -> anyhow::Result<()> {
         handle.join().unwrap();
     }
 
-    let _shutdown = thread::spawn(move || -> Result<Shutdown> {
+    thread::spawn(move || -> Result<Shutdown> {
         Arc::try_unwrap(options)
             .map_err(|_| anyhow!("failed to unwrap arc"))?
             .init()
             .map_err(Into::into)
     })
     .join()
-    .unwrap()?;
+    .unwrap()?
+    .shutdown();
+
+    test::verify_panics();
 
     Ok(())
 }

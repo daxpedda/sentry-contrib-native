@@ -20,6 +20,7 @@ vsprintf = { git = "https://github.com/daxpedda/vsprintf", branch = "fix-windows
 anyhow = "1"
 parking_lot = "0.11"
 reqwest = { version = "0.10", default-features = false, features = [
+  "blocking",
   "rustls-tls"
 ] }
 rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-macro-feature", features = [

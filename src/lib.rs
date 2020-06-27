@@ -21,6 +21,8 @@ mod logger;
 mod object;
 mod options;
 mod panic;
+#[cfg(feature = "test")]
+pub mod test;
 mod transport;
 mod user;
 mod value;
@@ -654,7 +656,6 @@ fn fingerprint_invalid() {
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 30000)]
 fn threaded_stress() -> anyhow::Result<()> {
-    use crate::User;
     use std::thread;
 
     fn spawns(tests: Vec<fn(i32)>) {
@@ -679,9 +680,11 @@ fn threaded_stress() -> anyhow::Result<()> {
         }
     }
 
+    test::set_hook();
+
     let mut options = Options::new();
     options.set_require_user_consent(true);
-    let _shutdown = options.init()?;
+    let shutdown = options.init()?;
 
     spawns(vec![
         |_| crate::clear_modulecache(),
@@ -720,6 +723,10 @@ fn threaded_stress() -> anyhow::Result<()> {
         |_| crate::start_session(),
         |_| crate::end_session(),
     ]);
+
+    shutdown.shutdown();
+
+    test::verify_panics();
 
     Ok(())
 }

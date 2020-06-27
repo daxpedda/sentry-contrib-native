@@ -1028,6 +1028,16 @@
 <span id="1028">1028</span>
 <span id="1029">1029</span>
 <span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry options implementation.</span>
 
@@ -1036,6 +1046,8 @@
     <span class="ident">BeforeSendData</span>, <span class="ident">CPath</span>, <span class="ident">CToR</span>, <span class="ident">Error</span>, <span class="ident">Level</span>, <span class="ident">Message</span>, <span class="ident">RToC</span>, <span class="ident">Transport</span>, <span class="ident">BEFORE_SEND</span>, <span class="ident">LOGGER</span>,
 };
 <span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::<span class="ident">Lazy</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">abort</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">env</span>, <span class="ident">ffi</span>::<span class="ident">CString</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -1214,6 +1226,10 @@
     }
 
     <span class="doccomment">/// Sets the before send callback.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Notes</span>
+    <span class="doccomment">/// Unwinding panics of functions in `before_send` will be cought and</span>
+    <span class="doccomment">/// [`abort`] will be called if any occured.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
@@ -1514,6 +1530,10 @@
 
     <span class="doccomment">/// Sets the Sentry logger function.</span>
     <span class="doccomment">/// Used for logging debug events when the `debug` option is set to true.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Notes</span>
+    <span class="doccomment">/// Unwinding panics of functions in `logger` will be cought and [`abort`]</span>
+    <span class="doccomment">/// will be called if any occured.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>

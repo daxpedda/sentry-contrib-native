@@ -13,20 +13,17 @@ once_cell = "1"
 rmpv = "0.4"
 sys = { package = "sentry-contrib-native-sys", path = "sentry-contrib-native-sys", default-features = false }
 thiserror = "1"
-url = { version = "2.1", optional = true }
+url = { version = "2", optional = true }
 vsprintf = { git = "https://github.com/daxpedda/vsprintf", branch = "fix-windows" }
 
 [dev-dependencies]
 anyhow = "1"
-rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-macro-feature", features = [
-  "macro"
-] }
-
-
-# Used by the custom-transport example.
-  parking_lot = "0.11"
+parking_lot = "0.11"
 reqwest = { version = "0.10", default-features = false, features = [
   "rustls-tls"
+] }
+rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-macro-feature", features = [
+  "macro"
 ] }
 tokio = { version = "0.2", features = ["rt-threaded"] }
 

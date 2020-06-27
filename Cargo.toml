@@ -22,8 +22,9 @@ rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-ma
   "macro"
 ] }
 
+
 # Used by the custom-transport example.
-parking_lot = "0.11"
+  parking_lot = "0.11"
 reqwest = { version = "0.10", default-features = false, features = [
   "rustls-tls"
 ] }

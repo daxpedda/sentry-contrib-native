@@ -76,8 +76,8 @@ impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
     }
 }
 
-/// Function to give [`Options::set_before_send`], which in turn calls the user
-/// defined one.
+/// Function to pass to [`sys::options_set_before_send`], which in turn calls
+/// the user defined one.
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
 #[allow(clippy::module_name_repetitions)]

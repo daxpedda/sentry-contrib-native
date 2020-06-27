@@ -5,6 +5,8 @@ use crate::{
     BeforeSendData, CPath, CToR, Error, Level, Message, RToC, Transport, BEFORE_SEND, LOGGER,
 };
 use once_cell::sync::Lazy;
+#[cfg(doc)]
+use std::process::abort;
 #[cfg(feature = "test")]
 use std::{env, ffi::CString};
 use std::{
@@ -183,6 +185,10 @@ impl Options {
     }
 
     /// Sets the before send callback.
+    ///
+    /// # Notes
+    /// Unwinding panics of functions in `before_send` will be cought and
+    /// [`abort`] will be called if any occured.
     ///
     /// # Examples
     /// ```
@@ -483,6 +489,10 @@ impl Options {
 
     /// Sets the Sentry logger function.
     /// Used for logging debug events when the `debug` option is set to true.
+    ///
+    /// # Notes
+    /// Unwinding panics of functions in `logger` will be cought and [`abort`]
+    /// will be called if any occured.
     ///
     /// # Examples
     /// ```

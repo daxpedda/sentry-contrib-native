@@ -5,6 +5,8 @@
 use crate::Options;
 use crate::{ffi, Level};
 use once_cell::sync::Lazy;
+#[cfg(doc)]
+use std::process::abort;
 use std::{
     fmt::{Display, Formatter, Result as FmtResult},
     os::raw::{c_char, c_void},

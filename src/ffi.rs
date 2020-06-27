@@ -1,7 +1,9 @@
-//! FFI helper types to communicate with `sentry-native`.
+//! FFI helper functions, traits and types to communicate with `sentry-native`.
 
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
+#[cfg(doc)]
+use std::process::abort;
 use std::{
     ffi::{CStr, CString},
     os::raw::c_char,
@@ -9,6 +11,7 @@ use std::{
     path::PathBuf,
     process,
 };
+
 #[cfg(not(windows))]
 use std::{mem, os::unix::ffi::OsStringExt};
 
@@ -19,7 +22,7 @@ type COsString = u16;
 #[cfg(not(windows))]
 type COsString = c_char;
 
-/// Trait for converting [`PathBuf`] to `Vec<COsString>`.
+/// Helper trait to convert [`PathBuf`] to `Vec<COsString>`.
 pub trait CPath {
     /// Re-encodes `self` into an OS compatible `Vec<COsString>`.
     ///
@@ -31,28 +34,27 @@ pub trait CPath {
 impl CPath for PathBuf {
     fn into_os_vec(self) -> Vec<COsString> {
         #[cfg(windows)]
-        let mut path: Vec<_> = self.into_os_string().encode_wide().collect();
+        let path: Vec<_> = self.into_os_string().encode_wide().chain(Some(0)).collect();
         #[cfg(not(windows))]
-        let mut path: Vec<_> = self
+        let path: Vec<_> = self
             .into_os_string()
             .into_vec()
             .into_iter()
             .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) })
+            .chain(Some(0))
             .collect();
 
-        if path.contains(&0) {
+        if path[0..path.len() - 1].contains(&0) {
             panic!("found null byte")
         }
-
-        path.push(0);
 
         path
     }
 }
 
-/// Trait for converting `*const c_char` to [`str`].
+/// Helper trait to convert `*const c_char` to [`str`].
 pub trait CToR {
-    /// Converts the given value to a [`str`].
+    /// Yields a [`str`] from `self`.
     ///
     /// # Panics
     /// Panics if `self` contains any invalid UTF-8.
@@ -72,18 +74,18 @@ impl CToR for *const c_char {
             Some(
                 unsafe { CStr::from_ptr(self) }
                     .to_str()
-                    .expect("invalid UTF-8"),
+                    .expect("found invalid UTF-8"),
             )
         }
     }
 }
 
-/// Trait for converting [`str`] to [`CString`].
+/// Helper trait to convert [`String`] to [`CString`].
 pub trait RToC {
     /// Re-encodes `self` into a [`CString`].
     ///
     /// # Panics
-    /// Panics if any null bytes are found.
+    /// Panics if `self` contains any null bytes.
     fn into_cstring(self) -> CString;
 }
 
@@ -93,7 +95,7 @@ impl RToC for String {
     }
 }
 
-/// Catch panics in FFI functions and abort instead.
+/// Catch unwinding panics and [`abort`] if any occured.
 pub fn catch<R>(fun: impl FnOnce() -> R) -> R {
     match panic::catch_unwind(AssertUnwindSafe(|| fun())) {
         Ok(ret) => ret,
@@ -207,4 +209,11 @@ mod rtoc {
     invalid!(invalid_4, convert("\0🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️"));
     invalid!(invalid_5, convert("abcd\0efgh"));
     invalid!(invalid_6, convert("🤦‍♂️🤦‍♀️\0🤷‍♂️🤷‍♀️"));
+}
+
+#[cfg(test)]
+#[rusty_fork::test_fork(timeout_ms = 5000)]
+#[should_panic]
+fn catch_panic() {
+    catch(|| panic!("test"))
 }

@@ -1,5 +1,4 @@
-//! Implementation details for
-//! [`Options::set_logger`](crate::Options::set_logger).
+//! Implementation details for [`Options::set_logger`].
 
 #[cfg(doc)]
 use crate::Options;
@@ -43,12 +42,7 @@ impl Display for Message {
 /// user defined one.
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
-#[allow(clippy::module_name_repetitions)]
-pub extern "C" fn sentry_contrib_native_logger(
-    level: i32,
-    message: *const c_char,
-    args: *mut c_void,
-) {
+pub extern "C" fn logger(level: i32, message: *const c_char, args: *mut c_void) {
     let lock = LOGGER.read();
     let logger = lock
         .as_ref()
@@ -71,7 +65,7 @@ pub extern "C" fn sentry_contrib_native_logger(
 
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 5000)]
-fn logger() -> anyhow::Result<()> {
+fn logger_test() -> anyhow::Result<()> {
     use crate::Options;
     use std::cell::RefCell;
 

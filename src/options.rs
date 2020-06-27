@@ -1,8 +1,8 @@
 //! Sentry options implementation.
 
 use crate::{
-    sentry_contrib_native_before_send, sentry_contrib_native_logger, transport, BeforeSend,
-    BeforeSendData, CPath, CToR, Error, Level, Message, RToC, Transport, BEFORE_SEND, LOGGER,
+    before_send, logger, transport, BeforeSend, BeforeSendData, CPath, CToR, Error, Level, Message,
+    RToC, Transport, BEFORE_SEND, LOGGER,
 };
 #[cfg(doc)]
 use crate::{shutdown, user_consent_give, user_consent_revoke, Event};
@@ -181,7 +181,7 @@ impl Options {
     ///     println!("Event to be sent: {:?}", envelope.event())
     /// });
     /// ```
-    /// See [`Transport`] for more detailed examples.
+    /// See [`Transport`] for more detailed documentation.
     pub fn set_transport<T: Into<Box<T>> + Transport>(&mut self, transport: T) {
         let data = Box::into_raw(Box::<Box<dyn Transport>>::new(transport.into()));
 
@@ -216,11 +216,7 @@ impl Options {
         self.before_send = Some(unsafe { Box::from_raw(fun) });
 
         unsafe {
-            sys::options_set_before_send(
-                self.as_mut(),
-                Some(sentry_contrib_native_before_send),
-                fun as _,
-            )
+            sys::options_set_before_send(self.as_mut(), Some(before_send::before_send), fun as _)
         }
     }
 
@@ -519,7 +515,7 @@ impl Options {
         logger: L,
     ) {
         *LOGGER.write().expect("failed to set `LOGGER`") = Some(logger.into());
-        unsafe { sys::options_set_logger(self.as_mut(), Some(sentry_contrib_native_logger)) }
+        unsafe { sys::options_set_logger(self.as_mut(), Some(logger::logger)) }
     }
 
     /// Enables or disabled user consent requirements for uploads.
@@ -804,9 +800,8 @@ impl Drop for Shutdown {
 }
 
 impl Shutdown {
-    /// Disable automatic shutdown.
-    /// Call [`shutdown`](crate::shutdown) manually to force transports to flush
-    /// out before the program exits.
+    /// Disable automatic shutdown. Call [`shutdown`] manually to force
+    /// transports to flush out before the program exits.
     ///
     /// # Examples
     /// ```

@@ -80,14 +80,13 @@ impl<T: Fn(Value) -> Value + 'static + Send + Sync> BeforeSend for T {
 /// the user defined one.
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
-#[allow(clippy::module_name_repetitions)]
-pub extern "C" fn sentry_contrib_native_before_send(
+pub extern "C" fn before_send(
     event: sys::Value,
     _hint: *mut c_void,
     closure: *mut c_void,
 ) -> sys::Value {
-    let before_send =
-        ManuallyDrop::new(unsafe { Box::<Box<dyn BeforeSend>>::from_raw(closure as _) });
+    let before_send = closure as *mut Box<dyn BeforeSend>;
+    let before_send = ManuallyDrop::new(unsafe { Box::from_raw(before_send) });
 
     ffi::catch(|| {
         before_send
@@ -98,7 +97,7 @@ pub extern "C" fn sentry_contrib_native_before_send(
 
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 10000)]
-fn before_send() -> anyhow::Result<()> {
+fn before_send_test() -> anyhow::Result<()> {
     use crate::{Event, Options, Value};
     use std::{
         cell::RefCell,

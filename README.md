@@ -58,7 +58,7 @@ use std::ptr;
 
 fn main() {
     // set up panic handler
-    sentry::set_hook(None);
+    sentry::set_hook(None, None);
     // start Sentry
     let mut options = Options::new();
     options.set_dsn("your-sentry-dsn.com");

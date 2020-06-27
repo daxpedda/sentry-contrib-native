@@ -1,17 +1,31 @@
 //! Sentry supported panic handler.
 
+#[cfg(doc)]
+use crate::{shutdown, Shutdown};
 use crate::{Event, Level};
+#[cfg(doc)]
+use std::process::abort;
 use std::{
     collections::BTreeMap,
     convert::TryFrom,
     panic::{self, PanicInfo},
 };
 
-/// Panic handler to send an event with the current stacktrace to Sentry.
+/// Panic handler to send an [`Event`] with the current stacktrace to Sentry.
 ///
+/// `before_send` is a callback that is able to modify the [`Event`] before it
+/// is captures.
+///
+/// `hook` is a callback that is run after the [`Event`] is captured.
+///
+/// # Notes
 /// This will not work properly if used with `panic = "abort"` because
-/// [`Shutdown`](crate::Shutdown) is never unwound. To fix this make sure you
-/// make the panic handler itself call [`shutdown`](crate::shutdown).
+/// [`Shutdown`] is never unwound. To fix this make sure you make the panic
+/// handler itself call [`shutdown`].
+///
+/// Rust doesn't allow panics inside of a panicking thread and reacts with an
+/// [`abort`]: if a custom transport or a before-send callback was registered
+/// that can panic, it might lead to any [`panic!`] being an [`abort`] instead.
 ///
 /// # Examples
 /// ```should_panic
@@ -19,23 +33,33 @@ use std::{
 /// # use sentry_contrib_native::{Options, set_hook};
 /// fn main() -> Result<()> {
 ///     // pass original panic handler provided by rust to retain it's functionality
-///     set_hook(Some(std::panic::take_hook()));
+///     set_hook(None, Some(std::panic::take_hook()));
 ///     // it can also be removed
-///     set_hook(None);
+///     set_hook(None, None);
+///     // the `Event` sent by a panic can also be modified
+///     set_hook(
+///         Some(Box::new(|mut event| {
+///             // do something with the event and then return it
+///             event
+///         })),
+///         None,
+///     );
 ///
 ///     let _shutdown = Options::new().init()?;
 ///
 ///     panic!("application panicked")
 /// }
 /// ```
-///
-/// If you are using `panic = "abort"` make sure to call
-/// [`shutdown`](crate::shutdown) inside the panic handler.
+/// If you are using `panic = "abort"` make sure to call [`shutdown`] inside the
+/// panic handler.
 /// ```
 /// # use sentry_contrib_native::{set_hook, shutdown};
-/// set_hook(Some(Box::new(|_| shutdown())));
+/// set_hook(None, Some(Box::new(|_| shutdown())));
 /// ```
-pub fn set_hook(hook: Option<Box<dyn Fn(&PanicInfo) + Sync + Send + 'static>>) {
+pub fn set_hook(
+    before_send: Option<Box<dyn Fn(Event) -> Event + 'static + Send + Sync>>,
+    hook: Option<Box<dyn Fn(&PanicInfo) + 'static + Send + Sync>>,
+) {
     panic::set_hook(Box::new(move |panic_info| {
         let mut event = Event::new_message(
             Level::Error,
@@ -59,10 +83,15 @@ pub fn set_hook(hook: Option<Box<dyn Fn(&PanicInfo) + Sync + Send + 'static>>) {
         }
 
         event.add_stacktrace(0);
+
+        if let Some(before_send) = &before_send {
+            event = before_send(event);
+        }
+
         event.capture();
 
         if let Some(hook) = &hook {
-            hook(panic_info)
+            hook(panic_info);
         }
     }));
 }
@@ -70,17 +99,28 @@ pub fn set_hook(hook: Option<Box<dyn Fn(&PanicInfo) + Sync + Send + 'static>>) {
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 5000)]
 fn hook() -> anyhow::Result<()> {
-    use std::thread;
+    use std::{
+        sync::atomic::{AtomicBool, Ordering},
+        thread,
+    };
 
-    static mut TEST: bool = false;
+    static BEFORE_SEND: AtomicBool = AtomicBool::new(false);
+    static HOOK: AtomicBool = AtomicBool::new(false);
 
-    set_hook(None);
-    set_hook(Some(Box::new(|_| unsafe { TEST = true })));
+    set_hook(None, None);
+    set_hook(
+        Some(Box::new(|event| {
+            BEFORE_SEND.store(true, Ordering::SeqCst);
+            event
+        })),
+        Some(Box::new(|_| HOOK.store(true, Ordering::SeqCst))),
+    );
 
     thread::spawn(|| panic!("this panic is a test"))
         .join()
         .unwrap_err();
 
-    assert!(unsafe { TEST });
+    assert!(BEFORE_SEND.load(Ordering::SeqCst));
+    assert!(HOOK.load(Ordering::SeqCst));
     Ok(())
 }

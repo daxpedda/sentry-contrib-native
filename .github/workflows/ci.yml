@@ -47,10 +47,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install Prettier
-        run: npm install --no-save prettier prettier-plugin-toml
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Install Prettier
+        run: npm install --no-save prettier prettier-plugin-toml
       - name: Prettier
         run: npx prettier -l .
 
@@ -210,12 +210,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install Prettier
-        run: npm install --no-save prettier prettier-plugin-toml
       - name: Checkout
         uses: actions/checkout@v2
         with:
           ref: ${{ matrix.branch }}
+      - name: Install Prettier
+        run: npm install --no-save prettier prettier-plugin-toml
       - name: Prettier
         run: npx prettier -l .
 

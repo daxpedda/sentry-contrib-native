@@ -1038,6 +1038,46 @@
 <span id="1038">1038</span>
 <span id="1039">1039</span>
 <span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry options implementation.</span>
 
@@ -1045,6 +1085,8 @@
     <span class="ident">sentry_contrib_native_before_send</span>, <span class="ident">sentry_contrib_native_logger</span>, <span class="ident">transport</span>, <span class="ident">BeforeSend</span>,
     <span class="ident">BeforeSendData</span>, <span class="ident">CPath</span>, <span class="ident">CToR</span>, <span class="ident">Error</span>, <span class="ident">Level</span>, <span class="ident">Message</span>, <span class="ident">RToC</span>, <span class="ident">Transport</span>, <span class="ident">BEFORE_SEND</span>, <span class="ident">LOGGER</span>,
 };
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">shutdown</span>, <span class="ident">user_consent_give</span>, <span class="ident">user_consent_revoke</span>, <span class="ident">Event</span>};
 <span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::<span class="ident">Lazy</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">abort</span>;
@@ -1059,13 +1101,10 @@
 
 <span class="doccomment">/// Global lock for the following purposes:</span>
 <span class="doccomment">/// - Prevent [`Options::init`] from being called twice.</span>
-<span class="doccomment">/// - Fix some use-after-free bugs in `sentry-native` that can happen when</span>
-<span class="doccomment">///   shutdown is called while other functions are still accessing global</span>
-<span class="doccomment">///   options. Hopefully this will be fixed upstream in the future, see</span>
+<span class="doccomment">/// - Fix some null-dereferncing bugs in `sentry-native` that can happen when</span>
+<span class="doccomment">///   shutdown is called while other functions are still accessing options.</span>
+<span class="doccomment">///   Hopefully this will be fixed upstream in the future, see</span>
 <span class="doccomment">///   &lt;https://github.com/getsentry/sentry-native/issues/280&gt;.</span>
-<span class="doccomment">/// - [`Event::capture`](crate::Event::capture) uses mutable global data passed</span>
-<span class="doccomment">///   to [`Options::set_before_send`], which would otherwise need a seperate</span>
-<span class="doccomment">///   [`Mutex`] to do safely.</span>
 <span class="kw">static</span> <span class="ident">GLOBAL_LOCK</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy</span>::<span class="ident">new</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="bool-val">false</span>));
 
 <span class="doccomment">/// Convenience function to get a read lock on `GLOBAL_LOCK`.</span>
@@ -1090,17 +1129,16 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Options</span> {
     <span class="doccomment">/// Raw Sentry options.</span>
     <span class="ident">raw</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ownership</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Storing a fake dsn to make documentation tests and examples work without</span>
-    <span class="doccomment">/// polluting the file system.</span>
+    <span class="doccomment">/// Storing a fake DSN to make documentation tests and examples work.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
     <span class="ident">dsn</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">CString</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Storing [`Options::set_before_send`] data to properly deallocate it</span>
-    <span class="doccomment">/// later.</span>
+    <span class="doccomment">/// Storing [`Options::set_before_send`] data to save it globally on</span>
+    <span class="doccomment">/// [`Options::init`] and properly deallocate it on [`shutdown`].</span>
     <span class="ident">before_send</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BeforeSendData</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Represents the ownership status of [`Options`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Ownership</span> {
     <span class="doccomment">/// [`Options`] is owned.</span>
     <span class="ident">Owned</span>(<span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">sys</span>::<span class="ident">Options</span>),
@@ -1122,7 +1160,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">debug</span> <span class="op">=</span> <span class="ident">fmt</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;Options&quot;</span>);
         <span class="ident">debug</span>.<span class="ident">field</span>(<span class="string">&quot;raw&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>);
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
-        <span class="ident">debug</span>.<span class="ident">field</span>(<span class="string">&quot;database_path&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dsn</span>);
+        <span class="ident">debug</span>.<span class="ident">field</span>(<span class="string">&quot;dsn&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dsn</span>);
         <span class="ident">debug</span>
             .<span class="ident">field</span>(
                 <span class="string">&quot;before_send&quot;</span>,
@@ -1138,18 +1176,15 @@
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Options</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>() {
-            <span class="kw">match</span> <span class="ident">options</span> {
-                <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_free</span>(<span class="ident">options</span>) },
-                <span class="ident">Ownership</span>::<span class="ident">Borrowed</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (),
-            }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>() {
+            <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_free</span>(<span class="ident">options</span>) }
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Options</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">raw</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">raw</span>
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="bool-val">false</span>
     }
 }
 
@@ -1202,17 +1237,30 @@
 
     <span class="doccomment">/// Yields a mutable pointer to [`sys::Options`], ownership is retained.</span>
     <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">sys</span>::<span class="ident">Options</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
-            <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">options</span>,
-            <span class="ident">Ownership</span>::<span class="ident">Borrowed</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;can&#39;t mutably borrow `Options`&quot;</span>),
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
+            <span class="ident">options</span>
+        } <span class="kw">else</span> {
+            <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;can&#39;t mutably borrow `Options`&quot;</span>)
         }
     }
 
-    <span class="doccomment">/// Sets a transport.</span>
+    <span class="doccomment">/// Sets a custom transport. This only affects events sent through</span>
+    <span class="doccomment">/// [`Event::capture`], not the crash handler.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Notes</span>
+    <span class="doccomment">/// Unwinding panics of functions in `transport` will be cought and</span>
+    <span class="doccomment">/// [`abort`] will be called if any occured.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">/// TODO</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_transport</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">T</span>: <span class="ident">Transport</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">transport</span>: <span class="ident">B</span>) {
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// # use sentry_contrib_native::{Options, RawEnvelope};</span>
+    <span class="doccomment">/// let mut options = Options::new();</span>
+    <span class="doccomment">/// options.set_transport(|envelope: RawEnvelope| {</span>
+    <span class="doccomment">///     println!(&quot;Event to be sent: {:?}&quot;, envelope.event())</span>
+    <span class="doccomment">/// });</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// See [`Transport`] for more detailed examples.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_transport</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Transport</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">transport</span>: <span class="ident">T</span>) {
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">into_raw</span>(<span class="ident">Box</span>::<span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="ident">transport</span>.<span class="ident">into</span>()));
 
         <span class="kw">unsafe</span> {
@@ -1221,11 +1269,12 @@
             <span class="ident">sys</span>::<span class="ident">transport_set_startup_func</span>(<span class="ident">transport</span>, <span class="prelude-val">Some</span>(<span class="ident">transport</span>::<span class="ident">startup</span>));
             <span class="ident">sys</span>::<span class="ident">transport_set_shutdown_func</span>(<span class="ident">transport</span>, <span class="prelude-val">Some</span>(<span class="ident">transport</span>::<span class="ident">shutdown</span>));
             <span class="ident">sys</span>::<span class="ident">transport_set_free_func</span>(<span class="ident">transport</span>, <span class="prelude-val">Some</span>(<span class="ident">transport</span>::<span class="ident">free</span>));
-            <span class="ident">sys</span>::<span class="ident">options_set_transport</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">transport</span>);
+            <span class="ident">sys</span>::<span class="ident">options_set_transport</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">transport</span>)
         }
     }
 
-    <span class="doccomment">/// Sets the before send callback.</span>
+    <span class="doccomment">/// Sets a callback that is triggered before sending an event through</span>
+    <span class="doccomment">/// [`Event::capture`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Notes</span>
     <span class="doccomment">/// Unwinding panics of functions in `before_send` will be cought and</span>
@@ -1265,16 +1314,17 @@
     <span class="doccomment">/// options.set_dsn(&quot;yourdsn.com&quot;);</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_dsn</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">dsn</span>: <span class="ident">S</span>) {
+        <span class="kw">let</span> <span class="ident">dsn</span> <span class="op">=</span> <span class="ident">dsn</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
+
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
         <span class="kw">let</span> <span class="ident">dsn</span> <span class="op">=</span> {
-            <span class="self">self</span>.<span class="ident">dsn</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">dsn</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>());
+            <span class="self">self</span>.<span class="ident">dsn</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">dsn</span>);
             <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;SENTRY_DSN&quot;</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;tests require a valid `SENTRY_DSN` environment variable&quot;</span>)
                 .<span class="ident">into_cstring</span>()
         };
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>))]</span>
-        <span class="kw">let</span> <span class="ident">dsn</span> <span class="op">=</span> <span class="ident">dsn</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_dsn</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">dsn</span>.<span class="ident">as_ptr</span>()) };
+
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_dsn</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">dsn</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Gets the DSN.</span>
@@ -1294,15 +1344,15 @@
             <span class="kw">return</span> <span class="self">self</span>
                 .<span class="ident">dsn</span>
                 .<span class="ident">as_ref</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">database_path</span><span class="op">|</span> <span class="ident">database_path</span>.<span class="ident">to_str</span>().<span class="ident">expect</span>(<span class="string">&quot;invalid UTF-8&quot;</span>));
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">dsn</span><span class="op">|</span> <span class="ident">dsn</span>.<span class="ident">to_str</span>().<span class="ident">expect</span>(<span class="string">&quot;invalid UTF-8&quot;</span>));
         }
 
         <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_dsn</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
     }
 
-    <span class="doccomment">/// Sets the sample rate, which should be a double between `0.0` and `1.0`.</span>
-    <span class="doccomment">/// Sentry will randomly discard any event that is captured using</span>
-    <span class="doccomment">/// [`Event`](crate::Event) when a sample rate &lt; 1 is set.</span>
+    <span class="doccomment">/// Sets the sample rate, which should be a [`f64`] between `0.0` and `1.0`.</span>
+    <span class="doccomment">/// Sentry will randomly discard any event that is captured using [`Event`]</span>
+    <span class="doccomment">/// when a sample rate &lt; 1.0 is set.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Errors</span>
     <span class="doccomment">/// Fails with [`Error::SampleRateRange`] if `sample_rate` is smaller than</span>
@@ -1354,7 +1404,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_release</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">release</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">release</span> <span class="op">=</span> <span class="ident">release</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_release</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">release</span>.<span class="ident">as_ptr</span>()) };
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_release</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">release</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Gets the release.</span>
@@ -1385,7 +1435,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_environment</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">environment</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">environment</span> <span class="op">=</span> <span class="ident">environment</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_environment</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">environment</span>.<span class="ident">as_ptr</span>()) };
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_environment</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">environment</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Gets the environment.</span>
@@ -1415,8 +1465,8 @@
     <span class="doccomment">/// options.set_distribution(&quot;release-pgo&quot;);</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_distribution</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">distribution</span>: <span class="ident">S</span>) {
-        <span class="kw">let</span> <span class="ident">dist</span> <span class="op">=</span> <span class="ident">distribution</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_dist</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">dist</span>.<span class="ident">as_ptr</span>()) };
+        <span class="kw">let</span> <span class="ident">distribution</span> <span class="op">=</span> <span class="ident">distribution</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_dist</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">distribution</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Gets the distribution.</span>
@@ -1447,7 +1497,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_http_proxy</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">proxy</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">proxy</span> <span class="op">=</span> <span class="ident">proxy</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_http_proxy</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">proxy</span>.<span class="ident">as_ptr</span>()) };
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_http_proxy</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">proxy</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Returns the configured http proxy.</span>
@@ -1465,7 +1515,7 @@
         <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_http_proxy</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
     }
 
-    <span class="doccomment">/// Configures the path to a file containing ssl certificates for</span>
+    <span class="doccomment">/// Configures the path to a file containing SSL certificates for</span>
     <span class="doccomment">/// verification.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
@@ -1479,10 +1529,10 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_ca_certs</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">path</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_ca_certs</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>()) };
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_ca_certs</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>()) }
     }
 
-    <span class="doccomment">/// Returns the configured path for ca certificates.</span>
+    <span class="doccomment">/// Returns the configured path for CA certificates.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
@@ -1507,7 +1557,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_debug</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">debug</span>: <span class="ident">bool</span>) {
         <span class="kw">let</span> <span class="ident">debug</span> <span class="op">=</span> <span class="ident">debug</span>.<span class="ident">into</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_debug</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">debug</span>) };
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_debug</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">debug</span>) }
     }
 
     <span class="doccomment">/// Returns the current value of the debug flag.</span>
@@ -1523,16 +1573,17 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">debug</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_debug</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
+            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
         }
     }
 
-    <span class="doccomment">/// Sets the Sentry logger function.</span>
-    <span class="doccomment">/// Used for logging debug events when the `debug` option is set to true.</span>
+    <span class="doccomment">/// Sets a callback that is used for logging purposes when</span>
+    <span class="doccomment">/// [`Options::debug`] is `true`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Notes</span>
-    <span class="doccomment">/// Unwinding panics of functions in `logger` will be cought and [`abort`]</span>
+    <span class="doccomment">/// Unwinding panics in `logger` will be cought and [`abort`]</span>
     <span class="doccomment">/// will be called if any occured.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
@@ -1545,9 +1596,9 @@
     <span class="doccomment">///     println!(&quot;[{}]: {}&quot;, level, message);</span>
     <span class="doccomment">/// });</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_logger</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">L</span>: <span class="ident">Fn</span>(<span class="ident">Level</span>, <span class="ident">Message</span>) <span class="op">+</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_logger</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Fn</span>(<span class="ident">Level</span>, <span class="ident">Message</span>) <span class="op">+</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">logger</span>: <span class="ident">B</span>,
+        <span class="ident">logger</span>: <span class="ident">L</span>,
     ) {
         <span class="kw-2">*</span><span class="ident">LOGGER</span>.<span class="ident">write</span>().<span class="ident">expect</span>(<span class="string">&quot;failed to set `LOGGER`&quot;</span>) <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">logger</span>.<span class="ident">into</span>());
         <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_logger</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="prelude-val">Some</span>(<span class="ident">sentry_contrib_native_logger</span>)) }
@@ -1556,9 +1607,8 @@
     <span class="doccomment">/// Enables or disabled user consent requirements for uploads.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This disables uploads until the user has given the consent to the SDK.</span>
-    <span class="doccomment">/// Consent itself is given with</span>
-    <span class="doccomment">/// [`user_consent_give`](crate::user_consent_give) and</span>
-    <span class="doccomment">/// [`user_consent_revoke`](crate::user_consent_revoke).</span>
+    <span class="doccomment">/// Consent itself is given with [`user_consent_give`] and revoked with</span>
+    <span class="doccomment">/// [`user_consent_revoke`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
@@ -1584,8 +1634,9 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">require_user_consent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_require_user_consent</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
+            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
         }
     }
 
@@ -1620,8 +1671,9 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbolize_stacktraces</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_symbolize_stacktraces</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
+            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
         }
     }
 
@@ -1647,7 +1699,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">windows</span>))]</span>
         <span class="kw">unsafe</span> {
             <span class="ident">sys</span>::<span class="ident">options_add_attachment</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
-        };
+        }
     }
 
     <span class="doccomment">/// Sets the path to the crashpad handler if the crashpad backend is used.</span>
@@ -1689,7 +1741,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">windows</span>))]</span>
         <span class="kw">unsafe</span> {
             <span class="ident">sys</span>::<span class="ident">options_set_handler_path</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
-        };
+        }
     }
 
     <span class="doccomment">/// Sets the path to the Sentry database directory.</span>
@@ -1700,7 +1752,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The path defaults to `.sentry-native` in the current working directory,</span>
     <span class="doccomment">/// will be created if it does not exist, and will be resolved to an</span>
-    <span class="doccomment">/// absolute path inside of `sentry_init`.</span>
+    <span class="doccomment">/// absolute path inside of [`Options::init`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// It is recommended that library users set an explicit absolute path,</span>
     <span class="doccomment">/// depending on their apps runtime directory.</span>
@@ -1752,13 +1804,16 @@
 
     <span class="doccomment">/// Initializes the Sentry SDK with the specified options. Make sure to</span>
     <span class="doccomment">/// capture the resulting [`Shutdown`], this makes sure to automatically</span>
-    <span class="doccomment">/// call [`shutdown`](crate::shutdown) when it drops.</span>
+    <span class="doccomment">/// call [`shutdown`] when it drops.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Errors</span>
     <span class="doccomment">/// Fails with [`Error::Init`] if Sentry couldn&#39;t initialize - should only</span>
     <span class="doccomment">/// occur in these situations:</span>
     <span class="doccomment">/// - Fails to create database directory.</span>
     <span class="doccomment">/// - Fails to lock database directory.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Panics</span>
+    <span class="doccomment">/// Panics if `init` was already called once before.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
@@ -1770,15 +1825,21 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Shutdown</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
 
+        <span class="comment">// make sure we aren&#39;t initializing Sentry twice</span>
         <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">lock</span> {
             <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;already initialized Sentry once&quot;</span>)
         }
 
-        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">init</span>(<span class="self">self</span>.<span class="ident">as_mut</span>()) } {
+        <span class="comment">// disolve `Options`, `sys::init` is going to take ownership now</span>
+        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>().<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
+            <span class="ident">options</span>
+        } <span class="kw">else</span> {
+            <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;can&#39;t mutably borrow `Options`&quot;</span>)
+        };
+
+        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">init</span>(<span class="ident">options</span>) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw-2">*</span><span class="ident">lock</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                <span class="comment">// init has taken ownership now</span>
-                <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>().<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>);
 
                 <span class="comment">// store `before_send` data so we can deallocate it later</span>
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">before_send</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">before_send</span>.<span class="ident">take</span>() {
@@ -1792,7 +1853,7 @@
 
                 <span class="prelude-val">Ok</span>(<span class="ident">Shutdown</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Init</span>(<span class="self">self</span>)),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Init</span>),
         }
     }
 }
@@ -1815,7 +1876,7 @@
 <span class="doccomment">///     // Sentry client will automatically shutdown because `Shutdown` is leaving context</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">Ord</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">Ord</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Shutdown</span>;
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Shutdown</span> {
@@ -1882,7 +1943,13 @@
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">options</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">Value</span>;
+    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">RawEnvelope</span>, <span class="ident">Value</span>};
+
+    <span class="kw">struct</span> <span class="ident">CustomTransport</span>;
+
+    <span class="kw">impl</span> <span class="ident">Transport</span> <span class="kw">for</span> <span class="ident">CustomTransport</span> {
+        <span class="kw">fn</span> <span class="ident">send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="ident">RawEnvelope</span>) {}
+    }
 
     <span class="kw">struct</span> <span class="ident">Filter</span>;
 
@@ -1893,6 +1960,9 @@
     }
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+
+    <span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {});
+    <span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="ident">CustomTransport</span>);
 
     <span class="ident">options</span>.<span class="ident">set_before_send</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">value</span>);
     <span class="ident">options</span>.<span class="ident">set_before_send</span>(<span class="ident">Filter</span>);
@@ -1940,6 +2010,16 @@
     <span class="ident">options</span>.<span class="ident">set_database_path</span>(<span class="string">&quot;.sentry-native&quot;</span>);
 
     <span class="ident">options</span>.<span class="ident">set_system_crash_reporter</span>(<span class="bool-val">true</span>);
+
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">5000</span>)]</span>
+<span class="attribute">#[<span class="ident">should_panic</span>]</span>
+<span class="kw">fn</span> <span class="ident">options_fail</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="ident">Options</span>::<span class="ident">new</span>().<span class="ident">init</span>()<span class="question-mark">?</span>;
+    <span class="ident">Options</span>::<span class="ident">new</span>().<span class="ident">init</span>()<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())
 }

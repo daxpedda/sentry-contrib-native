@@ -723,7 +723,6 @@
 <span id="723">723</span>
 <span id="724">724</span>
 <span id="725">725</span>
-<span id="726">726</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -740,13 +739,12 @@
 )]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>), <span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>)]</span>
 
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="kw">mod</span> <span class="ident">object</span>;
 <span class="kw">mod</span> <span class="ident">before_send</span>;
 <span class="kw">mod</span> <span class="ident">breadcrumb</span>;
 <span class="kw">mod</span> <span class="ident">event</span>;
 <span class="kw">mod</span> <span class="ident">ffi</span>;
 <span class="kw">mod</span> <span class="ident">logger</span>;
+<span class="kw">mod</span> <span class="ident">object</span>;
 <span class="kw">mod</span> <span class="ident">options</span>;
 <span class="kw">mod</span> <span class="ident">panic</span>;
 <span class="kw">mod</span> <span class="ident">transport</span>;
@@ -790,7 +788,7 @@
     <span class="ident">SampleRateRange</span>,
     <span class="doccomment">/// Failed to initialize Sentry.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to initialize Sentry&quot;</span>)]</span>
-    <span class="ident">Init</span>(<span class="ident">Options</span>),
+    <span class="ident">Init</span>,
     <span class="doccomment">/// Failed to remove value from list by index.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to remove value from list by index&quot;</span>)]</span>
     <span class="ident">ListRemove</span>,
@@ -1291,7 +1289,7 @@
 <span class="doccomment">/// TODO</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_session</span>() {
     <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_read</span>();
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">start_session</span>() };
+    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">start_session</span>() }
 }
 
 <span class="doccomment">/// Ends a session.</span>
@@ -1300,7 +1298,7 @@
 <span class="doccomment">/// TODO</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_session</span>() {
     <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_read</span>();
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">end_session</span>() };
+    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">end_session</span>() }
 }
 
 <span class="attribute">#[<span class="ident">test</span>]</span>

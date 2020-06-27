@@ -108,8 +108,6 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry breadcrumb implementation.</span>
 
@@ -209,9 +207,7 @@
 
         {
             <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
-            <span class="kw">unsafe</span> {
-                <span class="ident">sys</span>::<span class="ident">add_breadcrumb</span>(<span class="ident">breadcrumb</span>);
-            }
+            <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">add_breadcrumb</span>(<span class="ident">breadcrumb</span>) }
         }
     }
 }
@@ -221,7 +217,7 @@
     <span class="kw">let</span> <span class="ident">breadcrumb</span> <span class="op">=</span> <span class="ident">Breadcrumb</span>::<span class="ident">new</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()));
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="ident">breadcrumb</span>.<span class="ident">ty</span>);
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="ident">breadcrumb</span>.<span class="ident">message</span>);
-    <span class="ident">breadcrumb</span>.<span class="ident">add</span>();
+    <span class="ident">breadcrumb</span>.<span class="ident">add</span>()
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "sentry_contrib_native";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

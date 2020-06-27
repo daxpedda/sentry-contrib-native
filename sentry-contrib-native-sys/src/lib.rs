@@ -56,6 +56,7 @@ pub struct Uuid {
 
 /// Sentry levels for events and breadcrumbs.
 #[repr(i32)]
+#[derive(Debug, Copy, Clone)]
 pub enum Level {
     /// Debug
     Debug = -1,
@@ -71,6 +72,7 @@ pub enum Level {
 
 /// Type of a Sentry value.
 #[repr(i32)]
+#[derive(Debug, Copy, Clone)]
 pub enum ValueType {
     /// Null
     Null = 0,
@@ -90,6 +92,7 @@ pub enum ValueType {
 
 /// The state of user consent.
 #[repr(i32)]
+#[derive(Debug, Copy, Clone)]
 pub enum UserConsent {
     /// Unknown
     Unknown = -1,

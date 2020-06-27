@@ -55,13 +55,13 @@ pub use transport::{
 pub use user::User;
 pub use value::Value;
 
-/// Sentry errors.
+/// [`sentry-contrib-native`] errors.
 #[derive(Debug, Error, PartialEq)]
 pub enum Error {
     /// Sample rate outside of allowed range.
     #[error("sample rate outside of allowed range")]
     SampleRateRange,
-    /// Initializing Sentry failed.
+    /// Failed to initialize Sentry.
     #[error("failed to initialize Sentry")]
     Init(Options),
     /// Failed to remove value from list by index.
@@ -70,8 +70,8 @@ pub enum Error {
     /// Failed to remove value from map.
     #[error("failed to remove value from map")]
     MapRemove,
-    /// Failed to convert to type.
-    #[error("failed to convert to type")]
+    /// Failed to convert to given type.
+    #[error("failed to convert to given type")]
     TryConvert(Value),
     /// List of fingerprints is too long.
     #[error("list of fingerprints is too long")]
@@ -89,7 +89,7 @@ impl From<Infallible> for Error {
     }
 }
 
-/// Sentry levels for events and breadcrumbs.
+/// Sentry event level.
 #[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Level {
     /// Debug.
@@ -155,7 +155,7 @@ pub enum Consent {
 
 impl Consent {
     /// Convert [`sys::UserConsent`] to [`Consent`].
-    fn from_raw(level: &sys::UserConsent) -> Self {
+    fn from_raw(level: sys::UserConsent) -> Self {
         match level {
             sys::UserConsent::Unknown => Self::Unknown,
             sys::UserConsent::Revoked => Self::Revoked,
@@ -184,7 +184,7 @@ impl Consent {
 ///
 /// fn sentry_init() -> Result<()> {
 ///     let options = Options::new();
-///     // call forget because we are leaving the context and we don't want to shut down the Sentry client yet
+///     // `forget` to not automatically shutdown Sentry
 ///     options.init()?.forget();
 ///     Ok(())
 /// }
@@ -195,6 +195,7 @@ pub fn shutdown() {
         unsafe { sys::shutdown() };
     }
 
+    // de-allocate `BEFORE_SEND`
     if let Some(before_send) = BEFORE_SEND.get() {
         before_send
             .lock()
@@ -202,6 +203,7 @@ pub fn shutdown() {
             .take();
     }
 
+    // de-allocate `LOGGER`
     LOGGER
         .write()
         .expect("failed to deallocate `LOGGER`")
@@ -233,14 +235,14 @@ pub fn shutdown() {
 /// # Ok(()) }
 /// ```
 pub fn clear_modulecache() {
-    unsafe { sys::clear_modulecache() };
+    unsafe { sys::clear_modulecache() }
 }
 
 /// Gives user consent.
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Consent, user_consent_get, user_consent_give, Options};
+/// # use sentry_contrib_native::{Consent, Options, user_consent_get, user_consent_give};
 /// # fn main() -> anyhow::Result<()> {
 /// let mut options = Options::new();
 /// options.set_require_user_consent(true);
@@ -252,14 +254,14 @@ pub fn clear_modulecache() {
 /// ```
 pub fn user_consent_give() {
     let _lock = global_read();
-    unsafe { sys::user_consent_give() };
+    unsafe { sys::user_consent_give() }
 }
 
 /// Revokes user consent.
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Consent, user_consent_get, user_consent_revoke, Options};
+/// # use sentry_contrib_native::{Consent, Options, user_consent_get, user_consent_revoke};
 /// # fn main() -> anyhow::Result<()> {
 /// let mut options = Options::new();
 /// options.set_require_user_consent(true);
@@ -271,14 +273,14 @@ pub fn user_consent_give() {
 /// ```
 pub fn user_consent_revoke() {
     let _lock = global_read();
-    unsafe { sys::user_consent_revoke() };
+    unsafe { sys::user_consent_revoke() }
 }
 
 /// Resets the user consent (back to unknown).
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Consent, user_consent_get, user_consent_give, user_consent_reset, Options};
+/// # use sentry_contrib_native::{Consent, Options, user_consent_get, user_consent_give, user_consent_reset};
 /// # fn main() -> anyhow::Result<()> {
 /// let mut options = Options::new();
 /// options.set_require_user_consent(true);
@@ -291,7 +293,8 @@ pub fn user_consent_revoke() {
 /// # Ok(()) }
 /// ```
 pub fn user_consent_reset() {
-    unsafe { sys::user_consent_reset() };
+    let _lock = global_read();
+    unsafe { sys::user_consent_reset() }
 }
 
 /// Checks the current state of user consent.
@@ -310,7 +313,7 @@ pub fn user_consent_reset() {
 /// ```
 #[must_use]
 pub fn user_consent_get() -> Consent {
-    Consent::from_raw(&unsafe { sys::user_consent_get() })
+    Consent::from_raw(unsafe { sys::user_consent_get() })
 }
 
 /// Removes a user.
@@ -325,7 +328,7 @@ pub fn user_consent_get() -> Consent {
 /// remove_user();
 /// ```
 pub fn remove_user() {
-    unsafe { sys::remove_user() };
+    unsafe { sys::remove_user() }
 }
 
 /// Sets a tag.
@@ -342,10 +345,7 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
     let key = key.into().into_cstring();
     let value = value.into().into_cstring();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
-    }
+    unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
 }
 
 /// Removes the tag with the specified `key`.
@@ -361,11 +361,7 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
 /// ```
 pub fn remove_tag<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
-
-    {
-        let _lock = global_write();
-        unsafe { sys::remove_tag(key.as_ptr()) }
-    }
+    unsafe { sys::remove_tag(key.as_ptr()) }
 }
 
 /// Sets extra information.
@@ -383,10 +379,7 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::set_extra(key.as_ptr(), value) };
-    }
+    unsafe { sys::set_extra(key.as_ptr(), value) }
 }
 
 /// Removes the extra with the specified `key`.
@@ -402,11 +395,7 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
 /// ```
 pub fn remove_extra<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
-
-    {
-        let _lock = global_write();
-        unsafe { sys::remove_extra(key.as_ptr()) };
-    }
+    unsafe { sys::remove_extra(key.as_ptr()) }
 }
 
 /// Sets a context object.
@@ -424,10 +413,7 @@ pub fn set_context<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::set_context(key.as_ptr(), value) }
-    }
+    unsafe { sys::set_context(key.as_ptr(), value) }
 }
 
 /// Removes the context object with the specified key.
@@ -444,19 +430,16 @@ pub fn set_context<S: Into<String>, V: Into<Value>>(key: S, value: V) {
 pub fn remove_context<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::remove_context(key.as_ptr()) };
-    }
+    unsafe { sys::remove_context(key.as_ptr()) }
 }
 
 /// Sets the event fingerprint.
 ///
-/// # Panics
-/// Panics if [`String`]s in `fingerprints` contain any null bytes.
-///
 /// # Errors
 /// Fails with [`Error::Fingerprints`] if `fingerprints` is longer than 32.
+///
+/// # Panics
+/// Panics if [`String`]s in `fingerprints` contain any null bytes.
 ///
 /// # Examples
 /// ```
@@ -483,47 +466,43 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(
             *raw_fingerprint = fingerprint.as_ptr();
         }
 
-        {
-            let _lock = global_write();
-
-            unsafe {
-                sys::set_fingerprint(
-                    raw_fingerprints[0],
-                    raw_fingerprints[1],
-                    raw_fingerprints[2],
-                    raw_fingerprints[3],
-                    raw_fingerprints[4],
-                    raw_fingerprints[5],
-                    raw_fingerprints[6],
-                    raw_fingerprints[7],
-                    raw_fingerprints[8],
-                    raw_fingerprints[9],
-                    raw_fingerprints[10],
-                    raw_fingerprints[11],
-                    raw_fingerprints[12],
-                    raw_fingerprints[13],
-                    raw_fingerprints[14],
-                    raw_fingerprints[15],
-                    raw_fingerprints[16],
-                    raw_fingerprints[17],
-                    raw_fingerprints[18],
-                    raw_fingerprints[19],
-                    raw_fingerprints[20],
-                    raw_fingerprints[21],
-                    raw_fingerprints[22],
-                    raw_fingerprints[23],
-                    raw_fingerprints[24],
-                    raw_fingerprints[25],
-                    raw_fingerprints[26],
-                    raw_fingerprints[27],
-                    raw_fingerprints[28],
-                    raw_fingerprints[29],
-                    raw_fingerprints[30],
-                    raw_fingerprints[31],
-                    ptr::null::<c_char>(),
-                )
-            };
-        }
+        unsafe {
+            sys::set_fingerprint(
+                raw_fingerprints[0],
+                raw_fingerprints[1],
+                raw_fingerprints[2],
+                raw_fingerprints[3],
+                raw_fingerprints[4],
+                raw_fingerprints[5],
+                raw_fingerprints[6],
+                raw_fingerprints[7],
+                raw_fingerprints[8],
+                raw_fingerprints[9],
+                raw_fingerprints[10],
+                raw_fingerprints[11],
+                raw_fingerprints[12],
+                raw_fingerprints[13],
+                raw_fingerprints[14],
+                raw_fingerprints[15],
+                raw_fingerprints[16],
+                raw_fingerprints[17],
+                raw_fingerprints[18],
+                raw_fingerprints[19],
+                raw_fingerprints[20],
+                raw_fingerprints[21],
+                raw_fingerprints[22],
+                raw_fingerprints[23],
+                raw_fingerprints[24],
+                raw_fingerprints[25],
+                raw_fingerprints[26],
+                raw_fingerprints[27],
+                raw_fingerprints[28],
+                raw_fingerprints[29],
+                raw_fingerprints[30],
+                raw_fingerprints[31],
+                ptr::null::<c_char>(),
+            )
+        };
 
         Ok(())
     }
@@ -538,8 +517,7 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(
 /// remove_fingerprint();
 /// ```
 pub fn remove_fingerprint() {
-    let _lock = global_write();
-    unsafe { sys::remove_fingerprint() };
+    unsafe { sys::remove_fingerprint() }
 }
 
 /// Sets the transaction.
@@ -554,11 +532,7 @@ pub fn remove_fingerprint() {
 /// ```
 pub fn set_transaction<S: Into<String>>(transaction: S) {
     let transaction = transaction.into().into_cstring();
-
-    {
-        let _lock = global_write();
-        unsafe { sys::set_transaction(transaction.as_ptr()) };
-    }
+    unsafe { sys::set_transaction(transaction.as_ptr()) }
 }
 
 /// Removes the transaction.
@@ -570,7 +544,7 @@ pub fn set_transaction<S: Into<String>>(transaction: S) {
 /// remove_transaction();
 /// ```
 pub fn remove_transaction() {
-    unsafe { sys::remove_transaction() };
+    unsafe { sys::remove_transaction() }
 }
 
 /// Sets the event level.
@@ -581,7 +555,6 @@ pub fn remove_transaction() {
 /// set_level(Level::Debug);
 /// ```
 pub fn set_level(level: Level) {
-    let _lock = global_write();
     unsafe { sys::set_level(level.into_raw()) }
 }
 
@@ -590,7 +563,7 @@ pub fn set_level(level: Level) {
 /// # Examples
 /// TODO
 pub fn start_session() {
-    let _lock = global_write();
+    let _lock = global_read();
     unsafe { sys::start_session() };
 }
 
@@ -652,8 +625,7 @@ fn consent() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
-#[rusty_fork::test_fork]
+#[test]
 fn fingerprint() -> anyhow::Result<()> {
     for len in 1..33 {
         let mut fingerprints = Vec::with_capacity(len);
@@ -668,27 +640,25 @@ fn fingerprint() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
-#[rusty_fork::test_fork]
+#[test]
 #[should_panic]
-fn fingerprint_invalid() -> anyhow::Result<()> {
+fn fingerprint_invalid() {
     let mut fingerprints = Vec::with_capacity(33);
 
     for fingerprint in 0..33 {
         fingerprints.push(fingerprint.to_string());
     }
 
-    crate::set_fingerprint(fingerprints)?;
-
-    Ok(())
+    crate::set_fingerprint(fingerprints).unwrap()
 }
 
 #[cfg(test)]
 #[rusty_fork::test_fork]
 fn threaded_stress() -> anyhow::Result<()> {
-    use std::{convert::TryFrom, thread};
+    use crate::User;
+    use std::thread;
 
-    fn spawns(tests: Vec<fn(usize)>) {
+    fn spawns(tests: Vec<fn(i32)>) {
         let mut spawns = Vec::with_capacity(tests.len());
         for test in tests {
             let handle = thread::spawn(move || {
@@ -710,16 +680,29 @@ fn threaded_stress() -> anyhow::Result<()> {
         }
     }
 
-    let _shutdown = Options::new().init()?;
+    let mut options = Options::new();
+    options.set_require_user_consent(true);
+    let _shutdown = options.init()?;
 
     spawns(vec![
         |_| crate::clear_modulecache(),
+        |_| crate::user_consent_give(),
+        |_| crate::user_consent_revoke(),
+        |_| crate::user_consent_reset(),
+        |_| {
+            let _ = crate::user_consent_get();
+        },
+        |index| {
+            let mut user = User::new();
+            user.insert("id".into(), index.into());
+            user.set();
+        },
         |_| crate::remove_user(),
         |index| crate::set_tag(index.to_string(), index.to_string()),
         |index| crate::remove_tag(index.to_string()),
-        |index| crate::set_extra(index.to_string(), i32::try_from(index).unwrap()),
+        |index| crate::set_extra(index.to_string(), index),
         |index| crate::remove_extra(index.to_string()),
-        |index| crate::set_context(index.to_string(), i32::try_from(index).unwrap()),
+        |index| crate::set_context(index.to_string(), index),
         |index| crate::remove_context(index.to_string()),
         |index| crate::set_fingerprint(vec![index.to_string()]).unwrap(),
         |_| crate::remove_fingerprint(),
@@ -735,6 +718,8 @@ fn threaded_stress() -> anyhow::Result<()> {
                 _ => unreachable!(),
             })
         },
+        |_| crate::start_session(),
+        |_| crate::end_session(),
     ]);
 
     Ok(())

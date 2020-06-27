@@ -153,6 +153,10 @@
 <span id="153">153</span>
 <span id="154">154</span>
 <span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Implementation details for [`Options::set_before_send`].</span>
 
@@ -175,21 +179,24 @@
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// # use sentry_contrib_native::{BeforeSend, Options, Value};</span>
+<span class="doccomment">/// # use std::sync::atomic::{AtomicUsize, Ordering};</span>
 <span class="doccomment">/// # fn main() -&gt; anyhow::Result&lt;()&gt; {</span>
 <span class="doccomment">/// struct Filter {</span>
-<span class="doccomment">///     filtered: usize,</span>
+<span class="doccomment">///     filtered: AtomicUsize,</span>
 <span class="doccomment">/// };</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// impl BeforeSend for Filter {</span>
-<span class="doccomment">///     fn before_send(&amp;mut self, value: Value) -&gt; Value {</span>
-<span class="doccomment">///         self.filtered += 1;</span>
+<span class="doccomment">///     fn before_send(&amp;self, value: Value) -&gt; Value {</span>
+<span class="doccomment">///         self.filtered.fetch_add(1, Ordering::SeqCst);</span>
 <span class="doccomment">///         // do something with the value and then return it</span>
 <span class="doccomment">///         value</span>
 <span class="doccomment">///     }</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// let mut options = Options::new();</span>
-<span class="doccomment">/// options.set_before_send(Filter { filtered: 0 });</span>
+<span class="doccomment">/// options.set_before_send(Filter {</span>
+<span class="doccomment">///     filtered: AtomicUsize::new(0),</span>
+<span class="doccomment">/// });</span>
 <span class="doccomment">/// let _shutdown = options.init()?;</span>
 <span class="doccomment">/// # Ok(()) }</span>
 <span class="doccomment">/// ```</span>
@@ -207,13 +214,14 @@
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// # use sentry_contrib_native::{BeforeSend, Value};</span>
+    <span class="doccomment">/// # use std::sync::atomic::{AtomicUsize, Ordering};</span>
     <span class="doccomment">/// struct Filter {</span>
-    <span class="doccomment">///     filtered: usize,</span>
+    <span class="doccomment">///     filtered: AtomicUsize,</span>
     <span class="doccomment">/// };</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// impl BeforeSend for Filter {</span>
     <span class="doccomment">///     fn before_send(&amp;self, value: Value) -&gt; Value {</span>
-    <span class="doccomment">///         self.filtered += 1;</span>
+    <span class="doccomment">///         self.filtered.fetch_add(1, Ordering::SeqCst);</span>
     <span class="doccomment">///         // do something with the value and then return it</span>
     <span class="doccomment">///         value</span>
     <span class="doccomment">///     }</span>
@@ -249,7 +257,7 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>]</span>
+<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">10000</span>)]</span>
 <span class="kw">fn</span> <span class="ident">before_send</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Event</span>, <span class="ident">Options</span>, <span class="ident">Value</span>};
     <span class="kw">use</span> <span class="ident">std</span>::{

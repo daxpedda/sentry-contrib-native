@@ -64,7 +64,7 @@ pub extern "C" fn sentry_contrib_native_logger(
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork]
+#[rusty_fork::test_fork(timeout_ms = 5000)]
 fn logger() -> anyhow::Result<()> {
     use crate::Options;
 

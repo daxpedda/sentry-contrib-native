@@ -19,21 +19,24 @@ pub static BEFORE_SEND: OnceCell<Mutex<Option<Data>>> = OnceCell::new();
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{BeforeSend, Options, Value};
+/// # use std::sync::atomic::{AtomicUsize, Ordering};
 /// # fn main() -> anyhow::Result<()> {
 /// struct Filter {
-///     filtered: usize,
+///     filtered: AtomicUsize,
 /// };
 ///
 /// impl BeforeSend for Filter {
-///     fn before_send(&mut self, value: Value) -> Value {
-///         self.filtered += 1;
+///     fn before_send(&self, value: Value) -> Value {
+///         self.filtered.fetch_add(1, Ordering::SeqCst);
 ///         // do something with the value and then return it
 ///         value
 ///     }
 /// }
 ///
 /// let mut options = Options::new();
-/// options.set_before_send(Filter { filtered: 0 });
+/// options.set_before_send(Filter {
+///     filtered: AtomicUsize::new(0),
+/// });
 /// let _shutdown = options.init()?;
 /// # Ok(()) }
 /// ```
@@ -51,13 +54,14 @@ pub trait BeforeSend: 'static + Send + Sync {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{BeforeSend, Value};
+    /// # use std::sync::atomic::{AtomicUsize, Ordering};
     /// struct Filter {
-    ///     filtered: usize,
+    ///     filtered: AtomicUsize,
     /// };
     ///
     /// impl BeforeSend for Filter {
     ///     fn before_send(&self, value: Value) -> Value {
-    ///         self.filtered += 1;
+    ///         self.filtered.fetch_add(1, Ordering::SeqCst);
     ///         // do something with the value and then return it
     ///         value
     ///     }
@@ -93,7 +97,7 @@ pub extern "C" fn sentry_contrib_native_before_send(
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork]
+#[rusty_fork::test_fork(timeout_ms = 10000)]
 fn before_send() -> anyhow::Result<()> {
     use crate::{Event, Options, Value};
     use std::{

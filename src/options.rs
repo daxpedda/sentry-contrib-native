@@ -894,7 +894,7 @@ fn options() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork]
+#[rusty_fork::test_fork(timeout_ms = 30000)]
 fn threaded_stress() -> anyhow::Result<()> {
     use std::{
         convert::TryFrom,
@@ -995,7 +995,7 @@ fn threaded_stress() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork]
+#[rusty_fork::test_fork(timeout_ms = 30000)]
 fn sync() -> anyhow::Result<()> {
     use anyhow::{anyhow, Result};
     use std::{sync::Arc, thread};

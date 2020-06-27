@@ -68,7 +68,7 @@ pub fn set_hook(hook: Option<Box<dyn Fn(&PanicInfo) + Sync + Send + 'static>>) {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork]
+#[rusty_fork::test_fork(timeout_ms = 5000)]
 fn hook() -> anyhow::Result<()> {
     use std::thread;
 

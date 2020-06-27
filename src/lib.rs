@@ -598,7 +598,7 @@ fn level() {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork]
+#[rusty_fork::test_fork(timeout_ms = 1000)]
 fn consent() -> anyhow::Result<()> {
     assert_eq!(Consent::Unknown, crate::user_consent_get());
 
@@ -653,7 +653,7 @@ fn fingerprint_invalid() {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork]
+#[rusty_fork::test_fork(timeout_ms = 30000)]
 fn threaded_stress() -> anyhow::Result<()> {
     use crate::User;
     use std::thread;

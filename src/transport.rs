@@ -389,7 +389,7 @@ pub struct Parts {
 }
 
 #[cfg(all(test, feature = "custom-transport"))]
-#[rusty_fork::test_fork]
+#[rusty_fork::test_fork(timeout_ms = 5000)]
 fn dsn() -> anyhow::Result<()> {
     use crate::Event;
 

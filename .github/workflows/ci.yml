@@ -156,7 +156,7 @@ jobs:
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'
         continue-on-error: ${{ matrix.rust.continue-on-error }}
-        run: cargo fmt -v --all -- --check
+        run: cargo fmt -v -- --check
 
   schedule-cargo-audit:
     if: github.event_name == 'schedule'
@@ -325,4 +325,4 @@ jobs:
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'
         continue-on-error: ${{ matrix.rust.continue-on-error }}
-        run: cargo fmt -v --all -- --check
+        run: cargo fmt -v -- --check

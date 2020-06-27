@@ -203,7 +203,7 @@ impl Options {
     /// ```
     /// # use sentry_contrib_native::Options;
     /// let mut options = Options::new();
-    /// options.set_before_send(|value| {
+    /// options.set_before_send(|mut value| {
     ///     // do something with the value and then return it
     ///     value
     /// });

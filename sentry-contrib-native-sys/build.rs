@@ -79,9 +79,7 @@ fn main() -> Result<()> {
                 "crashpad_handler.exe"
             } else {
                 println!("cargo:rustc-link-lib=framework=Foundation");
-
                 println!("cargo:rustc-link-lib=curl");
-
                 println!("cargo:rustc-link-lib=dylib=c++");
 
                 "crashpad_handler"

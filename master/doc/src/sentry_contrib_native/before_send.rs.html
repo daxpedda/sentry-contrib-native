@@ -291,19 +291,19 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="comment">/*#[cfg(test)]
-#[rusty_fork::test_fork]
-#[should_panic]
-fn catch_panic() -&gt; anyhow::Result&lt;()&gt; {
-    use crate::{Event, Options};
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">5000</span>)]</span>
+<span class="attribute">#[<span class="ident">should_panic</span>]</span>
+<span class="kw">fn</span> <span class="ident">catch_panic</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Event</span>, <span class="ident">Options</span>};
 
-    let mut options = Options::new();
-    options.set_before_send(|_| panic!(&quot;this is a test&quot;));
-    let _shutdown = options.init()?;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+    <span class="ident">options</span>.<span class="ident">set_before_send</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;this is a test&quot;</span>));
+    <span class="kw">let</span> <span class="ident">_shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;
 
-    Event::new().capture();
+    <span class="ident">Event</span>::<span class="ident">new</span>().<span class="ident">capture</span>();
 
-    Ok(())
-}*/</span>
+    <span class="prelude-val">Ok</span>(())
+}
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "sentry_contrib_native";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

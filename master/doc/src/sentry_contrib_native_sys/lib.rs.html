@@ -668,6 +668,9 @@
 <span id="668">668</span>
 <span id="669">669</span>
 <span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">clippy</span>::<span class="ident">all</span>, <span class="ident">clippy</span>::<span class="ident">nursery</span>, <span class="ident">clippy</span>::<span class="ident">pedantic</span>, <span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(
@@ -727,6 +730,7 @@
 
 <span class="doccomment">/// Sentry levels for events and breadcrumbs.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">i32</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Level</span> {
     <span class="doccomment">/// Debug</span>
     <span class="ident">Debug</span> <span class="op">=</span> <span class="op">-</span><span class="number">1</span>,
@@ -742,6 +746,7 @@
 
 <span class="doccomment">/// Type of a Sentry value.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">i32</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ValueType</span> {
     <span class="doccomment">/// Null</span>
     <span class="ident">Null</span> <span class="op">=</span> <span class="number">0</span>,
@@ -761,6 +766,7 @@
 
 <span class="doccomment">/// The state of user consent.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">i32</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">UserConsent</span> {
     <span class="doccomment">/// Unknown</span>
     <span class="ident">Unknown</span> <span class="op">=</span> <span class="op">-</span><span class="number">1</span>,

@@ -137,8 +137,8 @@ fn before_send() -> anyhow::Result<()> {
     Ok(())
 }
 
-/*#[cfg(test)]
-#[rusty_fork::test_fork]
+#[cfg(test)]
+#[rusty_fork::test_fork(timeout_ms = 5000)]
 #[should_panic]
 fn catch_panic() -> anyhow::Result<()> {
     use crate::{Event, Options};
@@ -150,4 +150,4 @@ fn catch_panic() -> anyhow::Result<()> {
     Event::new().capture();
 
     Ok(())
-}*/
+}

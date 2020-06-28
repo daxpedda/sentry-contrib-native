@@ -723,6 +723,13 @@
 <span id="723">723</span>
 <span id="724">724</span>
 <span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -747,19 +754,21 @@
 <span class="kw">mod</span> <span class="ident">object</span>;
 <span class="kw">mod</span> <span class="ident">options</span>;
 <span class="kw">mod</span> <span class="ident">panic</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">test</span>;
 <span class="kw">mod</span> <span class="ident">transport</span>;
 <span class="kw">mod</span> <span class="ident">user</span>;
 <span class="kw">mod</span> <span class="ident">value</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">before_send</span>::<span class="ident">BeforeSend</span>;
-<span class="kw">use</span> <span class="ident">before_send</span>::{<span class="ident">sentry_contrib_native_before_send</span>, <span class="ident">Data</span> <span class="kw">as</span> <span class="ident">BeforeSendData</span>, <span class="ident">BEFORE_SEND</span>};
+<span class="kw">use</span> <span class="ident">before_send</span>::{<span class="ident">Data</span> <span class="kw">as</span> <span class="ident">BeforeSendData</span>, <span class="ident">BEFORE_SEND</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">breadcrumb</span>::<span class="ident">Breadcrumb</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">event</span>::{<span class="ident">Event</span>, <span class="ident">Interface</span>, <span class="ident">Uuid</span>};
 <span class="kw">use</span> <span class="ident">ffi</span>::{<span class="ident">CPath</span>, <span class="ident">CToR</span>, <span class="ident">RToC</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">http</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">logger</span>::<span class="ident">Message</span>;
-<span class="kw">use</span> <span class="ident">logger</span>::{<span class="ident">sentry_contrib_native_logger</span>, <span class="ident">LOGGER</span>};
+<span class="kw">use</span> <span class="ident">logger</span>::<span class="ident">LOGGER</span>;
 <span class="kw">use</span> <span class="ident">object</span>::{<span class="ident">Map</span>, <span class="ident">Object</span>};
 <span class="kw">use</span> <span class="ident">options</span>::{<span class="ident">global_read</span>, <span class="ident">global_write</span>, <span class="ident">Ownership</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">options</span>::{<span class="ident">Options</span>, <span class="ident">Shutdown</span>};
@@ -1380,7 +1389,6 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">30000</span>)]</span>
 <span class="kw">fn</span> <span class="ident">threaded_stress</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">User</span>;
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">thread</span>;
 
     <span class="kw">fn</span> <span class="ident">spawns</span>(<span class="ident">tests</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">fn</span>(<span class="ident">i32</span>)<span class="op">&gt;</span>) {
@@ -1405,9 +1413,11 @@
         }
     }
 
+    <span class="ident">test</span>::<span class="ident">set_hook</span>();
+
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
     <span class="ident">options</span>.<span class="ident">set_require_user_consent</span>(<span class="bool-val">true</span>);
-    <span class="kw">let</span> <span class="ident">_shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;
 
     <span class="ident">spawns</span>(<span class="macro">vec</span><span class="macro">!</span>[
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">clear_modulecache</span>(),
@@ -1446,6 +1456,10 @@
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">start_session</span>(),
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">end_session</span>(),
     ]);
+
+    <span class="ident">shutdown</span>.<span class="ident">shutdown</span>();
+
+    <span class="ident">test</span>::<span class="ident">verify_panics</span>();
 
     <span class="prelude-val">Ok</span>(())
 }

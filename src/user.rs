@@ -79,3 +79,8 @@ impl User {
         }
     }
 }
+
+#[test]
+fn user() {
+    User::new().set()
+}

@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["User","A Sentry user."]]});

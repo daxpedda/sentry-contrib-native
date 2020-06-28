@@ -129,7 +129,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">shutdown</span>, <span class="ident">Shutdown</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Event</span>, <span class="ident">Level</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Event</span>, <span class="ident">Level</span>, <span class="ident">Value</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">abort</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -196,14 +196,14 @@
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">location</span>) <span class="op">=</span> <span class="ident">panic_info</span>.<span class="ident">location</span>() {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">extra</span> <span class="op">=</span> <span class="ident">BTreeMap</span>::<span class="ident">new</span>();
-            <span class="ident">extra</span>.<span class="ident">insert</span>(<span class="string">&quot;file&quot;</span>.<span class="ident">into</span>(), <span class="ident">location</span>.<span class="ident">file</span>().<span class="ident">into</span>());
+            <span class="ident">extra</span>.<span class="ident">insert</span>(<span class="string">&quot;file&quot;</span>, <span class="ident">Value</span>::<span class="ident">from</span>(<span class="ident">location</span>.<span class="ident">file</span>()));
 
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">line</span>) <span class="op">=</span> <span class="ident">i32</span>::<span class="ident">try_from</span>(<span class="ident">location</span>.<span class="ident">line</span>()) {
-                <span class="ident">extra</span>.<span class="ident">insert</span>(<span class="string">&quot;line&quot;</span>.<span class="ident">into</span>(), <span class="ident">line</span>.<span class="ident">into</span>());
+                <span class="ident">extra</span>.<span class="ident">insert</span>(<span class="string">&quot;line&quot;</span>, <span class="ident">line</span>.<span class="ident">into</span>());
             }
 
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">column</span>) <span class="op">=</span> <span class="ident">i32</span>::<span class="ident">try_from</span>(<span class="ident">location</span>.<span class="ident">column</span>()) {
-                <span class="ident">extra</span>.<span class="ident">insert</span>(<span class="string">&quot;column&quot;</span>.<span class="ident">into</span>(), <span class="ident">column</span>.<span class="ident">into</span>());
+                <span class="ident">extra</span>.<span class="ident">insert</span>(<span class="string">&quot;column&quot;</span>, <span class="ident">column</span>.<span class="ident">into</span>());
             }
 
             <span class="ident">event</span>.<span class="ident">insert</span>(<span class="string">&quot;extra&quot;</span>.<span class="ident">into</span>(), <span class="ident">extra</span>.<span class="ident">into</span>());

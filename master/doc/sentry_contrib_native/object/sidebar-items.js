@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Map","A simple [`Object`] implementation for [`Value::Map`]."]],"trait":[["Object","Implementation details of [`Object`]."]]});

@@ -729,8 +729,6 @@
 <span id="729">729</span>
 <span id="730">730</span>
 <span id="731">731</span>
-<span id="732">732</span>
-<span id="733">733</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -1103,8 +1101,7 @@
 <span class="doccomment">/// Sets extra information.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Panics</span>
-<span class="doccomment">/// - Panics if `key` contains any null bytes.</span>
-<span class="doccomment">/// - Panics if `value` is a [`Value::String`] and contains null bytes.</span>
+<span class="doccomment">/// Panics if `key` or `value` contain any null bytes.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
@@ -1137,8 +1134,7 @@
 <span class="doccomment">/// Sets a context object.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Panics</span>
-<span class="doccomment">/// - Panics if `key` contains any null bytes.</span>
-<span class="doccomment">/// - Panics if `value` is a [`Value::String`] and contains null bytes.</span>
+<span class="doccomment">/// Panics if `key` or `value` contain any null bytes.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>

@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Message","Message received for custom logger."]],"fn":[["logger","Function to pass to [`sys::options_set_logger`], which in turn calls the user defined one."]],"static":[["LOGGER","Store [`Options::set_logger`] data to properly deallocate later."]],"type":[["Logger","Closure type for [`Options::set_logger`]."]]});

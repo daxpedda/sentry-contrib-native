@@ -79,6 +79,11 @@
 <span id="79">79</span>
 <span id="80">80</span>
 <span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry user implementation.</span>
 
@@ -160,6 +165,11 @@
             <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">set_user</span>(<span class="ident">user</span>) };
         }
     }
+}
+
+<span class="attribute">#[<span class="ident">test</span>]</span>
+<span class="kw">fn</span> <span class="ident">user</span>() {
+    <span class="ident">User</span>::<span class="ident">new</span>().<span class="ident">set</span>()
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "sentry_contrib_native";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

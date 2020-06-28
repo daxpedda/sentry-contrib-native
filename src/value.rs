@@ -37,7 +37,7 @@ impl Value {
     /// Creates a new Sentry value.
     ///
     /// # Panics
-    /// Panics if `value` is a [`Value::String`] and contains null bytes.
+    /// Panics if `value` contains any null bytes.
     pub fn new<V: Into<Self>>(value: V) -> Self {
         value.into()
     }
@@ -106,7 +106,7 @@ impl Value {
     /// for deallocating [`sys::Value`].
     ///
     /// # Panics
-    /// - Panics if `self` is a [`Value::String`] and contains any null bytes.
+    /// - Panics if `self` contains any null bytes.
     /// - Panics if Sentry failed to allocate memory.
     pub(crate) fn into_raw(self) -> sys::Value {
         match self {

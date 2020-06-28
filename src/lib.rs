@@ -369,8 +369,7 @@ pub fn remove_tag<S: Into<String>>(key: S) {
 /// Sets extra information.
 ///
 /// # Panics
-/// - Panics if `key` contains any null bytes.
-/// - Panics if `value` is a [`Value::String`] and contains null bytes.
+/// Panics if `key` or `value` contain any null bytes.
 ///
 /// # Examples
 /// ```
@@ -403,8 +402,7 @@ pub fn remove_extra<S: Into<String>>(key: S) {
 /// Sets a context object.
 ///
 /// # Panics
-/// - Panics if `key` contains any null bytes.
-/// - Panics if `value` is a [`Value::String`] and contains null bytes.
+/// Panics if `key` or `value` contain any null bytes.
 ///
 /// # Examples
 /// ```

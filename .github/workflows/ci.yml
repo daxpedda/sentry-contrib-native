@@ -75,11 +75,6 @@ jobs:
               custom-transport: true,
             }
           - { name: "", default-transport: true, custom-transport: false }
-          - {
-              name: "--features custom-transport",
-              default-transport: true,
-              custom-transport: true,
-            }
         os:
           - ubuntu-latest
           - macos-latest
@@ -245,11 +240,6 @@ jobs:
               custom-transport: true,
             }
           - { name: "", default-transport: true, custom-transport: false }
-          - {
-              name: "--features custom-transport",
-              default-transport: true,
-              custom-transport: true,
-            }
         os:
           - ubuntu-latest
           - macos-latest

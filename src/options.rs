@@ -190,7 +190,6 @@ impl Options {
             sys::transport_set_state(transport, data as _);
             sys::transport_set_startup_func(transport, Some(transport::startup));
             sys::transport_set_shutdown_func(transport, Some(transport::shutdown));
-            sys::transport_set_free_func(transport, Some(transport::free));
             sys::options_set_transport(self.as_mut(), transport)
         }
     }

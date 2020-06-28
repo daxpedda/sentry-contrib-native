@@ -1,15 +1,19 @@
-//! Contains types for creating custom transports that the underlying
-//! sentry-native library can use to send data to your upstream Sentry service
-//! in lieue of the built-in transports provided by the sentry-native library
-//! itself.
+//! Sentry custom transport implementation.
+//!
+//! This can be used to send data to an upstream Sentry service in lieue of the
+//! built-in transports provided by the sentry-native library itself.
 
+#[cfg(doc)]
+use crate::Event;
 use crate::{ffi, Options, Ownership, Value};
 use std::{
     mem::{self, ManuallyDrop},
     os::raw::{c_char, c_void},
-    slice,
+    ptr, slice, thread,
     time::Duration,
 };
+#[cfg(doc)]
+use std::{process::abort, sync::Mutex};
 pub use sys::SDK_USER_AGENT;
 #[cfg(feature = "custom-transport")]
 use ::{
@@ -51,7 +55,7 @@ impl From<Infallible> for Error {
     }
 }
 
-/// The request your [`Transport`] is expected to send.
+/// The [`http::Request`] request your [`Transport`] is expected to send.
 #[cfg(feature = "custom-transport")]
 #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
 pub type Request = HttpRequest<Envelope>;
@@ -64,11 +68,10 @@ pub const API_VERSION: i8 = 7;
 
 /// The return from [`Transport::shutdown`], which determines if we tell
 /// the Sentry SDK if we were able to send all requests to the remote service
-/// or not in the time allotted.
+/// or not in the allotted time.
 #[derive(Copy, Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Shutdown {
-    /// The custom transport was able to send all requests in the time
-    /// specified.
+    /// The custom transport was able to send all requests in the allotted time.
     Success,
     /// One or more requests could not be sent in the specified time frame.
     TimedOut,
@@ -84,13 +87,70 @@ impl Shutdown {
     }
 }
 
-/// Trait used to define your own transport that Sentry can use to send events
+/// Trait used to define a custom transport that Sentry can use to send events
 /// to a Sentry service.
+///
+/// # Examples
+/// ```
+/// # /*
+/// #![cfg(feature = "custom-transport")]
+///
+/// # */
+/// # fn main() -> anyhow::Result<()> {
+/// # #[cfg(feature = "custom-transport")]
+/// # {
+/// # use sentry_contrib_native::{Dsn, Event, Options, RawEnvelope, test, Transport};
+/// # test::set_hook();
+/// use reqwest::blocking::Client;
+///
+/// struct CustomTransport {
+///     dsn: Dsn,
+///     client: Client,
+/// };
+///
+/// impl Transport for CustomTransport {
+///     fn send(&self, envelope: RawEnvelope) {
+///         let dsn = self.dsn.clone();
+///         let client = self.client.clone();
+///
+///         std::thread::spawn(move || {
+///             let (parts, body) = envelope.to_request(dsn).into_parts();
+///             client
+///                 .post(&parts.uri.to_string())
+///                 .headers(parts.headers)
+///                 .body(body.as_bytes().to_owned())
+///                 .send()
+///                 .expect("failed to send envelope")
+///         });
+///     }
+/// }
+///
+/// let dsn = "https://public_key_1234@organization_1234.ingest.sentry.io/project_id_1234";
+///
+/// let mut options = Options::new();
+/// # /*
+/// options.set_dsn(dsn);
+/// # */
+/// # let dsn = options.dsn().unwrap().to_owned();
+/// # let dsn = &dsn;
+/// options.set_transport(CustomTransport {
+///     dsn: Dsn::new(dsn)?,
+///     client: Client::new(),
+/// });
+/// # let shutdown = options.init()?;
+/// # Event::new().capture();
+/// # shutdown.shutdown();
+/// # test::verify_panics();
+/// # } Ok(()) }
+/// ```
+/// See the
+/// [`custom-transport`](https://github.com/daxpedda/sentry-contrib-native/blob/master/examples/custom-transport.rs)
+/// example for a more sophisticated implementation.
 pub trait Transport: 'static + Send + Sync {
     /// Starts up the transport worker, with the options that were used to
     /// create the Sentry SDK.
     #[allow(unused_variables)]
-    fn startup(&self, options: &Options) {}
+    fn startup(&mut self, options: &Options) {}
 
     /// Sends the specified Envelope to a Sentry service.
     ///
@@ -103,9 +163,15 @@ pub trait Transport: 'static + Send + Sync {
     /// successfully able to empty its queue and shutdown before the specified
     /// timeout duration, it should return [`Shutdown::Success`],
     /// otherwise it should return [`Shutdown::TimedOut`].
-    #[allow(unused_variables)]
-    fn shutdown(&self, timeout: Duration) -> Shutdown {
-        Shutdown::Success
+    ///
+    /// The default implementation will block the thread for `timeout` duration
+    /// and always return [`Shutdown::TimedOut`], it has to be adjusted to
+    /// work correctly.
+    #[must_use]
+    #[allow(clippy::boxed_local)]
+    fn shutdown(self: Box<Self>, timeout: Duration) -> Shutdown {
+        thread::sleep(timeout);
+        Shutdown::TimedOut
     }
 }
 
@@ -115,8 +181,10 @@ impl<T: Fn(RawEnvelope) + 'static + Send + Sync> Transport for T {
     }
 }
 
-/// The function registered with [`sys::transport_new`] when the SDK wishes
-/// to send an envelope to Sentry
+/// Function to pass to [`sys::transport_new`], which in turn calls the user
+/// defined one.
+///
+/// This function will catch any unwinding panics and [`abort`] if any occured.
 pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
     let state = state as *mut Box<dyn Transport>;
     let state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
@@ -125,34 +193,66 @@ pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
     ffi::catch(|| state.send(envelope))
 }
 
-/// The function registered with [`sys::transport_set_startup_func`] to
-/// start our transport so that we can being sending requests to Sentry
+/// Function to pass to [`sys::transport_set_startup_func`], which in turn calls
+/// the user defined one.
+///
+/// State is mutably thread-safe, because this function is only called once
+/// during [`Options::init`], which is blocked with our global [`Mutex`],
+/// preventing [`Event::capture`] or [`shutdown`](crate::shutdown), the only
+/// functions that interfere.
+///
+/// This function will catch any unwinding panics and [`abort`] if any occured.
 pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
     let state = state as *mut Box<dyn Transport>;
-    let state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
+    let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
     let options = Options::from_sys(Ownership::Borrowed(options));
 
     ffi::catch(|| state.startup(&options))
 }
 
-/// The function registered with [`sys::transport_set_shutdown_func`] which
-/// will attempt to flush all of the outstanding requests via the transport,
-/// and shutdown the worker thread, before the specified timeout is reached
-pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> bool {
+/// Function to pass to [`sys::transport_set_shutdown_func`], which in turn
+/// calls the user defined one.
+///
+/// State is ownership thread-safe, because this function is only called once
+/// during [`shutdown`](crate::shutdown), which is blocked with our global
+/// [`Mutex`], preventing [`Options::init`] or [`Event::capture`], the only
+/// functions that interfere.
+///
+/// This function will catch any unwinding panics and [`abort`] if any occured.
+pub extern "C" fn shutdown(timeout: u64, mut state_old: *mut c_void) -> bool {
+    let mut state = ptr::null_mut();
+    mem::swap(&mut state, &mut state_old);
     let state = state as *mut Box<dyn Transport>;
-    let state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
+    let state = unsafe { Box::from_raw(state) };
     let timeout = Duration::from_millis(timeout);
 
     ffi::catch(|| state.shutdown(timeout)).into_raw()
 }
 
-/// The function registered with [`sys::transport_set_free_func`] that
-/// actually frees our state
-pub extern "C" fn free(state: *mut c_void) {
-    ffi::catch(|| mem::drop(unsafe { Box::from_raw(state as *mut Box<dyn Transport>) }))
-}
-
-/// Wrapper for the raw Envelope that we should send to Sentry
+/// Wrapper for the raw Envelope that we should send to Sentry.
+///
+/// # Examples
+/// ```
+/// # #[cfg(feature = "custom-transport")]
+/// # use sentry_contrib_native::{Dsn, Request};
+/// # use sentry_contrib_native::{Envelope, RawEnvelope, Transport, Value};
+/// struct CustomTransport {
+///     #[cfg(feature = "custom-transport")]
+///     dsn: Dsn,
+/// };
+///
+/// impl Transport for CustomTransport {
+///     fn send(&self, raw_envelope: RawEnvelope) {
+///         // get the `Event` that is being sent
+///         let event: Value = raw_envelope.event();
+///         // serialize it, maybe move this to another thread to prevent blocking
+///         let envelope: Envelope = raw_envelope.serialize();
+///         // or convert it into a `Request` right away!
+///         #[cfg(feature = "custom-transport")]
+///         let request: Request = raw_envelope.to_request(self.dsn.clone());
+///     }
+/// }
+/// ```
 #[derive(Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct RawEnvelope(*mut sys::Envelope);
 
@@ -178,6 +278,12 @@ impl RawEnvelope {
         }
     }
 
+    /// Yields the event that is being sent in the form of a [`Value`].
+    #[must_use]
+    pub fn event(&self) -> Value {
+        Value::from_raw_borrowed(unsafe { sys::envelope_get_event(self.0) })
+    }
+
     /// Constructs a HTTP request for the provided [`RawEnvelope`] with a
     /// [`Dsn`].
     ///
@@ -188,21 +294,38 @@ impl RawEnvelope {
     pub fn to_request(&self, dsn: Dsn) -> Request {
         self.serialize().into_request(dsn)
     }
-
-    /// Yields the event that is being sent in the form of a [`Value`].
-    #[must_use]
-    pub fn event(&self) -> Value {
-        Value::from_raw_borrowed(unsafe { sys::envelope_get_event(self.0) })
-    }
 }
 
 /// The actual body which transports send to Sentry.
+///
+/// # Examples
+/// ```
+/// # #[cfg(feature = "custom-transport")]
+/// # use sentry_contrib_native::{Dsn, Request};
+/// # use sentry_contrib_native::{Envelope, RawEnvelope, Transport, Value};
+/// struct CustomTransport {
+///     #[cfg(feature = "custom-transport")]
+///     dsn: Dsn,
+/// };
+///
+/// impl Transport for CustomTransport {
+///     fn send(&self, raw_envelope: RawEnvelope) {
+///         // serialize it, maybe move this to another thread to prevent blocking
+///         let envelope: Envelope = raw_envelope.serialize();
+///         // look at that body!
+///         println!("{:?}", envelope.as_bytes());
+///         // let's build the whole `Request`
+///         #[cfg(feature = "custom-transport")]
+///         let request: Request = envelope.into_request(self.dsn.clone());
+///     }
+/// }
+/// ```
 #[derive(Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Envelope {
     /// The raw bytes of the serialized envelope, which is the actual data to
-    /// send as the body of a request
+    /// send as the body of a request.
     data: *const c_char,
-    /// The length in bytes of the serialized data
+    /// The length in bytes of the serialized data.
     len: usize,
 }
 
@@ -222,16 +345,10 @@ impl AsRef<[u8]> for Envelope {
 }
 
 impl Envelope {
-    /// Get underlying data as `[u8]`.
+    /// Get underlying data as `&[u8]`.
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         unsafe { slice::from_raw_parts(self.data as _, self.len) }
-    }
-
-    /// Get underlying data as an owned `Vec<u8>`.
-    #[must_use]
-    pub fn to_vec(&self) -> Vec<u8> {
-        self.as_bytes().to_vec()
     }
 
     /// Constructs a HTTP request for the provided [`sys::Envelope`] with the
@@ -267,14 +384,54 @@ impl Envelope {
     }
 }
 
-impl From<RawEnvelope> for Envelope {
-    fn from(value: RawEnvelope) -> Self {
-        value.serialize()
-    }
-}
-
 /// Contains the pieces we need to send requests based on the DSN the user
 /// set on [`Options`]
+///
+/// # Examples
+/// ```
+/// # /*
+/// #![cfg(feature = "custom-transport")]
+///
+/// # */
+/// # fn main() -> anyhow::Result<()> {
+/// # #[cfg(feature = "custom-transport")]
+/// # {
+/// # use sentry_contrib_native::{Dsn, Event, Options, RawEnvelope, test, Transport};
+///
+/// struct CustomTransport {
+///     dsn: Dsn,
+/// };
+///
+/// impl Transport for CustomTransport {
+///     fn startup(&mut self, options: &Options) {
+///         // we can also get the DSN here
+///         if let Some(dsn) = options.dsn() {
+///             if let Ok(dsn) = Dsn::new(dsn) {
+///                 self.dsn = dsn;
+///             }
+///         }
+///     }
+///
+///     fn send(&self, envelope: RawEnvelope) {
+///         // we need `Dsn` to build the `Request`!
+///         envelope.to_request(self.dsn.clone());
+///     }
+/// }
+///
+/// let dsn = "https://public_key_1234@organization_1234.ingest.sentry.io/project_id_1234";
+///
+/// let mut options = Options::new();
+/// options.set_dsn(dsn);
+/// // we can get the `Dsn` right here
+/// options.set_transport(CustomTransport {
+///     dsn: Dsn::new(dsn)?,
+/// });
+/// // this is also possible
+/// options.set_transport(CustomTransport {
+///     dsn: Dsn::new(options.dsn().unwrap())?,
+/// });
+/// # } Ok(()) }
+/// ```
 #[cfg(feature = "custom-transport")]
 #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
@@ -294,14 +451,14 @@ impl Dsn {
     /// Fails with [`Error::Transport`](crate::Error::Transport) if the DSN is
     /// invalid.
     pub fn new(dsn: &str) -> Result<Self, crate::Error> {
-        // A sentry DSN contains the following components:
+        // a sentry DSN contains the following components:
         // <https://<username>@<host>/<path>>
         // * username = public key
         // * host = obviously, the host, sentry.io in the case of the hosted service
         // * path = the project ID
         let dsn_url = Url::parse(dsn).map_err(Error::from)?;
 
-        // Do some basic checking that the DSN is remotely valid
+        // do some basic checking that the DSN is remotely valid
         if !dsn_url.scheme().starts_with("http") {
             return Err(Error::Scheme.into());
         }
@@ -324,6 +481,12 @@ impl Dsn {
                     SDK_USER_AGENT
                 );
 
+                let host = if let Some(port) = dsn_url.port() {
+                    format!("{}:{}", host, port)
+                } else {
+                    host.to_owned()
+                };
+
                 let url = format!(
                     "{}://{}/api/{}/envelope/",
                     dsn_url.scheme(),
@@ -336,13 +499,13 @@ impl Dsn {
         }
     }
 
-    /// The auth header value
+    /// The auth header value.
     #[must_use]
     pub fn auth(&self) -> &str {
         &self.auth
     }
 
-    /// The full URL to send envelopes to
+    /// The full URL to send envelopes to.
     #[must_use]
     pub fn url(&self) -> &str {
         &self.url
@@ -390,6 +553,65 @@ pub struct Parts {
 
 #[cfg(all(test, feature = "custom-transport"))]
 #[rusty_fork::test_fork(timeout_ms = 5000)]
+fn transport() -> anyhow::Result<()> {
+    use crate::Event;
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
+    struct CustomTransport {
+        dsn: Dsn,
+    }
+
+    impl Transport for CustomTransport {
+        fn startup(&mut self, options: &Options) {
+            assert_eq!(false, STARTUP.swap(true, Ordering::SeqCst));
+            assert_eq!(self.dsn, Dsn::new(options.dsn().unwrap()).unwrap());
+        }
+
+        fn send(&self, envelope: RawEnvelope) {
+            SEND.fetch_add(1, Ordering::SeqCst);
+
+            let _ = envelope.event();
+            let request_1 = envelope.to_request(self.dsn.clone());
+
+            let envelope = envelope.serialize();
+            let request_2 = envelope.into_request(self.dsn.clone());
+
+            assert_eq!(request_1.uri(), request_2.uri());
+            assert_eq!(request_1.headers(), request_2.headers());
+            assert_eq!(request_1.body().as_bytes(), request_2.body().as_bytes());
+        }
+
+        fn shutdown(self: Box<Self>, _: Duration) -> Shutdown {
+            assert_eq!(false, SHUTDOWN.swap(true, Ordering::SeqCst));
+            Shutdown::Success
+        }
+    }
+
+    static STARTUP: AtomicBool = AtomicBool::new(false);
+    static SEND: AtomicUsize = AtomicUsize::new(0);
+    static SHUTDOWN: AtomicBool = AtomicBool::new(false);
+
+    let mut options = Options::new();
+    options.set_transport(CustomTransport {
+        dsn: Dsn::new(options.dsn().unwrap())?,
+    });
+    let shutdown = options.init()?;
+
+    Event::new().capture();
+    Event::new().capture();
+    Event::new().capture();
+
+    shutdown.shutdown();
+
+    assert!(STARTUP.load(Ordering::SeqCst));
+    assert_eq!(3, SEND.load(Ordering::SeqCst));
+    assert!(SHUTDOWN.load(Ordering::SeqCst));
+
+    Ok(())
+}
+
+#[cfg(all(test, feature = "custom-transport"))]
+#[rusty_fork::test_fork(timeout_ms = 5000)]
 fn dsn() -> anyhow::Result<()> {
     use crate::Event;
 
@@ -413,11 +635,15 @@ fn dsn() -> anyhow::Result<()> {
             }
 
             {
-                let dsn = Dsn::new("http://a0b1c2d3e4f5678910abcdeffedcba12@192.168.1.1/0123456")
-                    .unwrap();
+                let dsn =
+                    Dsn::new("http://a0b1c2d3e4f5678910abcdeffedcba12@192.168.1.1:9000/0123456")
+                        .unwrap();
                 let request = envelope.to_request(dsn);
 
-                assert_eq!(request.uri(), "http://192.168.1.1/api/0123456/envelope/");
+                assert_eq!(
+                    request.uri(),
+                    "http://192.168.1.1:9000/api/0123456/envelope/"
+                );
                 let headers = request.headers();
                 assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, SDK_USER_AGENT));
             }

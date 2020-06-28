@@ -668,10 +668,10 @@
 
                 <span class="kw">let</span> <span class="ident">msg_raw</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">value_to_msgpack</span>(<span class="ident">raw_value</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">size_out</span>) };
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">msg_raw</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">size_out</span>) };
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">msg_raw</span>.<span class="ident">cast</span>(), <span class="ident">size_out</span>) };
                 <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">decode</span>::<span class="ident">read_value</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">msg</span>).<span class="ident">expect</span>(<span class="string">&quot;message pack decoding failed&quot;</span>);
 
-                <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">free</span>(<span class="ident">msg_raw</span> <span class="kw">as</span> <span class="kw">_</span>) };
+                <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">free</span>(<span class="ident">msg_raw</span>.<span class="ident">cast</span>()) };
 
                 <span class="kw">let</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">into_value</span>();
 

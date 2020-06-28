@@ -25,11 +25,6 @@ use tokio::{
     task,
 };
 
-struct TransportState {
-    sender: Sender<RawEnvelope>,
-    shutdown: Arc<(Mutex<()>, Condvar)>,
-}
-
 async fn send_sentry_request(client: &Client, req: Request) -> Result<()> {
     let (parts, body) = req.into_parts();
     let uri = parts.uri.to_string();
@@ -73,90 +68,76 @@ struct Transport {
     /// same client that the rest of ark uses, if we do start doing that, we
     /// would need to build the client based on the options during startup()
     client: Client,
-    inner: Option<TransportState>,
+    sender: Sender<RawEnvelope>,
+    shutdown: Arc<(Mutex<()>, Condvar)>,
     rt: Handle,
 }
 
 impl Transport {
-    const fn new(client: Client, rt: Handle) -> Self {
-        Self {
+    fn new(client: Client, rt: Handle, options: &Options) -> Self {
+        let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
+        let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
+        let transport = Self {
             client,
-            inner: None,
+            sender,
+            shutdown: shutdown.clone(),
             rt,
-        }
+        };
+        let client = transport.client.clone();
+        let dsn = Dsn::from_str(options.dsn().expect("no DSN found")).expect("invalid DSN");
+
+        transport.rt.enter(|| {
+            tokio::spawn(async move {
+                // dequeue and send events until we are asked to shut down
+                while let Some(envelope) = receiver.recv().await {
+                    // convert the envelope into an HTTP request
+                    let req = envelope.to_request(dsn.clone());
+
+                    match send_sentry_request(&client, req).await {
+                        Ok(_) => eprintln!("successfully sent sentry envelope"),
+                        Err(err) => eprintln!("failed to send sentry envelope: {}", err),
+                    }
+                }
+
+                // shutting down, signal the condition variable that we've
+                // finished sending everything, so that we can tell the
+                // SDK about whether we've sent it all before their timeout
+                let (lock, cvar) = &*shutdown;
+                let _shutdown_lock = lock.lock();
+                cvar.notify_one();
+            });
+        });
+
+        transport
     }
 }
 
 impl SentryTransport for Transport {
-    fn startup(&mut self, options: &Options) {
-        if self.inner.is_some() {
-            eprintln!("sentry transport has already been started!");
-        } else {
-            let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
-            let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
-            self.inner = Some(TransportState {
-                sender,
-                shutdown: shutdown.clone(),
-            });
-            let client = self.client.clone();
-            let dsn = Dsn::from_str(options.dsn().expect("no DSN found")).expect("invalid DSN");
-
-            self.rt.enter(|| {
-                tokio::spawn(async move {
-                    // dequeue and send events until we are asked to shut down
-                    while let Some(envelope) = receiver.recv().await {
-                        // convert the envelope into an HTTP request
-                        let req = envelope.to_request(dsn.clone());
-
-                        match send_sentry_request(&client, req).await {
-                            Ok(_) => eprintln!("successfully sent sentry envelope"),
-                            Err(err) => eprintln!("failed to send sentry envelope: {}", err),
-                        }
-                    }
-
-                    // shutting down, signal the condition variable that we've
-                    // finished sending everything, so that we can tell the
-                    // SDK about whether we've sent it all before their timeout
-                    let (lock, cvar) = &*shutdown;
-                    let _shutdown_lock = lock.lock();
-                    cvar.notify_one();
-                });
-            });
-        }
-    }
-
     fn send(&self, envelope: RawEnvelope) {
-        if let Some(inner) = &self.inner {
-            let mut sender = inner.sender.clone();
-            self.rt.enter(|| {
-                task::spawn(async move {
-                    if let Err(err) = sender.send(envelope).await {
-                        eprintln!("failed to send envelope to send queue: {}", err);
-                    }
-                });
+        let mut sender = self.sender.clone();
+        self.rt.enter(|| {
+            task::spawn(async move {
+                if let Err(err) = sender.send(envelope).await {
+                    eprintln!("failed to send envelope to send queue: {}", err);
+                }
             });
-        }
+        });
     }
 
-    fn shutdown(mut self: Box<Self>, timeout: Duration) -> TransportShutdown {
+    fn shutdown(self: Box<Self>, timeout: Duration) -> TransportShutdown {
         // drop the sender so that the background thread will exit once
         // it has dequeued and processed all the envelopes we have enqueued
-        match self.inner.take() {
-            Some(inner) => {
-                drop(inner.sender);
+        drop(self.sender);
 
-                // wait for the condition variable to notify that the thread has shutdown
-                let (lock, cvar) = &*inner.shutdown;
-                let mut shutdown = lock.lock();
-                let result = cvar.wait_for(&mut shutdown, timeout);
+        // wait for the condition variable to notify that the thread has shutdown
+        let (lock, cvar) = &*self.shutdown;
+        let mut shutdown = lock.lock();
+        let result = cvar.wait_for(&mut shutdown, timeout);
 
-                if result.timed_out() {
-                    TransportShutdown::TimedOut
-                } else {
-                    TransportShutdown::Success
-                }
-            }
-            None => TransportShutdown::Success,
+        if result.timed_out() {
+            TransportShutdown::TimedOut
+        } else {
+            TransportShutdown::Success
         }
     }
 }
@@ -189,13 +170,20 @@ fn main() -> Result<()> {
     // actually registers our custom transport so that the SDK will use that to
     // send requests to your Sentry service, rather than the built in transports
     // that come with the SDK
-    options.set_transport(Transport::new(client, runtime.handle().clone()));
+    {
+        let client = client.clone();
+        let runtime = runtime.handle().clone();
+        options.set_transport(move |options| Transport::new(client, runtime, options));
+    }
 
     let _shutdown = options.init().expect("failed to initialize Sentry");
 
     Event::new().capture();
     Event::new().capture();
     Event::new().capture();
+
+    // it's possible to use the same `Client` for something else
+    client.post("example.com");
 
     Ok(())
 }

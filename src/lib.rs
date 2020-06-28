@@ -47,6 +47,7 @@ use std::{
     ptr,
 };
 use thiserror::Error;
+use transport::State as TransportState;
 #[cfg(feature = "custom-transport")]
 pub use transport::{Dsn, Error as TransportError, Parts, Request};
 pub use transport::{

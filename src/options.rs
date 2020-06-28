@@ -2,7 +2,7 @@
 
 use crate::{
     before_send, logger, transport, BeforeSend, BeforeSendData, CPath, CToR, Error, Level, Message,
-    RToC, Transport, BEFORE_SEND, LOGGER,
+    RToC, Transport, TransportState, BEFORE_SEND, LOGGER,
 };
 #[cfg(doc)]
 use crate::{shutdown, user_consent_give, user_consent_revoke, Event};
@@ -169,6 +169,10 @@ impl Options {
     /// Sets a custom transport. This only affects events sent through
     /// [`Event::capture`], not the crash handler.
     ///
+    /// The `startup` parameter is a function that serves as a one-time
+    /// initialization event for your [`Transport`], it takes a
+    /// [`&Options`](Options) and has to return a [`Transport`].
+    ///
     /// # Notes
     /// Unwinding panics of functions in `transport` will be cought and
     /// [`abort`] will be called if any occured.
@@ -177,17 +181,24 @@ impl Options {
     /// ```
     /// # use sentry_contrib_native::{Options, RawEnvelope};
     /// let mut options = Options::new();
-    /// options.set_transport(|envelope: RawEnvelope| {
-    ///     println!("Event to be sent: {:?}", envelope.event())
+    /// options.set_transport(|_| {
+    ///     |envelope: RawEnvelope| println!("Event to be sent: {:?}", envelope.event())
     /// });
     /// ```
-    /// See [`Transport`] for more detailed documentation.
-    pub fn set_transport<T: Into<Box<T>> + Transport>(&mut self, transport: T) {
-        let data = Box::into_raw(Box::<Box<dyn Transport>>::new(transport.into()));
+    /// See [`Transport`] for a more detailed documentation.
+    pub fn set_transport<
+        S: (FnOnce(&Self) -> T) + 'static + Send + Sync,
+        T: Into<Box<T>> + Transport,
+    >(
+        &mut self,
+        startup: S,
+    ) {
+        let startup = TransportState::Startup(Box::new(|options: &Self| startup(options).into()));
+        let startup = Box::into_raw(Box::new(Some(startup)));
 
         unsafe {
             let transport = sys::transport_new(Some(transport::send));
-            sys::transport_set_state(transport, data as _);
+            sys::transport_set_state(transport, startup.cast());
             sys::transport_set_startup_func(transport, Some(transport::startup));
             sys::transport_set_shutdown_func(transport, Some(transport::shutdown));
             sys::options_set_transport(self.as_mut(), transport)
@@ -762,7 +773,7 @@ impl Options {
                         .expect("`BEFORE_SEND` was set once before");
                 }
 
-                mem::drop(lock);
+                drop(lock);
 
                 Ok(Shutdown)
             }
@@ -849,7 +860,7 @@ impl Shutdown {
     /// }
     /// ```
     pub fn shutdown(self) {
-        mem::drop(self)
+        drop(self)
     }
 }
 
@@ -858,6 +869,12 @@ fn options() -> anyhow::Result<()> {
     use crate::{RawEnvelope, Value};
 
     struct CustomTransport;
+
+    impl CustomTransport {
+        const fn new(_: &Options) -> Self {
+            Self
+        }
+    }
 
     impl Transport for CustomTransport {
         fn send(&self, _: RawEnvelope) {}
@@ -873,8 +890,8 @@ fn options() -> anyhow::Result<()> {
 
     let mut options = Options::new();
 
-    options.set_transport(|_| {});
-    options.set_transport(CustomTransport);
+    options.set_transport(|_| |_| {});
+    options.set_transport(CustomTransport::new);
 
     options.set_before_send(|value| value);
     options.set_before_send(Filter);

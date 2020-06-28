@@ -7,9 +7,9 @@
 use crate::Event;
 use crate::{ffi, Options, Ownership, Value};
 use std::{
-    mem::{self, ManuallyDrop},
+    mem::ManuallyDrop,
     os::raw::{c_char, c_void},
-    ptr, slice, thread,
+    process, slice, thread,
     time::Duration,
 };
 #[cfg(doc)]
@@ -108,6 +108,15 @@ impl Shutdown {
 ///     client: Client,
 /// };
 ///
+/// impl CustomTransport {
+///     fn new(options: &Options) -> Self {
+///         CustomTransport {
+///             dsn: Dsn::new(options.dsn().unwrap()).unwrap(),
+///             client: Client::new(),
+///         }
+///     }
+/// }
+///
 /// impl Transport for CustomTransport {
 ///     fn send(&self, envelope: RawEnvelope) {
 ///         let dsn = self.dsn.clone();
@@ -128,15 +137,8 @@ impl Shutdown {
 /// let dsn = "https://public_key_1234@organization_1234.ingest.sentry.io/project_id_1234";
 ///
 /// let mut options = Options::new();
-/// # /*
 /// options.set_dsn(dsn);
-/// # */
-/// # let dsn = options.dsn().unwrap().to_owned();
-/// # let dsn = &dsn;
-/// options.set_transport(CustomTransport {
-///     dsn: Dsn::new(dsn)?,
-///     client: Client::new(),
-/// });
+/// options.set_transport(CustomTransport::new);
 /// # let shutdown = options.init()?;
 /// # Event::new().capture();
 /// # shutdown.shutdown();
@@ -147,11 +149,6 @@ impl Shutdown {
 /// [`custom-transport`](https://github.com/daxpedda/sentry-contrib-native/blob/master/examples/custom-transport.rs)
 /// example for a more sophisticated implementation.
 pub trait Transport: 'static + Send + Sync {
-    /// Starts up the transport worker, with the options that were used to
-    /// create the Sentry SDK.
-    #[allow(unused_variables)]
-    fn startup(&mut self, options: &Options) {}
-
     /// Sends the specified Envelope to a Sentry service.
     ///
     /// It is **highly** recommended to not block in this method, but rather
@@ -181,52 +178,72 @@ impl<T: Fn(RawEnvelope) + 'static + Send + Sync> Transport for T {
     }
 }
 
-/// Function to pass to [`sys::transport_new`], which in turn calls the user
-/// defined one.
-///
-/// This function will catch any unwinding panics and [`abort`] if any occured.
-pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
-    let state = state as *mut Box<dyn Transport>;
-    let state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
-    let envelope = RawEnvelope(envelope);
-
-    ffi::catch(|| state.send(envelope))
+/// Internal state of the [`Transport`].
+pub enum State {
+    /// [`Transport`] is in the startup phase.
+    Startup(Box<dyn (FnOnce(&Options) -> Box<dyn Transport>) + 'static + Send + Sync>),
+    /// [`Transport`] is in the sending phase.
+    Send(Box<dyn Transport>),
 }
 
 /// Function to pass to [`sys::transport_set_startup_func`], which in turn calls
 /// the user defined one.
 ///
-/// State is mutably thread-safe, because this function is only called once
+/// `state` is mutably thread-safe, because this function is only called once
 /// during [`Options::init`], which is blocked with our global [`Mutex`],
 /// preventing [`Event::capture`] or [`shutdown`](crate::shutdown), the only
 /// functions that interfere.
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
+#[allow(clippy::shadow_unrelated)]
 pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
-    let state = state as *mut Box<dyn Transport>;
-    let mut state = ManuallyDrop::new(unsafe { Box::from_raw(state) });
     let options = Options::from_sys(Ownership::Borrowed(options));
 
-    ffi::catch(|| state.startup(&options))
+    let state = unsafe { Box::from_raw(state.cast::<Option<State>>()) };
+    let mut state = ManuallyDrop::new(state);
+
+    if let Some(State::Startup(startup)) = state.take() {
+        state.replace(State::Send(ffi::catch(|| startup(&options))));
+    } else {
+        process::abort();
+    }
+}
+
+/// Function to pass to [`sys::transport_new`], which in turn calls the user
+/// defined one.
+///
+/// This function will catch any unwinding panics and [`abort`] if any occured.
+pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
+    let envelope = RawEnvelope(envelope);
+
+    let state = unsafe { Box::from_raw(state.cast::<Option<State>>()) };
+    let state = ManuallyDrop::new(state);
+
+    if let Some(State::Send(transport)) = state.as_ref() {
+        ffi::catch(|| transport.send(envelope));
+    } else {
+        process::abort();
+    }
 }
 
 /// Function to pass to [`sys::transport_set_shutdown_func`], which in turn
 /// calls the user defined one.
 ///
-/// State is ownership thread-safe, because this function is only called once
+/// `state` is ownership thread-safe, because this function is only called once
 /// during [`shutdown`](crate::shutdown), which is blocked with our global
 /// [`Mutex`], preventing [`Options::init`] or [`Event::capture`], the only
 /// functions that interfere.
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
-pub extern "C" fn shutdown(timeout: u64, mut state_old: *mut c_void) -> bool {
-    let mut state = ptr::null_mut();
-    mem::swap(&mut state, &mut state_old);
-    let state = state as *mut Box<dyn Transport>;
-    let state = unsafe { Box::from_raw(state) };
+pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> bool {
     let timeout = Duration::from_millis(timeout);
+    let mut state = unsafe { Box::from_raw(state.cast::<Option<State>>()) };
 
-    ffi::catch(|| state.shutdown(timeout)).into_raw()
+    if let Some(State::Send(transport)) = state.take() {
+        ffi::catch(|| transport.shutdown(timeout)).into_raw()
+    } else {
+        process::abort();
+    }
 }
 
 /// Wrapper for the raw Envelope that we should send to Sentry.
@@ -348,7 +365,7 @@ impl Envelope {
     /// Get underlying data as `&[u8]`.
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
-        unsafe { slice::from_raw_parts(self.data as _, self.len) }
+        unsafe { slice::from_raw_parts(self.data.cast(), self.len) }
     }
 
     /// Constructs a HTTP request for the provided [`sys::Envelope`] with the
@@ -402,16 +419,16 @@ impl Envelope {
 ///     dsn: Dsn,
 /// };
 ///
-/// impl Transport for CustomTransport {
-///     fn startup(&mut self, options: &Options) {
-///         // we can also get the DSN here
-///         if let Some(dsn) = options.dsn() {
-///             if let Ok(dsn) = Dsn::new(dsn) {
-///                 self.dsn = dsn;
-///             }
+/// impl CustomTransport {
+///     fn new(options: &Options) -> Self {
+///         CustomTransport {
+///             // we can also get the DSN here
+///             dsn: Dsn::new(options.dsn().unwrap()).unwrap(),
 ///         }
 ///     }
+/// }
 ///
+/// impl Transport for CustomTransport {
 ///     fn send(&self, envelope: RawEnvelope) {
 ///         // we need `Dsn` to build the `Request`!
 ///         envelope.to_request(self.dsn.clone());
@@ -422,14 +439,17 @@ impl Envelope {
 ///
 /// let mut options = Options::new();
 /// options.set_dsn(dsn);
-/// // we can get the `Dsn` right here
-/// options.set_transport(CustomTransport {
+/// // we can take the `dsn` right here
+/// let custom_transport = CustomTransport {
 ///     dsn: Dsn::new(dsn)?,
-/// });
+/// };
+/// options.set_transport(move |_| custom_transport);
 /// // this is also possible
-/// options.set_transport(CustomTransport {
-///     dsn: Dsn::new(options.dsn().unwrap())?,
+/// options.set_transport(|options| CustomTransport {
+///     dsn: Dsn::new(options.dsn().unwrap()).unwrap(),
 /// });
+/// // or use a method more directly
+/// options.set_transport(CustomTransport::new);
 /// # } Ok(()) }
 /// ```
 #[cfg(feature = "custom-transport")]
@@ -561,12 +581,16 @@ fn transport() -> anyhow::Result<()> {
         dsn: Dsn,
     }
 
-    impl Transport for CustomTransport {
-        fn startup(&mut self, options: &Options) {
+    impl CustomTransport {
+        fn new(dsn: Dsn, options: &Options) -> Self {
             assert_eq!(false, STARTUP.swap(true, Ordering::SeqCst));
-            assert_eq!(self.dsn, Dsn::new(options.dsn().unwrap()).unwrap());
-        }
+            assert_eq!(dsn, Dsn::new(options.dsn().unwrap()).unwrap());
 
+            Self { dsn }
+        }
+    }
+
+    impl Transport for CustomTransport {
         fn send(&self, envelope: RawEnvelope) {
             SEND.fetch_add(1, Ordering::SeqCst);
 
@@ -592,9 +616,8 @@ fn transport() -> anyhow::Result<()> {
     static SHUTDOWN: AtomicBool = AtomicBool::new(false);
 
     let mut options = Options::new();
-    options.set_transport(CustomTransport {
-        dsn: Dsn::new(options.dsn().unwrap())?,
-    });
+    let dsn = Dsn::new(options.dsn().unwrap())?;
+    options.set_transport(|options| CustomTransport::new(dsn, options));
     let shutdown = options.init()?;
 
     Event::new().capture();
@@ -615,43 +638,39 @@ fn transport() -> anyhow::Result<()> {
 fn dsn() -> anyhow::Result<()> {
     use crate::Event;
 
-    struct Parser;
+    #[allow(clippy::needless_pass_by_value)]
+    fn send(envelope: RawEnvelope) {
+        {
+            let dsn = Dsn::new(
+                "https://a0b1c2d3e4f5678910abcdeffedcba12@o209016.ingest.sentry.io/0123456",
+            )
+            .unwrap();
+            let request = envelope.to_request(dsn);
 
-    impl Transport for Parser {
-        fn send(&self, envelope: RawEnvelope) {
-            {
-                let dsn = Dsn::new(
-                    "https://a0b1c2d3e4f5678910abcdeffedcba12@o209016.ingest.sentry.io/0123456",
-                )
+            assert_eq!(
+                request.uri(),
+                "https://o209016.ingest.sentry.io/api/0123456/envelope/"
+            );
+            let headers = request.headers();
+            assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, SDK_USER_AGENT));
+        }
+
+        {
+            let dsn = Dsn::new("http://a0b1c2d3e4f5678910abcdeffedcba12@192.168.1.1:9000/0123456")
                 .unwrap();
-                let request = envelope.to_request(dsn);
+            let request = envelope.to_request(dsn);
 
-                assert_eq!(
-                    request.uri(),
-                    "https://o209016.ingest.sentry.io/api/0123456/envelope/"
-                );
-                let headers = request.headers();
-                assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, SDK_USER_AGENT));
-            }
-
-            {
-                let dsn =
-                    Dsn::new("http://a0b1c2d3e4f5678910abcdeffedcba12@192.168.1.1:9000/0123456")
-                        .unwrap();
-                let request = envelope.to_request(dsn);
-
-                assert_eq!(
-                    request.uri(),
-                    "http://192.168.1.1:9000/api/0123456/envelope/"
-                );
-                let headers = request.headers();
-                assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, SDK_USER_AGENT));
-            }
+            assert_eq!(
+                request.uri(),
+                "http://192.168.1.1:9000/api/0123456/envelope/"
+            );
+            let headers = request.headers();
+            assert_eq!(headers.get("x-sentry-auth").unwrap(), &format!("Sentry sentry_key=a0b1c2d3e4f5678910abcdeffedcba12, sentry_version={}, sentry_client={}", API_VERSION, SDK_USER_AGENT));
         }
     }
 
     let mut options = Options::new();
-    options.set_transport(Parser);
+    options.set_transport(|_| send);
     let _shutdown = options.init();
 
     Event::new().capture();

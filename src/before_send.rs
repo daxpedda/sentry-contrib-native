@@ -85,7 +85,7 @@ pub extern "C" fn before_send(
     _hint: *mut c_void,
     closure: *mut c_void,
 ) -> sys::Value {
-    let before_send = closure as *mut Box<dyn BeforeSend>;
+    let before_send = closure.cast::<Box<dyn BeforeSend>>();
     let before_send = ManuallyDrop::new(unsafe { Box::from_raw(before_send) });
 
     ffi::catch(|| {

@@ -226,7 +226,7 @@ impl Options {
         self.before_send = Some(unsafe { Box::from_raw(fun) });
 
         unsafe {
-            sys::options_set_before_send(self.as_mut(), Some(before_send::before_send), fun as _)
+            sys::options_set_before_send(self.as_mut(), Some(before_send::before_send), fun.cast())
         }
     }
 

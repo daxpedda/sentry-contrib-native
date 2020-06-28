@@ -86,10 +86,10 @@ impl Value {
 
                 let msg_raw = unsafe { sys::value_to_msgpack(raw_value, &mut size_out) };
 
-                let mut msg = unsafe { slice::from_raw_parts(msg_raw as _, size_out) };
+                let mut msg = unsafe { slice::from_raw_parts(msg_raw.cast(), size_out) };
                 let value = decode::read_value(&mut msg).expect("message pack decoding failed");
 
-                unsafe { sys::free(msg_raw as _) };
+                unsafe { sys::free(msg_raw.cast()) };
 
                 let map = value.into_value();
 

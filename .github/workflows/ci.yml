@@ -127,8 +127,8 @@ jobs:
       - name: Clippy
         if: always() && steps.build.outcome == 'success'
         run:
-          cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
-          matrix.rust.feature }} -- -F warnings
+          cargo clippy -v ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+          -- -F warnings
       - name: Documentation
         if: always() && steps.build.outcome == 'success'
         env:
@@ -136,6 +136,11 @@ jobs:
         run:
           cargo -v doc --no-deps --document-private-items --workspace ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
+      - name: Clippy tests
+        if: always() && steps.build.outcome == 'success'
+        run:
+          cargo clippy -v --all-targets --features test ${{ matrix.feature.name
+          }} ${{ matrix.rust.feature }} -- -F warnings
       - name: Test
         if: always() && steps.build.outcome == 'success'
         run:
@@ -296,8 +301,8 @@ jobs:
       - name: Clippy
         if: always() && steps.build.outcome == 'success'
         run:
-          cargo clippy -v --all-targets ${{ matrix.feature.name }} ${{
-          matrix.rust.feature }} -- -F warnings
+          cargo clippy -v ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+          -- -F warnings
       - name: Documentation
         if: always() && steps.build.outcome == 'success'
         env:
@@ -305,6 +310,11 @@ jobs:
         run:
           cargo -v doc --no-deps --document-private-items --workspace ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
+      - name: Clippy tests
+        if: always() && steps.build.outcome == 'success'
+        run:
+          cargo clippy -v --all-targets --features test ${{ matrix.feature.name
+          }} ${{ matrix.rust.feature }} -- -F warnings
       - name: Test
         if: always() && steps.build.outcome == 'success'
         run:

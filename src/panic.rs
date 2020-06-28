@@ -2,7 +2,7 @@
 
 #[cfg(doc)]
 use crate::{shutdown, Shutdown};
-use crate::{Event, Level};
+use crate::{Event, Level, Value};
 #[cfg(doc)]
 use std::process::abort;
 use std::{
@@ -69,14 +69,14 @@ pub fn set_hook(
 
         if let Some(location) = panic_info.location() {
             let mut extra = BTreeMap::new();
-            extra.insert("file".into(), location.file().into());
+            extra.insert("file", Value::from(location.file()));
 
             if let Ok(line) = i32::try_from(location.line()) {
-                extra.insert("line".into(), line.into());
+                extra.insert("line", line.into());
             }
 
             if let Ok(column) = i32::try_from(location.column()) {
-                extra.insert("column".into(), column.into());
+                extra.insert("column", column.into());
             }
 
             event.insert("extra".into(), extra.into());

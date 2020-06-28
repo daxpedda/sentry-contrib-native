@@ -18,7 +18,7 @@ use std::{
 /// # use std::collections::BTreeMap;
 /// let mut breadcrumb = Breadcrumb::new(None, Some("test message".into()));
 /// let mut data = BTreeMap::new();
-/// data.insert("some extra data".into(), "test data".into());
+/// data.insert("some extra data", "test data");
 /// breadcrumb.insert("data".into(), data.into());
 /// breadcrumb.add();
 /// ```

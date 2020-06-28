@@ -20,7 +20,7 @@ use std::{
 /// # use std::collections::BTreeMap;
 /// let mut event = Event::new();
 /// let mut extra = BTreeMap::new();
-/// extra.insert("some extra data".into(), "test data".into());
+/// extra.insert("some extra data", "test data");
 /// event.insert("extra".into(), extra.into());
 /// event.capture();
 /// ```
@@ -194,7 +194,7 @@ impl Event {
     /// # use std::collections::BTreeMap;
     /// let mut event = Event::new();
     /// let mut extra = BTreeMap::new();
-    /// extra.insert("some extra data".into(), "test data".into());
+    /// extra.insert("some extra data", "test data");
     /// event.insert("extra".into(), extra.into());
     /// event.capture();
     /// ```

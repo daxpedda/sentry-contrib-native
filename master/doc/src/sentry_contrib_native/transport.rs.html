@@ -677,6 +677,31 @@
 <span id="677">677</span>
 <span id="678">678</span>
 <span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry custom transport implementation.</span>
 <span class="doccomment">//!</span>
@@ -697,9 +722,9 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">sys</span>::<span class="ident">SDK_USER_AGENT</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
 <span class="kw">use</span> ::{
-    <span class="ident">http</span>::{<span class="ident">HeaderValue</span>, <span class="ident">Request</span> <span class="kw">as</span> <span class="ident">HttpRequest</span>},
+    <span class="ident">http</span>::{<span class="ident">HeaderMap</span>, <span class="ident">HeaderValue</span>, <span class="ident">Request</span> <span class="kw">as</span> <span class="ident">HttpRequest</span>},
     <span class="ident">std</span>::{
-        <span class="ident">convert</span>::{<span class="ident">Infallible</span>, <span class="ident">TryFrom</span>},
+        <span class="ident">convert</span>::{<span class="ident">Infallible</span>, <span class="ident">TryFrom</span>, <span class="ident">TryInto</span>},
         <span class="ident">str</span>::<span class="ident">FromStr</span>,
     },
     <span class="ident">thiserror</span>::<span class="ident">Error</span>,
@@ -780,6 +805,7 @@
 <span class="doccomment">/// # #[cfg(feature = &quot;custom-transport&quot;)]</span>
 <span class="doccomment">/// # {</span>
 <span class="doccomment">/// # use sentry_contrib_native::{Dsn, Event, Options, RawEnvelope, test, Transport};</span>
+<span class="doccomment">/// # use std::convert::TryInto;</span>
 <span class="doccomment">/// # test::set_hook();</span>
 <span class="doccomment">/// use reqwest::blocking::Client;</span>
 <span class="doccomment">///</span>
@@ -803,12 +829,11 @@
 <span class="doccomment">///         let client = self.client.clone();</span>
 <span class="doccomment">///</span>
 <span class="doccomment">///         std::thread::spawn(move || {</span>
-<span class="doccomment">///             let (parts, body) = envelope.to_request(dsn).into_parts();</span>
+<span class="doccomment">///             let request = envelope</span>
+<span class="doccomment">///                 .to_request(dsn)</span>
+<span class="doccomment">///                 .map(|body| body.as_bytes().to_vec());</span>
 <span class="doccomment">///             client</span>
-<span class="doccomment">///                 .post(&amp;parts.uri.to_string())</span>
-<span class="doccomment">///                 .headers(parts.headers)</span>
-<span class="doccomment">///                 .body(body.as_bytes().to_owned())</span>
-<span class="doccomment">///                 .send()</span>
+<span class="doccomment">///                 .execute(request.try_into().unwrap())</span>
 <span class="doccomment">///                 .expect(&quot;failed to send envelope&quot;)</span>
 <span class="doccomment">///         });</span>
 <span class="doccomment">///     }</span>
@@ -1054,9 +1079,9 @@
     <span class="doccomment">/// The return value has all of the necessary pieces of data to create a</span>
     <span class="doccomment">/// HTTP request with the HTTP client of your choice:</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// * The uri to send the request to</span>
-    <span class="doccomment">/// * The headers that must be set</span>
-    <span class="doccomment">/// * The body of the request</span>
+    <span class="doccomment">/// * The URL to send the request to.</span>
+    <span class="doccomment">/// * The headers that must be set.</span>
+    <span class="doccomment">/// * The body of the request.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The `content-length` header is already set for you, though some HTTP</span>
     <span class="doccomment">/// clients will automatically overwrite it, which should be fine.</span>
@@ -1068,16 +1093,14 @@
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_request</span>(<span class="self">self</span>, <span class="ident">dsn</span>: <span class="ident">Dsn</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Request</span> {
-        <span class="ident">HttpRequest</span>::<span class="ident">builder</span>()
-            .<span class="ident">header</span>(<span class="string">&quot;user-agent&quot;</span>, <span class="ident">HeaderValue</span>::<span class="ident">from_static</span>(<span class="ident">SDK_USER_AGENT</span>))
-            .<span class="ident">header</span>(<span class="string">&quot;content-type&quot;</span>, <span class="ident">HeaderValue</span>::<span class="ident">from_static</span>(<span class="ident">ENVELOPE_MIME</span>))
-            .<span class="ident">header</span>(<span class="string">&quot;accept&quot;</span>, <span class="ident">HeaderValue</span>::<span class="ident">from_static</span>(<span class="string">&quot;*/*&quot;</span>))
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">HttpRequest</span>::<span class="ident">builder</span>();
+        <span class="kw-2">*</span><span class="ident">request</span>.<span class="ident">headers_mut</span>().<span class="ident">expect</span>(<span class="string">&quot;failed to build headers&quot;</span>) <span class="op">=</span> <span class="ident">dsn</span>.<span class="ident">to_headers</span>();
+        <span class="ident">request</span>
             .<span class="ident">method</span>(<span class="string">&quot;POST&quot;</span>)
-            .<span class="ident">header</span>(<span class="string">&quot;x-sentry-auth&quot;</span>, <span class="ident">dsn</span>.<span class="ident">auth</span>)
             .<span class="ident">uri</span>(<span class="ident">dsn</span>.<span class="ident">url</span>)
             .<span class="ident">header</span>(<span class="string">&quot;content-length&quot;</span>, <span class="self">self</span>.<span class="ident">as_bytes</span>().<span class="ident">len</span>())
             .<span class="ident">body</span>(<span class="self">self</span>)
-            .<span class="ident">unwrap</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to build request&quot;</span>)
     }
 }
 
@@ -1093,7 +1116,7 @@
 <span class="doccomment">/// # fn main() -&gt; anyhow::Result&lt;()&gt; {</span>
 <span class="doccomment">/// # #[cfg(feature = &quot;custom-transport&quot;)]</span>
 <span class="doccomment">/// # {</span>
-<span class="doccomment">/// # use sentry_contrib_native::{Dsn, Event, Options, RawEnvelope, test, Transport};</span>
+<span class="doccomment">/// # use sentry_contrib_native::{Dsn, Event, http::HeaderMap, Options, RawEnvelope, test, Transport};</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// struct CustomTransport {</span>
 <span class="doccomment">///     dsn: Dsn,</span>
@@ -1112,6 +1135,8 @@
 <span class="doccomment">///     fn send(&amp;self, envelope: RawEnvelope) {</span>
 <span class="doccomment">///         // we need `Dsn` to build the `Request`!</span>
 <span class="doccomment">///         envelope.to_request(self.dsn.clone());</span>
+<span class="doccomment">///         // or build your own request with the help of a URL, `HeaderMap` and body.</span>
+<span class="doccomment">///         let (url, headers, body): (&amp;str, HeaderMap, &amp;[u8]) = (self.dsn.url(), self.dsn.to_headers(), envelope.serialize().as_bytes());</span>
 <span class="doccomment">///     }</span>
 <span class="doccomment">/// }</span>
 <span class="doccomment">///</span>
@@ -1138,7 +1163,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Dsn</span> {
     <span class="doccomment">/// The auth header value</span>
     <span class="ident">auth</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// The full URI to send envelopes to</span>
+    <span class="doccomment">/// The full URL to send envelopes to</span>
     <span class="ident">url</span>: <span class="ident">String</span>,
 }
 
@@ -1174,12 +1199,17 @@
         <span class="kw">match</span> <span class="ident">dsn_url</span>.<span class="ident">host_str</span>() {
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Host</span>.<span class="ident">into</span>()),
             <span class="prelude-val">Some</span>(<span class="ident">host</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">auth</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">auth</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(
                     <span class="string">&quot;Sentry sentry_key={}, sentry_version={}, sentry_client={}&quot;</span>,
                     <span class="ident">dsn_url</span>.<span class="ident">username</span>(),
                     <span class="ident">API_VERSION</span>,
                     <span class="ident">SDK_USER_AGENT</span>
                 );
+
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">password</span>) <span class="op">=</span> <span class="ident">dsn_url</span>.<span class="ident">password</span>() {
+                    <span class="ident">auth</span>.<span class="ident">push_str</span>(<span class="string">&quot;, sentry_secret=&quot;</span>);
+                    <span class="ident">auth</span>.<span class="ident">push_str</span>(<span class="ident">password</span>);
+                }
 
                 <span class="kw">let</span> <span class="ident">host</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">port</span>) <span class="op">=</span> <span class="ident">dsn_url</span>.<span class="ident">port</span>() {
                     <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}:{}&quot;</span>, <span class="ident">host</span>, <span class="ident">port</span>)
@@ -1220,6 +1250,25 @@
             <span class="ident">url</span>: <span class="self">self</span>.<span class="ident">url</span>,
         }
     }
+
+    <span class="doccomment">/// Yields a [`HeaderMap`] to build a correct HTTP request with this</span>
+    <span class="doccomment">/// [`Dsn`].</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_headers</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">HeaderMap</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">headers</span> <span class="op">=</span> <span class="ident">HeaderMap</span>::<span class="ident">new</span>();
+        <span class="ident">headers</span>.<span class="ident">insert</span>(<span class="string">&quot;user-agent&quot;</span>, <span class="ident">HeaderValue</span>::<span class="ident">from_static</span>(<span class="ident">SDK_USER_AGENT</span>));
+        <span class="ident">headers</span>.<span class="ident">insert</span>(<span class="string">&quot;content-type&quot;</span>, <span class="ident">HeaderValue</span>::<span class="ident">from_static</span>(<span class="ident">ENVELOPE_MIME</span>));
+        <span class="ident">headers</span>.<span class="ident">insert</span>(<span class="string">&quot;accept&quot;</span>, <span class="ident">HeaderValue</span>::<span class="ident">from_static</span>(<span class="string">&quot;*/*&quot;</span>));
+        <span class="ident">headers</span>.<span class="ident">insert</span>(
+            <span class="string">&quot;x-sentry-auth&quot;</span>,
+            (<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">auth</span>)
+                .<span class="ident">try_into</span>()
+                .<span class="ident">expect</span>(<span class="string">&quot;failed to insert `x-sentry-auth`&quot;</span>),
+        );
+        <span class="ident">headers</span>
+    }
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
@@ -1247,7 +1296,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Parts</span> {
     <span class="doccomment">/// The auth header value</span>
     <span class="kw">pub</span> <span class="ident">auth</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// The full URI to send envelopes to</span>
+    <span class="doccomment">/// The full URL to send envelopes to</span>
     <span class="kw">pub</span> <span class="ident">url</span>: <span class="ident">String</span>,
 }
 
@@ -1297,6 +1346,7 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
     <span class="kw">let</span> <span class="ident">dsn</span> <span class="op">=</span> <span class="ident">Dsn</span>::<span class="ident">new</span>(<span class="ident">options</span>.<span class="ident">dsn</span>().<span class="ident">unwrap</span>())<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">dsn</span>.<span class="ident">to_headers</span>();
     <span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="op">|</span><span class="ident">options</span><span class="op">|</span> <span class="ident">CustomTransport</span>::<span class="ident">new</span>(<span class="ident">dsn</span>, <span class="ident">options</span>));
     <span class="kw">let</span> <span class="ident">shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;
 

@@ -8,15 +8,13 @@
 // stable clippy seems to have an issue with await
 #![allow(clippy::used_underscore_binding)]
 
-#[cfg(feature = "custom-transport")]
-mod custom_transport;
 mod test;
 
 use anyhow::Result;
-#[cfg(feature = "custom-transport")]
-use custom_transport::Transport;
 use sentry::{Event, Level, Options};
 use sentry_contrib_native as sentry;
+#[cfg(feature = "custom-transport")]
+use test::custom_transport::Transport;
 
 #[test]
 fn event() -> Result<()> {

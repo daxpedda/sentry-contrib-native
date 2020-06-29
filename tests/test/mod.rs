@@ -1,3 +1,6 @@
+#[cfg(feature = "custom-transport")]
+pub mod custom_transport;
+
 use anyhow::{anyhow, bail, Result};
 use reqwest::{header::HeaderMap, Client};
 use sentry::Uuid;

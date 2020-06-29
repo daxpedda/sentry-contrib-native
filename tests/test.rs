@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, bail, Result};
 use reqwest::{header::HeaderMap, Client};
 use sentry_contrib_native::Uuid;
 use serde_derive::Deserialize;
@@ -95,21 +95,41 @@ pub async fn check(uuid: Uuid) -> Result<Event> {
     // build API URL
     let api_url = api_url(&client).await?.join(&format!("{}/", uuid))?;
 
-    // build request
-    let request = client.get(api_url.clone());
+    // we want to keep retrying until the message arrives at Sentry
+    for _ in 0_usize..6 {
+        // build request
+        let request = client.get(api_url.clone());
 
-    // wait for the event to arrive at Sentry first!
-    tokio::time::delay_for(Duration::from_secs(10)).await;
+        // wait for the event to arrive at Sentry first!
+        tokio::time::delay_for(Duration::from_secs(10)).await;
 
-    eprintln!("{}", client.get(api_url).send().await?.text().await?);
+        // get that event!
+        let response = request.send().await?.json::<EventResponse>().await?;
 
-    // get that event!
-    request
-        .send()
-        .await?
-        .json::<Event>()
-        .await
-        .map_err(Into::into)
+        match response {
+            EventResponse::Event(event) => return Ok(event),
+            EventResponse::NotFound { detail } => {
+                if detail != "Event not found" {
+                    bail!("unknown message")
+                }
+            }
+        }
+    }
+
+    eprintln!("URL: {}", api_url.to_string());
+    eprintln!(
+        "JSON: {}",
+        client.get(api_url.clone()).send().await?.text().await?
+    );
+
+    Err(anyhow!("timeout"))
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum EventResponse {
+    Event(Event),
+    NotFound { detail: String },
 }
 
 #[derive(Deserialize)]
@@ -117,3 +137,5 @@ pub async fn check(uuid: Uuid) -> Result<Event> {
 pub struct Event {
     pub message: String,
 }
+
+//{"detail":"Event not found"}

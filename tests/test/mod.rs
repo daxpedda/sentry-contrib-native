@@ -3,6 +3,7 @@ pub mod custom_transport;
 mod event;
 
 use anyhow::{anyhow, bail, Result};
+#[cfg(feature = "custom-transport")]
 use custom_transport::Transport;
 use event::{Event, Response};
 use reqwest::{header::HeaderMap, Client};
@@ -17,6 +18,12 @@ use std::{
     time::Duration,
 };
 use url::Url;
+
+/// Number of tries to wait for Sentry to process an event. Sentry.io sometimes
+/// takes really long to process those.
+const NUM_OF_TRIES: i32 = 20;
+/// Time between tries.
+const TIME_BETWEEN_TRIES: Duration = Duration::from_secs(30);
 
 /// Converts `SENTRY_DSN` environment variable to proper URL to Sentry API.
 async fn api_url(client: &Client) -> Result<Url> {
@@ -100,12 +107,12 @@ pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<(Event, V
     let mut response = Value::Null;
 
     // we want to keep retrying until the message arrives at Sentry
-    for _ in 0_usize..6 {
+    for _ in 0..NUM_OF_TRIES {
         // build request
         let request = client.get(api_url.clone());
 
         // wait for the event to arrive at Sentry first!
-        tokio::time::delay_for(Duration::from_secs(10)).await;
+        tokio::time::delay_for(TIME_BETWEEN_TRIES).await;
 
         // get that event!
         response = request.send().await?.json::<Value>().await?;
@@ -121,7 +128,7 @@ pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<(Event, V
         }
     }
 
-    Err(anyhow!("[Timeout]: {}", response))
+    Err(anyhow!("[UUID]: {}\n[Timeout]: {}", uuid, response))
 }
 
 #[allow(clippy::type_complexity)]

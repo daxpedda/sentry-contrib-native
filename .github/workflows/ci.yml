@@ -84,6 +84,7 @@ jobs:
 
     env:
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
 
     steps:
       - name: Install Rust
@@ -252,6 +253,7 @@ jobs:
 
     env:
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
 
     steps:
       - name: Install Rust

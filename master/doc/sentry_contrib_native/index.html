@@ -166,8 +166,14 @@ using <code>build.rs</code> is provided through the <code>DEP_SENTRY_NATIVE_CRAS
 <p>For correct testing the following has to be provided:</p>
 <ul>
 <li><code>feature = &quot;test&quot;</code> has to be enabled.</li>
-<li><code>SENTRY_DSN</code> environment variable has to contain a valid sentry URL.</li>
+<li><code>SENTRY_DSN</code> environment variable has to contain a valid Sentry DSN URL.</li>
+<li><code>SENTRY_TOKEN</code> environment variable has to contain a valid Sentry API Token
+with read access to &quot;Organization&quot;, &quot;Project&quot; and &quot;Issue &amp; Event&quot;.</li>
 </ul>
+<p>Tests may easily exhaust large number of events and you may not want to expose a
+Sentry API token, therefore it is recommended to run tests against a
+<a href="https://github.com/getsentry/onpremise">Sentry onpremise server</a>, it is quiet
+easy to setup.</p>
 <p><code>cargo test --features test</code></p>
 <h2 id="alternatives" class="section-header"><a href="#alternatives">Alternatives</a></h2>
 <p>It's recommended to use Sentry's official SDK for rust:

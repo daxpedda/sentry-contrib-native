@@ -25,8 +25,11 @@ async fn api_url(client: &Client) -> Result<Url> {
         }
     }
 
-    // clean what we don't need: username and path
+    // clean what we don't need: username, password and path
     api_url.set_username("").expect("failed to clear username");
+    api_url
+        .set_password(None)
+        .expect("failed to clear username");
     api_url
         .path_segments_mut()
         .expect("failed to clear path")

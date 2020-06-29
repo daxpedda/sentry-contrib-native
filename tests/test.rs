@@ -102,10 +102,12 @@ pub async fn check(uuid: Uuid) -> Result<Event> {
     tokio::time::delay_for(Duration::from_secs(10)).await;
 
     // get that event!
-    let events = request.send().await?.json::<Vec<Event>>().await?;
-    let event = events.into_iter().next().expect("no event found");
-
-    Ok(event)
+    request
+        .send()
+        .await?
+        .json::<Event>()
+        .await
+        .map_err(Into::into)
 }
 
 #[derive(Deserialize)]

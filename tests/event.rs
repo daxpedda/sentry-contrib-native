@@ -18,6 +18,7 @@ async fn event() -> Result<()> {
     let uuid = {
         let mut options = Options::new();
         options.set_debug(true);
+        options.set_logger(|_, s| eprintln!("{}", s));
         let _shutdown = Options::new().init()?;
 
         Event::new_message(Level::Debug, None, "test message").capture()

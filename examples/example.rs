@@ -17,7 +17,7 @@ fn main() -> Result<()> {
     let mut options = Options::new();
     options.set_debug(true);
     options.set_logger(|level, message| {
-        println!("{:<9} {}", format!("[{}]", level), message);
+        eprintln!("{:<9} {}", format!("[{}]", level), message);
     });
     let _shutdown = options.init()?;
 

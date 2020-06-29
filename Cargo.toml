@@ -40,6 +40,14 @@ custom-transport = ["http", "url"]
 nightly = []
 test = []
 
+[[test]]
+name = "custom_transport"
+test = false
+
+[[test]]
+name = "test"
+test = false
+
 [[example]]
 name = "custom-transport"
 required-features = ["custom-transport"]

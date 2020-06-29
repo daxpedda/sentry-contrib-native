@@ -28,7 +28,7 @@ async fn event() -> Result<()> {
         options.set_logger(|_, s| eprintln!("{}", s));
         #[cfg(not(feature = "default-transport"))]
         options.set_transport(Transport::new);
-        let _shutdown = Options::new().init()?;
+        let _shutdown = options.init()?;
 
         Event::new_message(Level::Debug, None, "test message").capture()
     };

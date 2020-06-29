@@ -8,34 +8,45 @@
 // stable clippy seems to have an issue with await
 #![allow(clippy::used_underscore_binding)]
 
-#[cfg(not(feature = "default-transport"))]
+#[cfg(feature = "custom-transport")]
 mod custom_transport;
 mod test;
 
 use anyhow::Result;
-#[cfg(not(feature = "default-transport"))]
+#[cfg(feature = "custom-transport")]
 use custom_transport::Transport;
 use sentry::{Event, Level, Options};
 use sentry_contrib_native as sentry;
 
-#[tokio::test]
-async fn event() -> Result<()> {
+#[test]
+fn event() -> Result<()> {
     sentry::test::set_hook();
 
-    let uuid = {
-        let mut options = Options::new();
-        options.set_debug(true);
-        options.set_logger(|_, s| eprintln!("{}", s));
-        #[cfg(not(feature = "default-transport"))]
-        options.set_transport(Transport::new);
-        let _shutdown = options.init()?;
+    let mut runtime = tokio::runtime::Builder::new()
+        .threaded_scheduler()
+        .enable_all()
+        .thread_name("sentry-tokio")
+        .build()
+        .expect("failed to create tokio runtime");
+    #[cfg(feature = "custom-transport")]
+    let handle = runtime.handle().clone();
 
-        Event::new_message(Level::Debug, None, "test message").capture()
-    };
+    runtime.block_on(async {
+        let uuid = {
+            let mut options = Options::new();
+            options.set_debug(true);
+            options.set_logger(|level, message| eprintln!("[{}]: {}", level, message));
+            #[cfg(feature = "custom-transport")]
+            options.set_transport(|options| Transport::new(handle, options));
+            let _shutdown = options.init()?;
 
-    assert_eq!("test message", test::check(uuid).await?.message);
+            Event::new_message(Level::Debug, None, "test message").capture()
+        };
 
-    sentry::test::verify_panics();
+        assert_eq!("test message", test::check(uuid).await?.message);
 
-    Ok(())
+        sentry::test::verify_panics();
+
+        Ok(())
+    })
 }

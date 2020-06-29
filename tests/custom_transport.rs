@@ -4,6 +4,7 @@ use sentry::{Dsn, Options, RawEnvelope, Request, Transport as SentryTransport, T
 use sentry_contrib_native as sentry;
 use std::{str::FromStr, sync::Arc, time::Duration};
 use tokio::{
+    runtime::Handle,
     sync::mpsc::{self, Sender},
     task,
 };
@@ -25,32 +26,36 @@ async fn send_sentry_request(client: &Client, request: Request) {
 }
 
 pub struct Transport {
+    runtime: Handle,
     sender: Sender<RawEnvelope>,
     shutdown: Arc<(Mutex<()>, Condvar)>,
 }
 
 impl Transport {
-    pub fn new(options: &Options) -> Self {
+    pub fn new(runtime: Handle, options: &Options) -> Self {
         let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
         let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
         let transport = Self {
+            runtime,
             sender,
             shutdown: shutdown.clone(),
         };
         let dsn = Dsn::from_str(options.dsn().expect("no DSN found")).expect("invalid DSN");
 
-        tokio::spawn(async move {
-            let client = Client::new();
+        transport.runtime.enter(|| {
+            tokio::spawn(async move {
+                let client = Client::new();
 
-            // dequeue and send events until we are asked to shut down
-            while let Some(envelope) = receiver.recv().await {
-                let req = envelope.to_request(dsn.clone());
-                send_sentry_request(&client, req).await;
-            }
+                // dequeue and send events until we are asked to shut down
+                while let Some(envelope) = receiver.recv().await {
+                    let req = envelope.to_request(dsn.clone());
+                    send_sentry_request(&client, req).await;
+                }
 
-            let (lock, cvar) = &*shutdown;
-            let _shutdown_lock = lock.lock();
-            cvar.notify_one();
+                let (lock, cvar) = &*shutdown;
+                let _shutdown_lock = lock.lock();
+                cvar.notify_one();
+            })
         });
 
         transport
@@ -60,11 +65,13 @@ impl Transport {
 impl SentryTransport for Transport {
     fn send(&self, envelope: RawEnvelope) {
         let mut sender = self.sender.clone();
-        task::spawn(async move {
-            sender
-                .send(envelope)
-                .await
-                .expect("failed to send envelope to send queue");
+        self.runtime.enter(|| {
+            task::spawn(async move {
+                sender
+                    .send(envelope)
+                    .await
+                    .expect("failed to send envelope to send queue");
+            })
         });
     }
 

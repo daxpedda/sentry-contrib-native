@@ -10,54 +10,41 @@
 
 //!
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use parking_lot::{Condvar, Mutex};
 use reqwest::Client;
 use sentry::{
-    http::Method, Dsn, Event, Options, RawEnvelope, Request, Transport as SentryTransport,
-    TransportShutdown,
+    Dsn, Event, Options, RawEnvelope, Request, Transport as SentryTransport, TransportShutdown,
 };
 use sentry_contrib_native as sentry;
-use std::{slice, str::FromStr, sync::Arc, time::Duration};
+use std::{convert::TryInto, slice, str::FromStr, sync::Arc, time::Duration};
 use tokio::{
     runtime::Handle,
     sync::mpsc::{self, Sender},
     task,
 };
 
-async fn send_sentry_request(client: &Client, req: Request) -> Result<()> {
-    let (parts, body) = req.into_parts();
-    let uri = parts.uri.to_string();
+async fn send_sentry_request(client: &Client, request: Request) -> Result<()> {
+    let request = request.map(|body| {
+        // we cheat so that we don't have to copy all of the bytes of the body
+        // into a new buffer, but we have to fake that the slice is static, which
+        // should be ok since we only need that buffer until the request is finished
+        #[allow(unsafe_code)]
+        unsafe {
+            let body = body.as_bytes();
+            slice::from_raw_parts::<'static, _>(body.as_ptr(), body.len())
+        }
+    });
 
-    // Sentry should only give us POST requests to send
-    if parts.method != Method::POST {
-        bail!(
-            "Sentry SDK is trying to send an unexpected request of '{}'",
-            parts.method
-        )
-    }
-
-    let rb = client.post(&uri);
-
-    // we cheat so that we don't have to copy all of the bytes of the body
-    // into a new buffer, but we have to fake that the slice is static, which
-    // should be ok since we only need that buffer until the request is finished
-    #[allow(unsafe_code)]
-    let buffer = unsafe {
-        let buf = body.as_bytes();
-        slice::from_raw_parts::<'static, _>(buf.as_ptr(), buf.len())
-    };
-
-    let response = rb
-        .headers(parts.headers)
-        .body(buffer)
-        .send()
+    let response = client
+        .execute(request.try_into()?)
         .await
         .map_err(|e| anyhow!("Failed to send Sentry request: {}", e))?;
 
     response
         .error_for_status()
         .map_err(|e| anyhow!("Received error response from Sentry: {}", e))?;
+
     Ok(())
 }
 

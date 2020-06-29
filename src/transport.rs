@@ -17,9 +17,9 @@ use std::{process::abort, sync::Mutex};
 pub use sys::SDK_USER_AGENT;
 #[cfg(feature = "custom-transport")]
 use ::{
-    http::{HeaderValue, Request as HttpRequest},
+    http::{HeaderMap, HeaderValue, Request as HttpRequest},
     std::{
-        convert::{Infallible, TryFrom},
+        convert::{Infallible, TryFrom, TryInto},
         str::FromStr,
     },
     thiserror::Error,
@@ -100,6 +100,7 @@ impl Shutdown {
 /// # #[cfg(feature = "custom-transport")]
 /// # {
 /// # use sentry_contrib_native::{Dsn, Event, Options, RawEnvelope, test, Transport};
+/// # use std::convert::TryInto;
 /// # test::set_hook();
 /// use reqwest::blocking::Client;
 ///
@@ -123,12 +124,11 @@ impl Shutdown {
 ///         let client = self.client.clone();
 ///
 ///         std::thread::spawn(move || {
-///             let (parts, body) = envelope.to_request(dsn).into_parts();
+///             let request = envelope
+///                 .to_request(dsn)
+///                 .map(|body| body.as_bytes().to_vec());
 ///             client
-///                 .post(&parts.uri.to_string())
-///                 .headers(parts.headers)
-///                 .body(body.as_bytes().to_owned())
-///                 .send()
+///                 .execute(request.try_into().unwrap())
 ///                 .expect("failed to send envelope")
 ///         });
 ///     }
@@ -374,9 +374,9 @@ impl Envelope {
     /// The return value has all of the necessary pieces of data to create a
     /// HTTP request with the HTTP client of your choice:
     ///
-    /// * The uri to send the request to
-    /// * The headers that must be set
-    /// * The body of the request
+    /// * The URL to send the request to.
+    /// * The headers that must be set.
+    /// * The body of the request.
     ///
     /// The `content-length` header is already set for you, though some HTTP
     /// clients will automatically overwrite it, which should be fine.
@@ -388,16 +388,14 @@ impl Envelope {
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
     #[must_use]
     pub fn into_request(self, dsn: Dsn) -> Request {
-        HttpRequest::builder()
-            .header("user-agent", HeaderValue::from_static(SDK_USER_AGENT))
-            .header("content-type", HeaderValue::from_static(ENVELOPE_MIME))
-            .header("accept", HeaderValue::from_static("*/*"))
+        let mut request = HttpRequest::builder();
+        *request.headers_mut().expect("failed to build headers") = dsn.to_headers();
+        request
             .method("POST")
-            .header("x-sentry-auth", dsn.auth)
             .uri(dsn.url)
             .header("content-length", self.as_bytes().len())
             .body(self)
-            .unwrap()
+            .expect("failed to build request")
     }
 }
 
@@ -432,6 +430,8 @@ impl Envelope {
 ///     fn send(&self, envelope: RawEnvelope) {
 ///         // we need `Dsn` to build the `Request`!
 ///         envelope.to_request(self.dsn.clone());
+///         // or build your own request with the help of a URL and `HeaderMap`
+///         let (url, headers) = (self.dsn.url(), self.dsn.to_headers());
 ///     }
 /// }
 ///
@@ -458,7 +458,7 @@ impl Envelope {
 pub struct Dsn {
     /// The auth header value
     auth: String,
-    /// The full URI to send envelopes to
+    /// The full URL to send envelopes to
     url: String,
 }
 
@@ -494,12 +494,17 @@ impl Dsn {
         match dsn_url.host_str() {
             None => Err(Error::Host.into()),
             Some(host) => {
-                let auth = format!(
+                let mut auth = format!(
                     "Sentry sentry_key={}, sentry_version={}, sentry_client={}",
                     dsn_url.username(),
                     API_VERSION,
                     SDK_USER_AGENT
                 );
+
+                if let Some(password) = dsn_url.password() {
+                    auth.push_str(", sentry_secret=");
+                    auth.push_str(password);
+                }
 
                 let host = if let Some(port) = dsn_url.port() {
                     format!("{}:{}", host, port)
@@ -540,6 +545,25 @@ impl Dsn {
             url: self.url,
         }
     }
+
+    /// Yields a [`HeaderMap`] to build a correct HTTP request with this
+    /// [`Dsn`].
+    #[cfg(feature = "custom-transport")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+    #[must_use]
+    pub fn to_headers(&self) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert("user-agent", HeaderValue::from_static(SDK_USER_AGENT));
+        headers.insert("content-type", HeaderValue::from_static(ENVELOPE_MIME));
+        headers.insert("accept", HeaderValue::from_static("*/*"));
+        headers.insert(
+            "x-sentry-auth",
+            (&self.auth)
+                .try_into()
+                .expect("failed to insert `x-sentry-auth`"),
+        );
+        headers
+    }
 }
 
 #[cfg(feature = "custom-transport")]
@@ -567,7 +591,7 @@ impl TryFrom<&str> for Dsn {
 pub struct Parts {
     /// The auth header value
     pub auth: String,
-    /// The full URI to send envelopes to
+    /// The full URL to send envelopes to
     pub url: String,
 }
 
@@ -617,6 +641,7 @@ fn transport() -> anyhow::Result<()> {
 
     let mut options = Options::new();
     let dsn = Dsn::new(options.dsn().unwrap())?;
+    let _ = dsn.to_headers();
     options.set_transport(|options| CustomTransport::new(dsn, options));
     let shutdown = options.init()?;
 

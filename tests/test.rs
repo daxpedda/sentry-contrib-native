@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use reqwest::{header::HeaderMap, Client};
-use sentry_contrib_native::Uuid;
+use sentry::Uuid;
+use sentry_contrib_native as sentry;
 use serde_derive::Deserialize;
 use serde_json::Value;
 use std::{convert::TryInto, env, iter::FromIterator, time::Duration};
@@ -140,5 +141,3 @@ pub enum EventResponse {
 pub struct Event {
     pub message: String,
 }
-
-//{"detail":"Event not found"}

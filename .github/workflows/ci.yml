@@ -150,7 +150,9 @@ jobs:
           cargo -v test --features test ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
       - name: Example
-        if: always() && steps.build.outcome == 'success'
+        if:
+          always() && steps.build.outcome == 'success' &&
+          matrix.feature.default-transport
         run:
           cargo -v run --example example --features test ${{ matrix.feature.name
           }} ${{ matrix.rust.feature }}
@@ -327,7 +329,9 @@ jobs:
           cargo -v test --features test ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
       - name: Example
-        if: always() && steps.build.outcome == 'success'
+        if:
+          always() && steps.build.outcome == 'success' &&
+          matrix.feature.default-transport
         run:
           cargo -v run --example example --features test ${{ matrix.feature.name
           }} ${{ matrix.rust.feature }}

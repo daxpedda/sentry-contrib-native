@@ -107,8 +107,9 @@ pub async fn check(uuid: Uuid) -> Result<Event> {
     let event = events.into_iter().next().expect("no event found");
 
     if event.message == "" {
+        eprintln!("URL: {}", api_url);
         eprintln!(
-            "{}",
+            "JSON: {}",
             client.get(api_url).send().await?.json::<Value>().await?
         );
     }

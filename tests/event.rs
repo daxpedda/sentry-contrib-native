@@ -16,9 +16,15 @@ use sentry_contrib_native::{Event, Level, Options};
 #[tokio::test]
 async fn event() -> Result<()> {
     let uuid = {
-        let _shutdown = Options::new().init()?;
+        let mut options = Options::new();
+        options.set_debug(true);
+        let _shutdown = options.init()?;
+        //let _shutdown = Options::new().init()?;
         Event::new_message(Level::Debug, None, "test message").capture()
     };
+
+    eprintln!("UUID: {:?}", uuid);
+    eprintln!("UUID string: {}", uuid.to_string());
 
     assert_eq!("test message", test::check(uuid).await?.message);
 

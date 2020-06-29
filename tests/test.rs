@@ -97,7 +97,7 @@ pub async fn check(uuid: Uuid) -> Result<Event> {
     api_url.join(&format!("{}/", uuid))?;
 
     // build request
-    let request = client.get(api_url);
+    let request = client.get(api_url.clone());
 
     // wait for the event to arrive at Sentry first!
     tokio::time::delay_for(Duration::from_secs(10)).await;
@@ -105,6 +105,13 @@ pub async fn check(uuid: Uuid) -> Result<Event> {
     // get that event!
     let events = request.send().await?.json::<Vec<Event>>().await?;
     let event = events.into_iter().next().expect("no event found");
+
+    if event.message == "" {
+        eprintln!(
+            "{}",
+            client.get(api_url).send().await?.json::<Value>().await?
+        );
+    }
 
     Ok(event)
 }

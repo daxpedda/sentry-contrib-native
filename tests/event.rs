@@ -11,40 +11,78 @@
 mod test;
 
 use anyhow::Result;
-use sentry::{Event, Level, Options};
+use sentry::{Event, Level};
 use sentry_contrib_native as sentry;
-#[cfg(feature = "custom-transport")]
-use test::custom_transport::Transport;
+use std::collections::BTreeMap;
 
-#[test]
-fn event() -> Result<()> {
-    sentry::test::set_hook();
+#[tokio::test(threaded_scheduler)]
+async fn event() -> Result<()> {
+    test::events(vec![
+        (
+            || Event::new().capture(),
+            |event| {
+                assert_eq!("<unlabeled event>", event.title);
+                assert_eq!("error", event.tags.get("level").unwrap());
+                assert_eq!("", event.message);
+                assert_eq!(None, event.tags.get("logger"));
+            },
+        ),
+        (
+            || Event::new_message(Level::Debug, None, "test message").capture(),
+            |event| {
+                assert_eq!("test message", event.title);
+                assert_eq!("debug", event.tags.get("level").unwrap());
+                assert_eq!("test message", event.message);
+                assert_eq!(None, event.tags.get("logger"));
+            },
+        ),
+        (
+            || {
+                Event::new_message(Level::Debug, Some("test logger".into()), "test message")
+                    .capture()
+            },
+            |event| {
+                assert_eq!("test message", event.title);
+                assert_eq!("debug", event.tags.get("level").unwrap());
+                assert_eq!("test message", event.message);
+                assert_eq!("test logger", event.tags.get("logger").unwrap());
+            },
+        ),
+        (
+            || {
+                let mut event = Event::new();
+                event.add_stacktrace(0);
+                event.capture()
+            },
+            |event| {
+                assert_eq!("<unlabeled event>", event.title);
+                assert_eq!("error", event.tags.get("level").unwrap());
+                assert_eq!("", event.message);
+                assert_eq!(None, event.tags.get("logger"));
+                assert!(event.entries.get("threads").is_some());
+            },
+        ),
+        (
+            || {
+                let mut event = Event::new();
+                let mut exception = BTreeMap::new();
 
-    let mut runtime = tokio::runtime::Builder::new()
-        .threaded_scheduler()
-        .enable_all()
-        .thread_name("sentry-tokio")
-        .build()
-        .expect("failed to create tokio runtime");
-    #[cfg(feature = "custom-transport")]
-    let handle = runtime.handle().clone();
+                exception.insert("type".into(), "test exception type".into());
+                exception.insert("value".into(), "test exception value".into());
 
-    runtime.block_on(async {
-        let uuid = {
-            let mut options = Options::new();
-            options.set_debug(true);
-            options.set_logger(|level, message| eprintln!("[{}]: {}", level, message));
-            #[cfg(feature = "custom-transport")]
-            options.set_transport(|options| Transport::new(handle, options));
-            let _shutdown = options.init()?;
+                event.add_exception(exception, 0);
+                event.capture()
+            },
+            |event| {
+                assert_eq!("test exception type: test exception value", event.title);
+                assert_eq!("error", event.tags.get("level").unwrap());
+                assert_eq!("", event.message);
+                assert_eq!(None, event.tags.get("logger"));
+                assert!(event.entries.get("exception").is_some());
+            },
+        ),
+    ])
+    .await?;
 
-            Event::new_message(Level::Debug, None, "test message").capture()
-        };
-
-        assert_eq!("test message", test::check(uuid).await?.message);
-
-        sentry::test::verify_panics();
-
-        Ok(())
-    })
+    Ok(())
 }

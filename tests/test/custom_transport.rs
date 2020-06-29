@@ -1,91 +1,75 @@
-use parking_lot::{Condvar, Mutex};
+use anyhow::{Error, Result};
+use futures_executor as executor;
 use reqwest::Client;
-use sentry::{Dsn, Options, RawEnvelope, Request, Transport as SentryTransport, TransportShutdown};
+use sentry::{Dsn, Options, RawEnvelope, Transport as SentryTransport, TransportShutdown};
 use sentry_contrib_native as sentry;
-use std::{str::FromStr, sync::Arc, time::Duration};
+use std::{convert::TryInto, str::FromStr, time::Duration};
 use tokio::{
-    runtime::Handle,
-    sync::mpsc::{self, Sender},
-    task,
+    sync::mpsc::{self, Receiver, Sender},
+    task::JoinHandle,
+    time,
 };
 
-async fn send_sentry_request(client: &Client, request: Request) {
-    let (parts, body) = request.into_parts();
-    let request = client.post(&parts.uri.to_string());
-
-    let response = request
-        .headers(parts.headers)
-        .body(body.as_bytes().to_vec())
-        .send()
-        .await
-        .expect("failed to send Sentry request");
-
-    response
-        .error_for_status()
-        .expect("received error response from Sentry");
-}
-
 pub struct Transport {
-    runtime: Handle,
-    sender: Sender<RawEnvelope>,
-    shutdown: Arc<(Mutex<()>, Condvar)>,
+    dsn: Dsn,
+    receiver: Receiver<JoinHandle<Result<()>>>,
+    sender: Sender<JoinHandle<Result<()>>>,
+    client: Client,
 }
 
 impl Transport {
-    pub fn new(runtime: Handle, options: &Options) -> Self {
-        let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
-        let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
-        let transport = Self {
-            runtime,
-            sender,
-            shutdown: shutdown.clone(),
-        };
+    pub fn new(options: &Options) -> Self {
         let dsn = Dsn::from_str(options.dsn().expect("no DSN found")).expect("invalid DSN");
+        let (sender, receiver) = mpsc::channel(1024);
+        let client = Client::new();
 
-        transport.runtime.enter(|| {
-            tokio::spawn(async move {
-                let client = Client::new();
-
-                // dequeue and send events until we are asked to shut down
-                while let Some(envelope) = receiver.recv().await {
-                    let req = envelope.to_request(dsn.clone());
-                    send_sentry_request(&client, req).await;
-                }
-
-                let (lock, cvar) = &*shutdown;
-                let _shutdown_lock = lock.lock();
-                cvar.notify_one();
-            })
-        });
-
-        transport
+        Self {
+            dsn,
+            receiver,
+            sender,
+            client,
+        }
     }
 }
 
 impl SentryTransport for Transport {
     fn send(&self, envelope: RawEnvelope) {
+        let dsn = self.dsn.clone();
         let mut sender = self.sender.clone();
-        self.runtime.enter(|| {
-            task::spawn(async move {
-                sender
-                    .send(envelope)
-                    .await
-                    .expect("failed to send envelope to send queue");
-            })
+        let client = self.client.clone();
+
+        tokio::spawn(async move {
+            sender
+                .send(tokio::spawn(async move {
+                    let request = envelope
+                        .to_request(dsn.clone())
+                        .map(|body| body.as_bytes().to_vec());
+                    client
+                        .execute(request.try_into().unwrap())
+                        .await?
+                        .error_for_status()?;
+
+                    Ok(())
+                }))
+                .await
         });
     }
 
-    fn shutdown(self: Box<Self>, timeout: Duration) -> TransportShutdown {
-        drop(self.sender);
+    fn shutdown(mut self: Box<Self>, timeout: Duration) -> TransportShutdown {
+        executor::block_on(async {
+            let result = time::timeout(timeout, async {
+                while let Some(task) = self.receiver.recv().await {
+                    task.await??;
+                }
 
-        let (lock, cvar) = &*self.shutdown;
-        let mut shutdown = lock.lock();
-        let result = cvar.wait_for(&mut shutdown, timeout);
+                Result::<_, Error>::Ok(TransportShutdown::Success)
+            })
+            .await;
 
-        if result.timed_out() {
-            TransportShutdown::TimedOut
-        } else {
-            TransportShutdown::Success
-        }
+            match result {
+                Ok(result) => result.expect("task panicked"),
+                Err(_) => TransportShutdown::TimedOut,
+            }
+        })
     }
 }

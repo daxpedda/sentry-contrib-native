@@ -411,7 +411,7 @@ impl Envelope {
 /// # fn main() -> anyhow::Result<()> {
 /// # #[cfg(feature = "custom-transport")]
 /// # {
-/// # use sentry_contrib_native::{Dsn, Event, Options, RawEnvelope, test, Transport};
+/// # use sentry_contrib_native::{Dsn, Event, http::HeaderMap, Options, RawEnvelope, test, Transport};
 ///
 /// struct CustomTransport {
 ///     dsn: Dsn,
@@ -430,8 +430,8 @@ impl Envelope {
 ///     fn send(&self, envelope: RawEnvelope) {
 ///         // we need `Dsn` to build the `Request`!
 ///         envelope.to_request(self.dsn.clone());
-///         // or build your own request with the help of a URL and `HeaderMap`
-///         let (url, headers) = (self.dsn.url(), self.dsn.to_headers());
+///         // or build your own request with the help of a URL, `HeaderMap` and body.
+///         let (url, headers, body): (&str, HeaderMap, &[u8]) = (self.dsn.url(), self.dsn.to_headers(), envelope.serialize().as_bytes());
 ///     }
 /// }
 ///

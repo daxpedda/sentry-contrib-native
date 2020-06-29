@@ -1,13 +1,21 @@
 #[cfg(feature = "custom-transport")]
 pub mod custom_transport;
+mod event;
 
 use anyhow::{anyhow, bail, Result};
+use custom_transport::Transport;
+use event::{Event, Response};
 use reqwest::{header::HeaderMap, Client};
-use sentry::Uuid;
+use sentry::{Options, Uuid};
 use sentry_contrib_native as sentry;
-use serde_derive::Deserialize;
 use serde_json::Value;
-use std::{convert::TryInto, env, iter::FromIterator, time::Duration};
+use std::{
+    convert::TryInto,
+    env,
+    iter::FromIterator,
+    panic::{self, AssertUnwindSafe},
+    time::Duration,
+};
 use url::Url;
 
 /// Converts `SENTRY_DSN` environment variable to proper URL to Sentry API.
@@ -80,14 +88,59 @@ fn slugs(response: &Value, id: &str) -> Option<(String, String)> {
     None
 }
 
-/// TODO
-///
-/// # Errors
-/// TODO
-pub async fn check(uuid: Uuid) -> Result<Event> {
+/// Query event from Sentry service.
+pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<(Event, Value)> {
     // build UUID
     let mut uuid = uuid.to_string();
     uuid.retain(|c| c != '-');
+
+    // build API URL
+    let api_url = api_url.join(&format!("{}/", uuid))?;
+
+    let mut response = Value::Null;
+
+    // we want to keep retrying until the message arrives at Sentry
+    for _ in 0_usize..6 {
+        // build request
+        let request = client.get(api_url.clone());
+
+        // wait for the event to arrive at Sentry first!
+        tokio::time::delay_for(Duration::from_secs(10)).await;
+
+        // get that event!
+        response = request.send().await?.json::<Value>().await?;
+        let event: Response = serde_json::from_value(response.clone())?;
+
+        match event {
+            Response::Event(event) => return Ok((event, response)),
+            Response::NotFound { detail } => {
+                if detail != "Event not found" {
+                    bail!("unknown message")
+                }
+            }
+        }
+    }
+
+    Err(anyhow!("[Timeout]: {}", response))
+}
+
+#[allow(clippy::type_complexity)]
+pub async fn events(events: Vec<(fn() -> Uuid, fn(Event))>) -> Result<()> {
+    let mut options = Options::new();
+    options.set_debug(true);
+    options.set_logger(|level, message| eprintln!("[{}]: {}", level, message));
+    #[cfg(feature = "custom-transport")]
+    options.set_transport(Transport::new);
+    let shutdown = options.init()?;
+
+    let mut uuids = Vec::new();
+    let mut checks = Vec::new();
+
+    // send all events
+    for (event, check) in events {
+        uuids.push(event());
+        checks.push(check);
+    }
 
     // get API token set by the user
     let token = env::var("SENTRY_TOKEN")?;
@@ -99,48 +152,30 @@ pub async fn check(uuid: Uuid) -> Result<Event> {
     )));
     let client = Client::builder().default_headers(headers).build()?;
 
-    // build API URL
-    let api_url = api_url(&client).await?.join(&format!("{}/", uuid))?;
+    // build API URL by querying Sentry service for organization and project slug
+    let api_url = api_url(&client).await?;
 
-    // we want to keep retrying until the message arrives at Sentry
-    for _ in 0_usize..6 {
-        // build request
-        let request = client.get(api_url.clone());
+    // store check workers
+    let mut tasks = Vec::new();
 
-        // wait for the event to arrive at Sentry first!
-        tokio::time::delay_for(Duration::from_secs(10)).await;
+    for uuid in uuids {
+        let client = client.clone();
+        let api_url = api_url.clone();
 
-        // get that event!
-        let response = request.send().await?.json::<EventResponse>().await?;
+        tasks.push(tokio::spawn(
+            async move { event(client, api_url, uuid).await },
+        ));
+    }
 
-        match response {
-            EventResponse::Event(event) => return Ok(event),
-            EventResponse::NotFound { detail } => {
-                if detail != "Event not found" {
-                    bail!("unknown message")
-                }
-            }
+    shutdown.shutdown();
+
+    for (task, check) in tasks.into_iter().zip(checks) {
+        let (event, response) = task.await??;
+
+        if panic::catch_unwind(AssertUnwindSafe(|| check(event.clone()))).is_err() {
+            bail!("Failed:\nEvent: {:?}\nJson: {}", event, response)
         }
     }
 
-    eprintln!("URL: {}", api_url.to_string());
-    eprintln!(
-        "JSON: {}",
-        client.get(api_url.clone()).send().await?.text().await?
-    );
-
-    Err(anyhow!("timeout"))
-}
-
-#[derive(Deserialize)]
-#[serde(untagged)]
-pub enum EventResponse {
-    Event(Event),
-    NotFound { detail: String },
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Event {
-    pub message: String,
+    Ok(())
 }

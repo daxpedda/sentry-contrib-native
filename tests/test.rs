@@ -16,6 +16,15 @@ async fn api_url(client: &Client) -> Result<Url> {
         .and_then(|mut path| path.next())
         .expect("no projet ID found")
         .to_owned();
+
+    // if we are connection to the official "sentry.io" server, remove the
+    // "o1234.ingest." part
+    if let Some(domain) = api_url.domain() {
+        if domain.ends_with(".ingest.sentry.io") {
+            api_url.set_host(Some("sentry.io"))?;
+        }
+    }
+
     // clean what we don't need: username and path
     api_url.set_username("").expect("failed to clear username");
     api_url

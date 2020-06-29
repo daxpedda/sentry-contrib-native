@@ -5,6 +5,8 @@
     clippy::pedantic,
     missing_docs
 )]
+// stable clippy seems to have an issue with await
+#![allow(clippy::used_underscore_binding)]
 
 mod test;
 

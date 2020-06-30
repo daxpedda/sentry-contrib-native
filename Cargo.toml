@@ -5,7 +5,7 @@ authors = ["daxpedda <daxpedda@gmail.com>"]
 edition = "2018"
 
 [workspace]
-members = ["sentry-contrib-native-sys"]
+members = ["sentry-contrib-native-sys", "tests/test/dylib"]
 
 [dependencies]
 http = { version = "0.2", optional = true }
@@ -18,8 +18,10 @@ vsprintf = { git = "https://github.com/daxpedda/vsprintf", branch = "fix-windows
 
 [dev-dependencies]
 anyhow = "1"
+dylib = { path = "tests/test/dylib" }
 futures-executor = "0.3"
 futures-util = "0.3"
+libloading = "0.6"
 parking_lot = "0.11"
 reqwest = { version = "0.10", default-features = false, features = [
   "blocking",

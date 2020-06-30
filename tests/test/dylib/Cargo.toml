@@ -1,0 +1,9 @@
+[package]
+name = "dylib"
+version = "0.1.0"
+authors = ["daxpedda <daxpedda@gmail.com>"]
+edition = "2018"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]

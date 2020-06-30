@@ -7,9 +7,9 @@ use std::{
     ffi::CStr,
     fmt::{Display, Formatter, Result},
     hash::{Hash, Hasher},
+    mem,
     ops::{Deref, DerefMut},
-    os::raw::c_char,
-    ptr,
+    ptr, slice,
 };
 
 /// A Sentry event.
@@ -150,7 +150,7 @@ impl Event {
     /// event.capture();
     /// ```
     pub fn add_stacktrace(&mut self, len: usize) {
-        self.insert("threads".into(), Self::stacktrace(len).into());
+        self.insert("threads", Self::stacktrace(len));
     }
 
     /// Adds an exception to the [`Event`] along with a stacktrace with `len`
@@ -215,7 +215,11 @@ impl Event {
 /// ```
 /// # use sentry_contrib_native::Event;
 /// let uuid = Event::new().capture();
-/// println!("event sent has UUID \"{}\"", uuid);
+/// println!("event sent has UUID: \"{}\"", uuid);
+/// println!(
+///     "event sent has Sentry service compatible UUID: \"{}\"",
+///     uuid.to_plain()
+/// );
 /// ```
 #[derive(Debug, Copy, Clone)]
 pub struct Uuid(sys::Uuid);
@@ -271,10 +275,10 @@ impl Uuid {
     ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::Uuid;
+    /// # use sentry_contrib_native::{Event, Uuid};
     /// assert_eq!(
     ///     "00000000-0000-0000-0000-000000000000",
-    ///     Uuid::new().to_string()
+    ///     Event::new().capture().to_string()
     /// );
     /// ```
     #[must_use]
@@ -287,33 +291,72 @@ impl Uuid {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Uuid;
-    /// Uuid::from_bytes([0; 16]);
+    /// let uuid = Uuid::from_bytes([0; 16]);
     /// ```
     #[must_use]
-    pub const fn from_bytes(bytes: [c_char; 16]) -> Self {
-        Self(sys::Uuid { bytes })
+    #[allow(clippy::missing_const_for_fn)]
+    pub fn from_bytes(bytes: [u8; 16]) -> Self {
+        Self(sys::Uuid {
+            bytes: unsafe { mem::transmute(bytes) },
+        })
     }
 
     /// Returns the bytes of the [`Uuid`].
     ///
     /// # Examples
     /// ```
-    /// # use sentry_contrib_native::Uuid;
-    /// assert_eq!([0; 16], Uuid::new().into_bytes());
+    /// # use sentry_contrib_native::{Event, Uuid};
+    /// assert_eq!([0; 16], Event::new().capture().into_bytes());
     /// ```
     #[must_use]
-    pub const fn into_bytes(self) -> [c_char; 16] {
-        self.0.bytes
+    #[allow(clippy::missing_const_for_fn)]
+    pub fn into_bytes(self) -> [u8; 16] {
+        unsafe { mem::transmute(self.0.bytes) }
+    }
+
+    /// Yield the bytes of the [`Uuid`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Event, Uuid};
+    /// assert_eq!([0; 16], Event::new().capture().as_bytes());
+    /// ```
+    #[must_use]
+    pub fn as_bytes(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.0.bytes.as_ptr().cast(), self.0.bytes.len()) }
+    }
+
+    /// Yield the UUID without dashes.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Event, Uuid};
+    /// assert_eq!(
+    ///     "00000000000000000000000000000000",
+    ///     Event::new().capture().to_plain()
+    /// );
+    /// ```
+    #[must_use]
+    pub fn to_plain(&self) -> String {
+        let mut uuid = self.to_string();
+        uuid.retain(|c| c != '-');
+        uuid
     }
 }
 
-impl From<[c_char; 16]> for Uuid {
-    fn from(value: [c_char; 16]) -> Self {
+impl AsRef<[u8]> for Uuid {
+    fn as_ref(&self) -> &[u8] {
+        self.as_bytes()
+    }
+}
+
+impl From<[u8; 16]> for Uuid {
+    fn from(value: [u8; 16]) -> Self {
         Self::from_bytes(value)
     }
 }
 
-impl From<Uuid> for [c_char; 16] {
+impl From<Uuid> for [u8; 16] {
     fn from(value: Uuid) -> Self {
         value.into_bytes()
     }
@@ -376,8 +419,23 @@ fn event() -> anyhow::Result<()> {
 
 #[test]
 fn uuid() {
+    assert_eq!(Uuid::new(), Uuid::new());
+
     assert_eq!(
         "00000000-0000-0000-0000-000000000000",
         Uuid::new().to_string()
     );
+
+    assert_eq!("00000000000000000000000000000000", Uuid::new().to_plain());
+
+    assert_eq!(
+        "00000000-0000-0000-0000-000000000000",
+        Uuid::new().to_string()
+    );
+
+    assert_eq!(Uuid::new(), Uuid::from_bytes(Uuid::new().into_bytes()));
+
+    assert_eq!([0; 16], Uuid::new().into_bytes());
+
+    assert_eq!([0; 16], Uuid::new().as_bytes());
 }

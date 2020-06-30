@@ -64,7 +64,7 @@ pub extern "C" fn logger(level: i32, message: *const c_char, args: *mut c_void) 
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 5000)]
+#[rusty_fork::test_fork(timeout_ms = 60000)]
 fn logger_test() -> anyhow::Result<()> {
     use crate::Options;
     use std::cell::RefCell;
@@ -85,7 +85,7 @@ fn logger_test() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 5000)]
+#[rusty_fork::test_fork(timeout_ms = 60000)]
 #[should_panic]
 fn catch_panic() -> anyhow::Result<()> {
     use crate::Options;

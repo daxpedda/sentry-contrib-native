@@ -596,7 +596,7 @@ pub struct Parts {
 }
 
 #[cfg(all(test, feature = "custom-transport"))]
-#[rusty_fork::test_fork(timeout_ms = 5000)]
+#[rusty_fork::test_fork(timeout_ms = 60000)]
 fn transport() -> anyhow::Result<()> {
     use crate::Event;
     use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -659,7 +659,7 @@ fn transport() -> anyhow::Result<()> {
 }
 
 #[cfg(all(test, feature = "custom-transport"))]
-#[rusty_fork::test_fork(timeout_ms = 5000)]
+#[rusty_fork::test_fork(timeout_ms = 60000)]
 fn dsn() -> anyhow::Result<()> {
     use crate::Event;
 

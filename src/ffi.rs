@@ -212,7 +212,7 @@ mod rtoc {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 5000)]
+#[rusty_fork::test_fork(timeout_ms = 60000)]
 #[should_panic]
 fn catch_panic() {
     catch(|| panic!("test"))

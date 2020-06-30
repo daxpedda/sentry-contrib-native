@@ -97,7 +97,7 @@ pub fn set_hook(
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 5000)]
+#[rusty_fork::test_fork(timeout_ms = 60000)]
 fn hook() -> anyhow::Result<()> {
     use std::{
         sync::atomic::{AtomicBool, Ordering},

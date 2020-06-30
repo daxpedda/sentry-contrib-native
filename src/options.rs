@@ -944,7 +944,7 @@ fn options() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 5000)]
+#[rusty_fork::test_fork(timeout_ms = 60000)]
 #[should_panic]
 fn options_fail() -> anyhow::Result<()> {
     Options::new().init()?;
@@ -954,7 +954,7 @@ fn options_fail() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 30000)]
+#[rusty_fork::test_fork(timeout_ms = 60000)]
 fn threaded_stress() -> anyhow::Result<()> {
     use crate::test;
     use std::{
@@ -1061,7 +1061,7 @@ fn threaded_stress() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 30000)]
+#[rusty_fork::test_fork(timeout_ms = 60000)]
 fn sync() -> anyhow::Result<()> {
     use crate::test;
     use anyhow::{anyhow, Result};

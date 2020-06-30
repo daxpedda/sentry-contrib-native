@@ -71,9 +71,9 @@ impl Breadcrumb {
     /// ```
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
-    pub fn new(ty: Option<String>, message: Option<String>) -> Self {
+    pub fn new(r#type: Option<String>, message: Option<String>) -> Self {
         Self {
-            ty,
+            ty: r#type,
             message,
             map: BTreeMap::new(),
         }

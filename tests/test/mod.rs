@@ -138,7 +138,7 @@ pub async fn events(events: Vec<(fn() -> Uuid, fn(Event))>) -> Result<()> {
     options.set_logger(|level, message| eprintln!("[{}]: {}", level, message));
     #[cfg(feature = "custom-transport")]
     options.set_transport(Transport::new);
-    let shutdown = options.init()?;
+    let _shutdown = options.init()?;
 
     let mut uuids = Vec::new();
     let mut checks = Vec::new();
@@ -173,8 +173,6 @@ pub async fn events(events: Vec<(fn() -> Uuid, fn(Event))>) -> Result<()> {
             async move { event(client, api_url, uuid).await },
         ));
     }
-
-    shutdown.shutdown();
 
     for (task, check) in tasks.into_iter().zip(checks) {
         let (event, response) = task.await??;

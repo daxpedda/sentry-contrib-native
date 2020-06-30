@@ -164,7 +164,7 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">5000</span>)]</span>
+<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
 <span class="kw">fn</span> <span class="ident">logger_test</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">Options</span>;
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
@@ -185,7 +185,7 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">5000</span>)]</span>
+<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
 <span class="attribute">#[<span class="ident">should_panic</span>]</span>
 <span class="kw">fn</span> <span class="ident">catch_panic</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">Options</span>;

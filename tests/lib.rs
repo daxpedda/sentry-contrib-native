@@ -20,13 +20,23 @@ use std::path::{Path, PathBuf};
 #[tokio::test(threaded_scheduler)]
 async fn event() -> Result<()> {
     fn lib_path() -> PathBuf {
-        PathBuf::from(env!("OUT_DIR"))
+        let mut path = PathBuf::from(env!("OUT_DIR"))
             .parent()
             .and_then(Path::parent)
             .and_then(Path::parent)
             .unwrap()
-            .join("deps")
-            .join("dylib")
+            .join("deps");
+
+        #[cfg(windows)]
+        {
+            path = path.join("dylib");
+        }
+        #[cfg(not(windows))]
+        {
+            path = path.join("libdylib.so");
+        }
+
+        path
     }
 
     test::events(

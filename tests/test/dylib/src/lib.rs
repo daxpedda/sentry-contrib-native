@@ -1,4 +1,4 @@
 #[no_mangle]
-pub fn test() -> bool {
+pub extern "C" fn test() -> bool {
     true
 }

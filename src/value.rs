@@ -235,6 +235,25 @@ impl Value {
         }
     }
 
+    /// Returns [`Some`] with the inner value if `self` is [`Value::Bool`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Value;
+    /// let mut value = Value::new(true);
+    /// value.as_mut_bool().map(|value| *value = false);
+    ///
+    /// assert_eq!(Some(false), value.as_bool());
+    /// ```
+    #[must_use]
+    pub fn as_mut_bool(&mut self) -> Option<&mut bool> {
+        if let Self::Bool(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
     /// Returns [`Ok`] with the inner value if `self` is [`Value::Bool`].
     ///
     /// # Errors
@@ -284,6 +303,25 @@ impl Value {
     pub fn as_int(&self) -> Option<i32> {
         if let Self::Int(value) = self {
             Some(*value)
+        } else {
+            None
+        }
+    }
+
+    /// Returns [`Some`] with the inner value if `self` is [`Value::Int`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Value;
+    /// let mut value = Value::new(10);
+    /// value.as_mut_int().map(|value| *value = 5);
+    ///
+    /// assert_eq!(Some(5), value.as_int());
+    /// ```
+    #[must_use]
+    pub fn as_mut_int(&mut self) -> Option<&mut i32> {
+        if let Self::Int(value) = self {
+            Some(value)
         } else {
             None
         }
@@ -343,6 +381,25 @@ impl Value {
         }
     }
 
+    /// Returns [`Some`] with the inner value if `self` is [`Value::Double`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Value;
+    /// let mut value = Value::new(10.);
+    /// value.as_mut_double().map(|value| *value = 5.);
+    ///
+    /// assert_eq!(Some(5.), value.as_double());
+    /// ```
+    #[must_use]
+    pub fn as_mut_double(&mut self) -> Option<&mut f64> {
+        if let Self::Double(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
     /// Returns [`Ok`] with the inner value if `self` is [`Value::Double`].
     ///
     /// # Errors
@@ -390,6 +447,27 @@ impl Value {
     /// ```
     #[must_use]
     pub fn as_str(&self) -> Option<&str> {
+        if let Self::String(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    /// Returns [`Some`] with the inner value if `self` is [`Value::String`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Value;
+    /// let mut value = Value::new("test");
+    /// value
+    ///     .as_mut_str()
+    ///     .map(|value| value.get_mut(0..1).unwrap().make_ascii_uppercase());
+    ///
+    /// assert_eq!(Some("Test"), value.as_str());
+    /// ```
+    #[must_use]
+    pub fn as_mut_str(&mut self) -> Option<&mut str> {
         if let Self::String(value) = self {
             Some(value)
         } else {
@@ -454,6 +532,27 @@ impl Value {
         }
     }
 
+    /// Returns [`Some`] with the inner value if `self` is [`Value::List`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Value;
+    /// # fn main() -> anyhow::Result<()> {
+    /// let mut value = Value::new(vec!["test 1", "test 2"]);
+    /// value.as_mut_list().map(|value| value[0] = "test 3".into());
+    ///
+    /// assert_eq!(Some("test 3"), value.into_list()?[0].as_str());
+    /// # Ok(()) }
+    /// ```
+    #[must_use]
+    pub fn as_mut_list(&mut self) -> Option<&mut Vec<Self>> {
+        if let Self::List(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
     /// Returns [`Ok`] with the inner value if `self` is [`Value::List`].
     ///
     /// # Errors
@@ -511,6 +610,32 @@ impl Value {
     /// ```
     #[must_use]
     pub fn as_map(&self) -> Option<&BTreeMap<String, Self>> {
+        if let Self::Map(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    /// Returns [`Some`] with the inner value if `self` is [`Value::Map`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Value;
+    /// # use std::{collections::BTreeMap, iter::FromIterator};
+    /// # fn main() -> anyhow::Result<()> {
+    /// let mut value = Value::new(vec![("test key 1", false), ("test key 2", false)]);
+    /// value
+    ///     .as_mut_map()
+    ///     .and_then(|value| value.get_mut("test key 1"))
+    ///     .and_then(|value| value.as_mut_bool())
+    ///     .map(|value| *value = true);
+    ///
+    /// assert_eq!(Some(true), value.into_map()?["test key 1"].as_bool());
+    /// # Ok(()) }
+    /// ```
+    #[must_use]
+    pub fn as_mut_map(&mut self) -> Option<&mut BTreeMap<String, Self>> {
         if let Self::Map(value) = self {
             Some(value)
         } else {
@@ -923,6 +1048,7 @@ fn value_methods() {
 
     assert!(Value::new(true).is_bool());
     assert_eq!(Some(true), Value::new(true).as_bool());
+    assert_eq!(Some(&mut true), Value::new(true).as_mut_bool());
     assert_eq!(Ok(true), Value::new(true).into_bool());
     assert_eq!(
         Err(Error::TryConvert(Value::new(()))),
@@ -931,6 +1057,7 @@ fn value_methods() {
 
     assert!(Value::new(10).is_int());
     assert_eq!(Some(10), Value::new(10).as_int());
+    assert_eq!(Some(&mut 10), Value::new(10).as_mut_int());
     assert_eq!(Ok(10), Value::new(10).into_int());
     assert_eq!(
         Err(Error::TryConvert(failure.clone())),
@@ -939,6 +1066,7 @@ fn value_methods() {
 
     assert!(Value::new(10.).is_double());
     assert_eq!(Some(10.), Value::new(10.).as_double());
+    assert_eq!(Some(&mut 10.), Value::new(10.).as_mut_double());
     assert_eq!(Ok(10.), Value::new(10.).into_double());
     assert_eq!(
         Err(Error::TryConvert(failure.clone())),
@@ -947,6 +1075,8 @@ fn value_methods() {
 
     assert!(Value::new("test").is_string());
     assert_eq!(Some("test"), Value::new("test").as_str());
+    let mut test = String::from("test");
+    assert_eq!(Some(test.as_mut_str()), Value::new("test").as_mut_str());
     assert_eq!(Ok(String::from("test")), Value::new("test").into_string());
     assert_eq!(
         Err(Error::TryConvert(failure.clone())),
@@ -956,6 +1086,8 @@ fn value_methods() {
     let list = vec![Value::from("test 1"), "test 2".into()];
     assert!(Value::new(list.clone()).is_list());
     assert_eq!(Some(&list), Value::new(list.clone()).as_list());
+    let mut list2 = list.clone();
+    assert_eq!(Some(&mut list2), Value::new(list.clone()).as_mut_list());
     assert_eq!(Ok(list.clone()), Value::new(list).into_list());
     assert_eq!(
         Err(Error::TryConvert(failure.clone())),
@@ -968,6 +1100,8 @@ fn value_methods() {
     ]);
     assert!(Value::new(map.clone()).is_map());
     assert_eq!(Some(&map), Value::new(map.clone()).as_map());
+    let mut map2 = map.clone();
+    assert_eq!(Some(&mut map2), Value::new(map.clone()).as_mut_map());
     assert_eq!(Ok(map.clone()), Value::new(map).into_map());
     assert_eq!(Err(Error::TryConvert(failure.clone())), failure.into_map());
 }

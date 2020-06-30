@@ -729,6 +729,8 @@
 <span id="729">729</span>
 <span id="730">730</span>
 <span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -737,6 +739,8 @@
     <span class="ident">clippy</span>::<span class="ident">pedantic</span>,
     <span class="ident">missing_docs</span>
 )]</span>
+<span class="comment">// currently nightly allows many more const fn&#39;s than stable or beta</span>
+<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_const_for_fn</span>)]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(
     <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>,
     <span class="ident">feature</span>(<span class="ident">doc_cfg</span>),

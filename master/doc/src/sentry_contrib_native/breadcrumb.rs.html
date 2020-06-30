@@ -108,6 +108,21 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry breadcrumb implementation.</span>
 
@@ -128,9 +143,7 @@
 <span class="doccomment">/// # use sentry_contrib_native::Breadcrumb;</span>
 <span class="doccomment">/// # use std::collections::BTreeMap;</span>
 <span class="doccomment">/// let mut breadcrumb = Breadcrumb::new(None, Some(&quot;test message&quot;.into()));</span>
-<span class="doccomment">/// let mut data = BTreeMap::new();</span>
-<span class="doccomment">/// data.insert(&quot;some extra data&quot;, &quot;test data&quot;);</span>
-<span class="doccomment">/// breadcrumb.insert(&quot;data&quot;.into(), data.into());</span>
+<span class="doccomment">/// breadcrumb.insert(&quot;data&quot;, vec![&quot;some extra data&quot;, &quot;test data&quot;]);</span>
 <span class="doccomment">/// breadcrumb.add();</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
@@ -192,6 +205,18 @@
         }
     }
 
+    <span class="doccomment">/// Inserts a key-value pair into the [`Breadcrumb`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// # use sentry_contrib_native::Breadcrumb;</span>
+    <span class="doccomment">/// let mut breadcrumb = Breadcrumb::new(None, None);</span>
+    <span class="doccomment">/// breadcrumb.insert(&quot;data&quot;, vec![(&quot;data&quot;, &quot;test data&quot;)]);</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">V</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">S</span>, <span class="ident">value</span>: <span class="ident">V</span>) {
+        <span class="self">self</span>.<span class="ident">deref_mut</span>().<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">into</span>(), <span class="ident">value</span>.<span class="ident">into</span>());
+    }
+
     <span class="doccomment">/// Adds the [`Breadcrumb`] to be sent in case of an [`Event::capture`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
@@ -217,6 +242,11 @@
     <span class="kw">let</span> <span class="ident">breadcrumb</span> <span class="op">=</span> <span class="ident">Breadcrumb</span>::<span class="ident">new</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()));
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="ident">breadcrumb</span>.<span class="ident">ty</span>);
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="ident">breadcrumb</span>.<span class="ident">message</span>);
+    <span class="ident">breadcrumb</span>.<span class="ident">add</span>();
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">breadcrumb</span> <span class="op">=</span> <span class="ident">Breadcrumb</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
+    <span class="ident">breadcrumb</span>.<span class="ident">insert</span>(<span class="string">&quot;test&quot;</span>, <span class="string">&quot;test&quot;</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>), <span class="ident">breadcrumb</span>.<span class="ident">get</span>(<span class="string">&quot;test&quot;</span>).<span class="ident">and_then</span>(<span class="ident">Value</span>::<span class="ident">as_str</span>));
     <span class="ident">breadcrumb</span>.<span class="ident">add</span>()
 }
 </pre></div>

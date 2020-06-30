@@ -381,6 +381,76 @@
 <span id="381">381</span>
 <span id="382">382</span>
 <span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry event implementation.</span>
 
@@ -391,9 +461,9 @@
     <span class="ident">ffi</span>::<span class="ident">CStr</span>,
     <span class="ident">fmt</span>::{<span class="ident">Display</span>, <span class="ident">Formatter</span>, <span class="prelude-ty">Result</span>},
     <span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>},
+    <span class="ident">mem</span>,
     <span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>},
-    <span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_char</span>,
-    <span class="ident">ptr</span>,
+    <span class="ident">ptr</span>, <span class="ident">slice</span>,
 };
 
 <span class="doccomment">/// A Sentry event.</span>
@@ -403,9 +473,7 @@
 <span class="doccomment">/// # use sentry_contrib_native::Event;</span>
 <span class="doccomment">/// # use std::collections::BTreeMap;</span>
 <span class="doccomment">/// let mut event = Event::new();</span>
-<span class="doccomment">/// let mut extra = BTreeMap::new();</span>
-<span class="doccomment">/// extra.insert(&quot;some extra data&quot;, &quot;test data&quot;);</span>
-<span class="doccomment">/// event.insert(&quot;extra&quot;.into(), extra.into());</span>
+<span class="doccomment">/// event.insert(&quot;extra&quot;, vec![(&quot;data&quot;, &quot;test data&quot;)]);</span>
 <span class="doccomment">/// event.capture();</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
@@ -508,6 +576,18 @@
         }
     }
 
+    <span class="doccomment">/// Inserts a key-value pair into the [`Event`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// # use sentry_contrib_native::Event;</span>
+    <span class="doccomment">/// let mut event = Event::new();</span>
+    <span class="doccomment">/// event.insert(&quot;extra&quot;, vec![(&quot;data&quot;, &quot;test data&quot;)]);</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">V</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="ident">S</span>, <span class="ident">value</span>: <span class="ident">V</span>) {
+        <span class="self">self</span>.<span class="ident">deref_mut</span>().<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">into</span>(), <span class="ident">value</span>.<span class="ident">into</span>());
+    }
+
     <span class="doccomment">/// Generate stacktrace.</span>
     <span class="kw">fn</span> <span class="ident">stacktrace</span>(<span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="kw">unsafe</span> {
@@ -534,7 +614,7 @@
     <span class="doccomment">/// event.capture();</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_stacktrace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">len</span>: <span class="ident">usize</span>) {
-        <span class="self">self</span>.<span class="ident">insert</span>(<span class="string">&quot;threads&quot;</span>.<span class="ident">into</span>(), <span class="self">Self</span>::<span class="ident">stacktrace</span>(<span class="ident">len</span>).<span class="ident">into</span>());
+        <span class="self">self</span>.<span class="ident">insert</span>(<span class="string">&quot;threads&quot;</span>, <span class="self">Self</span>::<span class="ident">stacktrace</span>(<span class="ident">len</span>));
     }
 
     <span class="doccomment">/// Adds an exception to the [`Event`] along with a stacktrace with `len`</span>
@@ -564,7 +644,7 @@
             .<span class="ident">expect</span>(<span class="string">&quot;failed to move stacktrace&quot;</span>);
 
         <span class="ident">exception</span>.<span class="ident">insert</span>(<span class="string">&quot;stacktrace&quot;</span>.<span class="ident">into</span>(), <span class="ident">stacktrace</span>);
-        <span class="self">self</span>.<span class="ident">insert</span>(<span class="string">&quot;exception&quot;</span>.<span class="ident">into</span>(), <span class="ident">exception</span>.<span class="ident">into</span>());
+        <span class="self">self</span>.<span class="ident">insert</span>(<span class="string">&quot;exception&quot;</span>, <span class="ident">exception</span>);
     }
 
     <span class="doccomment">/// Sends the [`Event`].</span>
@@ -577,9 +657,7 @@
     <span class="doccomment">/// # use sentry_contrib_native::Event;</span>
     <span class="doccomment">/// # use std::collections::BTreeMap;</span>
     <span class="doccomment">/// let mut event = Event::new();</span>
-    <span class="doccomment">/// let mut extra = BTreeMap::new();</span>
-    <span class="doccomment">/// extra.insert(&quot;some extra data&quot;, &quot;test data&quot;);</span>
-    <span class="doccomment">/// event.insert(&quot;extra&quot;.into(), extra.into());</span>
+    <span class="doccomment">/// event.insert(&quot;extra&quot;, vec![(&quot;data&quot;, &quot;test data&quot;)]);</span>
     <span class="doccomment">/// event.capture();</span>
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">must_use_candidate</span>)]</span>
@@ -599,7 +677,11 @@
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// # use sentry_contrib_native::Event;</span>
 <span class="doccomment">/// let uuid = Event::new().capture();</span>
-<span class="doccomment">/// println!(&quot;event sent has UUID \&quot;{}\&quot;&quot;, uuid);</span>
+<span class="doccomment">/// println!(&quot;event sent has UUID: \&quot;{}\&quot;&quot;, uuid);</span>
+<span class="doccomment">/// println!(</span>
+<span class="doccomment">///     &quot;event sent has Sentry service compatible UUID: \&quot;{}\&quot;&quot;,</span>
+<span class="doccomment">///     uuid.to_plain()</span>
+<span class="doccomment">/// );</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Uuid</span>(<span class="ident">sys</span>::<span class="ident">Uuid</span>);
@@ -655,10 +737,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use sentry_contrib_native::Uuid;</span>
+    <span class="doccomment">/// # use sentry_contrib_native::{Event, Uuid};</span>
     <span class="doccomment">/// assert_eq!(</span>
     <span class="doccomment">///     &quot;00000000-0000-0000-0000-000000000000&quot;,</span>
-    <span class="doccomment">///     Uuid::new().to_string()</span>
+    <span class="doccomment">///     Event::new().capture().to_string()</span>
     <span class="doccomment">/// );</span>
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
@@ -671,33 +753,72 @@
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// # use sentry_contrib_native::Uuid;</span>
-    <span class="doccomment">/// Uuid::from_bytes([0; 16]);</span>
+    <span class="doccomment">/// let uuid = Uuid::from_bytes([0; 16]);</span>
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: [<span class="ident">c_char</span>; <span class="number">16</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">sys</span>::<span class="ident">Uuid</span> { <span class="ident">bytes</span> })
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_const_for_fn</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="number">16</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>(<span class="ident">sys</span>::<span class="ident">Uuid</span> {
+            <span class="ident">bytes</span>: <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">transmute</span>(<span class="ident">bytes</span>) },
+        })
     }
 
     <span class="doccomment">/// Returns the bytes of the [`Uuid`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// # use sentry_contrib_native::Uuid;</span>
-    <span class="doccomment">/// assert_eq!([0; 16], Uuid::new().into_bytes());</span>
+    <span class="doccomment">/// # use sentry_contrib_native::{Event, Uuid};</span>
+    <span class="doccomment">/// assert_eq!([0; 16], Event::new().capture().into_bytes());</span>
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">into_bytes</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">c_char</span>; <span class="number">16</span>] {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">bytes</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_const_for_fn</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_bytes</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> [<span class="ident">u8</span>; <span class="number">16</span>] {
+        <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">transmute</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">bytes</span>) }
+    }
+
+    <span class="doccomment">/// Yield the bytes of the [`Uuid`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// # use sentry_contrib_native::{Event, Uuid};</span>
+    <span class="doccomment">/// assert_eq!([0; 16], Event::new().capture().as_bytes());</span>
+    <span class="doccomment">/// ```</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+        <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">bytes</span>.<span class="ident">as_ptr</span>().<span class="ident">cast</span>(), <span class="self">self</span>.<span class="number">0</span>.<span class="ident">bytes</span>.<span class="ident">len</span>()) }
+    }
+
+    <span class="doccomment">/// Yield the UUID without dashes.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Examples</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// # use sentry_contrib_native::{Event, Uuid};</span>
+    <span class="doccomment">/// assert_eq!(</span>
+    <span class="doccomment">///     &quot;00000000000000000000000000000000&quot;,</span>
+    <span class="doccomment">///     Event::new().capture().to_plain()</span>
+    <span class="doccomment">/// );</span>
+    <span class="doccomment">/// ```</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_plain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">uuid</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">to_string</span>();
+        <span class="ident">uuid</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">!</span><span class="op">=</span> <span class="string">&#39;-&#39;</span>);
+        <span class="ident">uuid</span>
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>[<span class="ident">c_char</span>; <span class="number">16</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Uuid</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: [<span class="ident">c_char</span>; <span class="number">16</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Uuid</span> {
+    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+        <span class="self">self</span>.<span class="ident">as_bytes</span>()
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">16</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Uuid</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: [<span class="ident">u8</span>; <span class="number">16</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span>::<span class="ident">from_bytes</span>(<span class="ident">value</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Uuid</span><span class="op">&gt;</span> <span class="kw">for</span> [<span class="ident">c_char</span>; <span class="number">16</span>] {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Uuid</span><span class="op">&gt;</span> <span class="kw">for</span> [<span class="ident">u8</span>; <span class="number">16</span>] {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">Uuid</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">value</span>.<span class="ident">into_bytes</span>()
     }
@@ -741,6 +862,10 @@
     <span class="ident">event</span>.<span class="ident">capture</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">Event</span>::<span class="ident">new</span>();
+    <span class="ident">event</span>.<span class="ident">insert</span>(<span class="string">&quot;extra&quot;</span>, <span class="macro">vec</span><span class="macro">!</span>[(<span class="string">&quot;data&quot;</span>, <span class="string">&quot;test data&quot;</span>)]);
+    <span class="ident">event</span>.<span class="ident">capture</span>();
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">Event</span>::<span class="ident">new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">exception</span> <span class="op">=</span> <span class="ident">BTreeMap</span>::<span class="ident">new</span>();
     <span class="ident">exception</span>.<span class="ident">insert</span>(<span class="string">&quot;type&quot;</span>.<span class="ident">into</span>(), <span class="string">&quot;test type&quot;</span>.<span class="ident">into</span>());
     <span class="ident">exception</span>.<span class="ident">insert</span>(<span class="string">&quot;value&quot;</span>.<span class="ident">into</span>(), <span class="string">&quot;test value&quot;</span>.<span class="ident">into</span>());
@@ -760,10 +885,25 @@
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">uuid</span>() {
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Uuid</span>::<span class="ident">new</span>(), <span class="ident">Uuid</span>::<span class="ident">new</span>());
+
     <span class="macro">assert_eq</span><span class="macro">!</span>(
         <span class="string">&quot;00000000-0000-0000-0000-000000000000&quot;</span>,
         <span class="ident">Uuid</span>::<span class="ident">new</span>().<span class="ident">to_string</span>()
     );
+
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;00000000000000000000000000000000&quot;</span>, <span class="ident">Uuid</span>::<span class="ident">new</span>().<span class="ident">to_plain</span>());
+
+    <span class="macro">assert_eq</span><span class="macro">!</span>(
+        <span class="string">&quot;00000000-0000-0000-0000-000000000000&quot;</span>,
+        <span class="ident">Uuid</span>::<span class="ident">new</span>().<span class="ident">to_string</span>()
+    );
+
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Uuid</span>::<span class="ident">new</span>(), <span class="ident">Uuid</span>::<span class="ident">from_bytes</span>(<span class="ident">Uuid</span>::<span class="ident">new</span>().<span class="ident">into_bytes</span>()));
+
+    <span class="macro">assert_eq</span><span class="macro">!</span>([<span class="number">0</span>; <span class="number">16</span>], <span class="ident">Uuid</span>::<span class="ident">new</span>().<span class="ident">into_bytes</span>());
+
+    <span class="macro">assert_eq</span><span class="macro">!</span>([<span class="number">0</span>; <span class="number">16</span>], <span class="ident">Uuid</span>::<span class="ident">new</span>().<span class="ident">as_bytes</span>());
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "sentry_contrib_native";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

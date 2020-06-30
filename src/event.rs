@@ -19,9 +19,7 @@ use std::{
 /// # use sentry_contrib_native::Event;
 /// # use std::collections::BTreeMap;
 /// let mut event = Event::new();
-/// let mut extra = BTreeMap::new();
-/// extra.insert("some extra data", "test data");
-/// event.insert("extra".into(), extra.into());
+/// event.insert("extra", vec![("data", "test data")]);
 /// event.capture();
 /// ```
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
@@ -124,6 +122,18 @@ impl Event {
         }
     }
 
+    /// Inserts a key-value pair into the [`Event`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Event;
+    /// let mut event = Event::new();
+    /// event.insert("extra", vec![("data", "test data")]);
+    /// ```
+    pub fn insert<S: Into<String>, V: Into<Value>>(&mut self, key: S, value: V) {
+        self.deref_mut().insert(key.into(), value.into());
+    }
+
     /// Generate stacktrace.
     fn stacktrace(len: usize) -> BTreeMap<String, Value> {
         let event = unsafe {
@@ -180,7 +190,7 @@ impl Event {
             .expect("failed to move stacktrace");
 
         exception.insert("stacktrace".into(), stacktrace);
-        self.insert("exception".into(), exception.into());
+        self.insert("exception", exception);
     }
 
     /// Sends the [`Event`].
@@ -193,9 +203,7 @@ impl Event {
     /// # use sentry_contrib_native::Event;
     /// # use std::collections::BTreeMap;
     /// let mut event = Event::new();
-    /// let mut extra = BTreeMap::new();
-    /// extra.insert("some extra data", "test data");
-    /// event.insert("extra".into(), extra.into());
+    /// event.insert("extra", vec![("data", "test data")]);
     /// event.capture();
     /// ```
     #[allow(clippy::must_use_candidate)]
@@ -397,6 +405,10 @@ fn event() -> anyhow::Result<()> {
     let mut event = Event::new_message(Level::Debug, None, "test");
     event.add_stacktrace(0);
     assert!(event.get("threads").is_some());
+    event.capture();
+
+    let mut event = Event::new();
+    event.insert("extra", vec![("data", "test data")]);
     event.capture();
 
     let mut event = Event::new();

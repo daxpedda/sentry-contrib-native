@@ -324,7 +324,7 @@ pub fn user_consent_get() -> Consent {
 /// ```
 /// # use sentry_contrib_native::{Options, remove_user, User};
 /// let mut user = User::new();
-/// user.insert("id".into(), 1.into());
+/// user.insert("id", 1);
 /// user.set();
 ///
 /// remove_user();
@@ -695,7 +695,7 @@ fn threaded_stress() -> anyhow::Result<()> {
         },
         |index| {
             let mut user = User::new();
-            user.insert("id".into(), index.into());
+            user.insert("id", index);
             user.set();
         },
         |_| crate::remove_user(),

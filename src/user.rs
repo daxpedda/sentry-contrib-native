@@ -12,7 +12,7 @@ use std::{
 /// ```
 /// # use sentry_contrib_native::User;
 /// let mut user = User::new();
-/// user.insert("id".into(), 1.into());
+/// user.insert("id", 1);
 /// user.set();
 /// ```
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
@@ -58,6 +58,18 @@ impl User {
         Self(BTreeMap::new())
     }
 
+    /// Inserts a key-value pair into the [`User`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::User;
+    /// let mut user = User::new();
+    /// user.insert("id", 1);
+    /// ```
+    pub fn insert<S: Into<String>, V: Into<Value>>(&mut self, key: S, value: V) {
+        self.deref_mut().insert(key.into(), value.into());
+    }
+
     /// Sets the specified user.
     ///
     /// # Panics
@@ -67,7 +79,7 @@ impl User {
     /// ```
     /// # use sentry_contrib_native::User;
     /// let mut user = User::new();
-    /// user.insert("id".into(), 1.into());
+    /// user.insert("id", 1);
     /// user.set();
     /// ```
     pub fn set(self) {
@@ -82,5 +94,9 @@ impl User {
 
 #[test]
 fn user() {
-    User::new().set()
+    User::new().set();
+
+    let mut user = User::new();
+    user.insert("test", "test");
+    user.set()
 }

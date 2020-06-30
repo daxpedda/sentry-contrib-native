@@ -79,7 +79,7 @@ pub fn set_hook(
                 extra.insert("column", column.into());
             }
 
-            event.insert("extra".into(), extra.into());
+            event.insert("extra", extra);
         }
 
         event.add_stacktrace(0);

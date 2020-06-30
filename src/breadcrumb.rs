@@ -17,9 +17,7 @@ use std::{
 /// # use sentry_contrib_native::Breadcrumb;
 /// # use std::collections::BTreeMap;
 /// let mut breadcrumb = Breadcrumb::new(None, Some("test message".into()));
-/// let mut data = BTreeMap::new();
-/// data.insert("some extra data", "test data");
-/// breadcrumb.insert("data".into(), data.into());
+/// breadcrumb.insert("data", vec!["some extra data", "test data"]);
 /// breadcrumb.add();
 /// ```
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
@@ -81,6 +79,18 @@ impl Breadcrumb {
         }
     }
 
+    /// Inserts a key-value pair into the [`Breadcrumb`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Breadcrumb;
+    /// let mut breadcrumb = Breadcrumb::new(None, None);
+    /// breadcrumb.insert("data", vec![("data", "test data")]);
+    /// ```
+    pub fn insert<S: Into<String>, V: Into<Value>>(&mut self, key: S, value: V) {
+        self.deref_mut().insert(key.into(), value.into());
+    }
+
     /// Adds the [`Breadcrumb`] to be sent in case of an [`Event::capture`].
     ///
     /// # Panics
@@ -106,5 +116,10 @@ fn breadcrumb() {
     let breadcrumb = Breadcrumb::new(Some("test".into()), Some("test".into()));
     assert_eq!(Some("test".into()), breadcrumb.ty);
     assert_eq!(Some("test".into()), breadcrumb.message);
+    breadcrumb.add();
+
+    let mut breadcrumb = Breadcrumb::new(None, None);
+    breadcrumb.insert("test", "test");
+    assert_eq!(Some("test"), breadcrumb.get("test").and_then(Value::as_str));
     breadcrumb.add()
 }

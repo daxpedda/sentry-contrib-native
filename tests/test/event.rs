@@ -14,6 +14,7 @@ pub enum Response {
 pub struct Event {
     pub title: String,
     pub message: String,
+    pub context: HashMap<String, Value>,
     #[serde(deserialize_with = "tags")]
     pub tags: HashMap<String, String>,
     #[serde(deserialize_with = "entries")]

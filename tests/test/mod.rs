@@ -6,6 +6,7 @@ use anyhow::{anyhow, bail, Result};
 #[cfg(feature = "custom-transport")]
 use custom_transport::Transport;
 use event::{Event, Response};
+use futures_util::future;
 use reqwest::{header::HeaderMap, Client};
 use sentry::{Options, Uuid};
 use sentry_contrib_native as sentry;
@@ -17,11 +18,12 @@ use std::{
     panic::{self, AssertUnwindSafe},
     time::Duration,
 };
+use tokio::time;
 use url::Url;
 
 /// Number of tries to wait for Sentry to process an event. Sentry.io sometimes
 /// takes really long to process those.
-const NUM_OF_TRIES: i32 = 20;
+const NUM_OF_TRIES: u32 = 20;
 /// Time between tries.
 const TIME_BETWEEN_TRIES: Duration = Duration::from_secs(30);
 
@@ -98,13 +100,10 @@ fn slugs(response: &Value, id: &str) -> Option<(String, String)> {
 /// Query event from Sentry service.
 pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<(Event, Value)> {
     // build UUID
-    let mut uuid = uuid.to_string();
-    uuid.retain(|c| c != '-');
+    let uuid = uuid.to_plain();
 
     // build API URL
     let api_url = api_url.join(&format!("{}/", uuid))?;
-
-    let mut response = Value::Null;
 
     // we want to keep retrying until the message arrives at Sentry
     for _ in 0..NUM_OF_TRIES {
@@ -112,11 +111,11 @@ pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<(Event, V
         let request = client.get(api_url.clone());
 
         // wait for the event to arrive at Sentry first!
-        tokio::time::delay_for(TIME_BETWEEN_TRIES).await;
+        time::delay_for(TIME_BETWEEN_TRIES).await;
 
         // get that event!
-        response = request.send().await?.json::<Value>().await?;
-        let event: Response = serde_json::from_value(response.clone())?;
+        let response = request.send().await?.json::<Value>().await?;
+        let event = serde_json::from_value(response.clone())?;
 
         match event {
             Response::Event(event) => return Ok((event, response)),
@@ -128,16 +127,28 @@ pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<(Event, V
         }
     }
 
-    Err(anyhow!("[UUID]: {}\n[Timeout]: {}", uuid, response))
+    Err(anyhow!("[Timeout]: {}", uuid))
 }
 
 #[allow(clippy::type_complexity)]
-pub async fn events(events: Vec<(fn() -> Uuid, fn(Event))>) -> Result<()> {
+/// List of events to send, query and than run checks on.
+pub async fn events(
+    option: Option<fn(&mut Options)>,
+    events: Vec<(fn() -> Uuid, fn(Event))>,
+) -> Result<()> {
+    // build the Sentry client
     let mut options = Options::new();
     options.set_debug(true);
     options.set_logger(|level, message| eprintln!("[{}]: {}", level, message));
     #[cfg(feature = "custom-transport")]
     options.set_transport(Transport::new);
+
+    // apply custom configuration
+    if let Some(option) = option {
+        option(&mut options);
+    }
+
+    // start the Sentry client!
     let _shutdown = options.init()?;
 
     let mut uuids = Vec::new();
@@ -165,22 +176,22 @@ pub async fn events(events: Vec<(fn() -> Uuid, fn(Event))>) -> Result<()> {
     // store check workers
     let mut tasks = Vec::new();
 
-    for uuid in uuids {
+    for (uuid, check) in uuids.into_iter().zip(checks) {
         let client = client.clone();
         let api_url = api_url.clone();
 
-        tasks.push(tokio::spawn(
-            async move { event(client, api_url, uuid).await },
-        ));
+        tasks.push(async move {
+            // get event from the Sentry service
+            let (event, response) = event(client, api_url, uuid).await?;
+
+            // run our checks against it
+            panic::catch_unwind(AssertUnwindSafe(|| check(event.clone())))
+                .map_err(|_| anyhow!("Failed:\nEvent: {:?}\nJson: {}", event, response))
+        });
     }
 
-    for (task, check) in tasks.into_iter().zip(checks) {
-        let (event, response) = task.await??;
-
-        if panic::catch_unwind(AssertUnwindSafe(|| check(event.clone()))).is_err() {
-            bail!("Failed:\nEvent: {:?}\nJson: {}", event, response)
-        }
-    }
+    // poll all tasks
+    future::try_join_all(tasks).await?;
 
     Ok(())
 }

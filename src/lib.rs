@@ -5,6 +5,8 @@
     clippy::pedantic,
     missing_docs
 )]
+// currently nightly allows many more const fn's than stable or beta
+#![allow(clippy::missing_const_for_fn)]
 #![cfg_attr(
     feature = "nightly",
     feature(doc_cfg),

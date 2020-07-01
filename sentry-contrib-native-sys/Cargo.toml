@@ -19,3 +19,7 @@ cmake = "0.1"
 default = ["default-transport"]
 default-transport = []
 nightly = []
+
+[package.metadata.docs.rs]
+features = ["nightly"]
+targets = ["x86_64-unknown-linux-gnu"]

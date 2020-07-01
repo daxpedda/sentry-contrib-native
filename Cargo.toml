@@ -17,10 +17,10 @@ members = ["sentry-contrib-native-sys", "tests/test/dylib"]
 http = { version = "0.2", optional = true }
 once_cell = "1"
 rmpv = "0.4"
-sys = { package = "sentry-contrib-native-sys", path = "sentry-contrib-native-sys", default-features = false }
+sys = { package = "sentry-contrib-native-sys", version = "0.1.0-alpha", path = "sentry-contrib-native-sys", default-features = false }
 thiserror = "1"
 url = { version = "2", optional = true }
-vsprintf = { git = "https://github.com/daxpedda/vsprintf", branch = "fix-windows" }
+vsprintf = { package = "daxpedda-vsprintf", version = "1.0.2-pr" }
 
 [dev-dependencies]
 anyhow = "1"
@@ -54,3 +54,7 @@ test = []
 [[example]]
 name = "custom-transport"
 required-features = ["custom-transport"]
+
+[package.metadata.docs.rs]
+features = ["nightly"]
+targets = ["x86_64-unknown-linux-gnu"]

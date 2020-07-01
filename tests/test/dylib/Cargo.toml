@@ -1,7 +1,6 @@
 [package]
 name = "dylib"
-version = "0.1.0"
-authors = ["daxpedda <daxpedda@gmail.com>"]
+version = "0.0.0"
 edition = "2018"
 publish = false
 

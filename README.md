@@ -198,7 +198,7 @@ For correct testing the following has to be provided:
 Tests may easily exhaust large number of events and you may not want to expose a
 Sentry API token, therefore it is recommended to run tests against a
 [Sentry onpremise server](https://github.com/getsentry/onpremise), it is quiet
-easy to setup.
+easy to set up.
 
 `cargo test --features test`
 

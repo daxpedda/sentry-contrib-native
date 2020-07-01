@@ -15,12 +15,16 @@ and this project adheres to
 - Improved links to the documentation for the `master` branch.
 - Improved general documentation.
 - Update `vsprintf` to the new official version.
+- Improved `custom-transport` example.
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Fixed `custom-transport` example which was crashing because of a
+  use-after-free.
 
 ### Security
 

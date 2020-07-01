@@ -214,8 +214,8 @@ for more details.</p>
 </div><h2 id='reexports' class='section-header'><a href="#reexports">Re-exports</a></h2>
 <table><tr><td><code>pub use <a class="mod" href="https://docs.rs/http/0.2.1/http/index.html" title="mod http">http</a>;</code></td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table><tr class='module-item'><td><a class="struct" href="struct.Breadcrumb.html" title='sentry_contrib_native::Breadcrumb struct'>Breadcrumb</a></td><td class='docblock-short'><p>A Sentry breadcrumb.</p>
-</td></tr><tr class='module-item'><td><a class="struct" href="struct.Dsn.html" title='sentry_contrib_native::Dsn struct'>Dsn</a></td><td class='docblock-short'><span class="stab portability"><code>feature="custom-transport"</code></span><p>Contains the pieces we need to send requests based on the DSN the user
-set on <a href="../sentry_contrib_native/struct.Options.html" title="`Options`"><code>Options</code></a></p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Dsn.html" title='sentry_contrib_native::Dsn struct'>Dsn</a></td><td class='docblock-short'><span class="stab portability"><code>feature="custom-transport"</code></span><p>Contains the pieces that are needed to build correct headers for a request
+based on the given DSN.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Envelope.html" title='sentry_contrib_native::Envelope struct'>Envelope</a></td><td class='docblock-short'><p>The actual body which transports send to Sentry.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Event.html" title='sentry_contrib_native::Event struct'>Event</a></td><td class='docblock-short'><p>A Sentry event.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Options.html" title='sentry_contrib_native::Options struct'>Options</a></td><td class='docblock-short'><p>The Sentry client options.</p>
@@ -226,7 +226,7 @@ set on <a href="../sentry_contrib_native/struct.Options.html" title="`Options`">
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Uuid.html" title='sentry_contrib_native::Uuid struct'>Uuid</a></td><td class='docblock-short'><p>A Sentry UUID.</p>
 </td></tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
 <table><tr class='module-item'><td><a class="enum" href="enum.Consent.html" title='sentry_contrib_native::Consent enum'>Consent</a></td><td class='docblock-short'><p>The state of user consent.</p>
-</td></tr><tr class='module-item'><td><a class="enum" href="enum.Error.html" title='sentry_contrib_native::Error enum'>Error</a></td><td class='docblock-short'><p>[<code>sentry-contrib-native</code>] errors.</p>
+</td></tr><tr class='module-item'><td><a class="enum" href="enum.Error.html" title='sentry_contrib_native::Error enum'>Error</a></td><td class='docblock-short'><p>Errors for this crate.</p>
 </td></tr><tr class='module-item'><td><a class="enum" href="enum.Interface.html" title='sentry_contrib_native::Interface enum'>Interface</a></td><td class='docblock-short'><p>Sentry event interface.</p>
 </td></tr><tr class='module-item'><td><a class="enum" href="enum.Level.html" title='sentry_contrib_native::Level enum'>Level</a></td><td class='docblock-short'><p>Sentry event level.</p>
 </td></tr><tr class='module-item'><td><a class="enum" href="enum.Message.html" title='sentry_contrib_native::Message enum'>Message</a></td><td class='docblock-short'><p>Message received for custom logger.</p>

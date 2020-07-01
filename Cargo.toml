@@ -1,8 +1,14 @@
 [package]
 name = "sentry-contrib-native"
-version = "0.1.0"
+version = "0.1.0-alpha"
 authors = ["daxpedda <daxpedda@gmail.com>"]
 edition = "2018"
+description = "Unofficial bindings to the Sentry Native SDK for Rust"
+readme = "README.md"
+repository = "https://github.com/daxpedda/sentry-contrib-native"
+license = "MIT OR Apache-2.0"
+keywords = ["sentry", "crash", "crashpad", "breakpad", "minidump"]
+categories = ["api-bindings", "development-tools::debugging"]
 
 [workspace]
 members = ["sentry-contrib-native-sys", "tests/test/dylib"]
@@ -42,7 +48,7 @@ url = "2"
 default = ["default-transport"]
 default-transport = ["sys/default-transport"]
 custom-transport = ["http", "url"]
-nightly = []
+nightly = ["sys/nightly"]
 test = []
 
 [[example]]

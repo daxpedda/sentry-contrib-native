@@ -29,7 +29,8 @@
 - [Alternatives](#alternatives)
 - [Changelog](#changelog)
 - [License](#license)
-- [Contribution](#contribution)
+  - [Contribution](#contribution)
+  - [Attribution](#attribution)
 
 ## Description
 
@@ -125,10 +126,10 @@ Currently the following systems are tested with CI:
 - x86_64-pc-windows-msvc
 
 See the [CI itself](https://github.com/daxpedda/sentry-contrib-native/actions)
-for more detailed information. See
-[`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys)
-for more platform and feature support details there, this crate doesn't do
-anything fancy, so we mostly rely on `sentry-native` for support.
+for more detailed information. See the
+[Sentry Native SDK](https://github.com/getsentry/sentry-native) for more
+platform and feature support details there, this crate doesn't do anything
+fancy, so we mostly rely on `sentry-native` for support.
 
 ## Build
 
@@ -142,9 +143,8 @@ provided with the `SENTRY_NATIVE_INSTALL` environment variable.
 Additionally on any other platform than Windows, the development version of
 `curl` is required.
 
-See
-[`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys)
-for more details.
+See the [Sentry Native SDK](https://github.com/getsentry/sentry-native) for more
+details.
 
 ## Crate features
 
@@ -223,14 +223,27 @@ file for details.
 
 Licensed under either of
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or
-  http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0
+  ([LICENSE-APACHE](https://github.com/daxpedda/sentry-contrib-native/blob/master/LICENSE-APACHE)
+  or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license
+  ([LICENSE-MIT](https://github.com/daxpedda/sentry-contrib-native/blob/master/LICENSE-MIT)
+  or http://opensource.org/licenses/MIT)
 
 at your option.
 
-## Contribution
+### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
+
+### Attribution
+
+Used documentation from
+[Sentry Native SDK](https://github.com/getsentry/sentry-native):
+[MIT](https://github.com/getsentry/sentry-native/blob/master/LICENSE)
+
+See the
+[ATTRIBUTION](https://github.com/daxpedda/sentry-contrib-native/blob/master/ATTRIBUTION)
+for more details.

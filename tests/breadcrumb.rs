@@ -1,7 +1,7 @@
 #![warn(
     clippy::all,
-    clippy::nursery,
     clippy::missing_docs_in_private_items,
+    clippy::nursery,
     clippy::pedantic,
     missing_docs
 )]

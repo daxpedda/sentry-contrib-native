@@ -1,6 +1,6 @@
 #![warn(
     clippy::all,
-    //clippy::missing_docs_in_private_items,
+    clippy::missing_docs_in_private_items,
     clippy::nursery,
     clippy::pedantic,
     missing_docs
@@ -8,7 +8,7 @@
 // stable clippy seems to have an issue with await
 #![allow(clippy::used_underscore_binding)]
 
-//!
+//! Example how to use [`reqwest`] with the feature `custom-transport`.
 
 use anyhow::{anyhow, Result};
 use parking_lot::{Condvar, Mutex};
@@ -24,6 +24,7 @@ use tokio::{
     task,
 };
 
+/// Send the request.
 async fn send_sentry_request(client: &Client, request: Request) -> Result<()> {
     let request = request.map(|body| {
         // we cheat so that we don't have to copy all of the bytes of the body
@@ -48,19 +49,21 @@ async fn send_sentry_request(client: &Client, request: Request) -> Result<()> {
     Ok(())
 }
 
-// we can implement our own transport for Sentry data so that we don't pull in
-// C dependencies (COUGH OPENSSL COUGH) that we don't want
+/// We can implement our own transport for Sentry data so that we don't pull in
+/// C dependencies (COUGH OPENSSL COUGH) that we don't want.
 struct Transport {
-    /// we don't currently use custom certs or proxies, so we can just use the
-    /// same client that the rest of ark uses, if we do start doing that, we
-    /// would need to build the client based on the options during startup()
+    /// Client.
     client: Client,
+    /// MPSC {`Sender`].
     sender: Sender<RawEnvelope>,
+    /// Shutdown helpers.
     shutdown: Arc<(Mutex<()>, Condvar)>,
+    /// Tokio runtime [`Handle`].
     rt: Handle,
 }
 
 impl Transport {
+    /// Create a new [`Transport`].
     fn new(client: Client, rt: Handle, options: &Options) -> Self {
         let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
         let shutdown = Arc::new((Mutex::new(()), Condvar::new()));

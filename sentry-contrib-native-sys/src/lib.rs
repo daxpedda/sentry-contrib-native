@@ -1,4 +1,10 @@
-#![warn(clippy::all, clippy::nursery, clippy::pedantic, missing_docs)]
+#![warn(
+    clippy::all,
+    clippy::missing_docs_in_private_items,
+    clippy::nursery,
+    clippy::pedantic,
+    missing_docs
+)]
 #![cfg_attr(
     feature = "nightly",
     feature(external_doc),
@@ -11,8 +17,9 @@ use std::{
     os::raw::{c_char, c_int, c_void},
 };
 
+/// Char type for Windows APIs.
 #[allow(non_camel_case_types)]
-type c_wchar = u16;
+pub type c_wchar = u16;
 
 /// SDK Version
 pub const SDK_USER_AGENT: &str = "sentry.native/0.3.4";
@@ -40,6 +47,7 @@ pub struct Options([u8; 0]);
 /// the module list.
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::missing_docs_in_private_items)]
 pub union Value {
     _bits: u64,
     _double: f64,

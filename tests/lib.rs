@@ -1,7 +1,7 @@
 #![warn(
     clippy::all,
-    clippy::nursery,
     clippy::missing_docs_in_private_items,
+    clippy::nursery,
     clippy::pedantic,
     missing_docs
 )]
@@ -27,13 +27,17 @@ async fn event() -> Result<()> {
             .unwrap()
             .join("deps");
 
-        #[cfg(windows)]
-        {
-            path = path.join("dylib");
-        }
-        #[cfg(not(windows))]
+        #[cfg(target_os = "linux")]
         {
             path = path.join("libdylib.so");
+        }
+        #[cfg(target_os = "macos")]
+        {
+            path = path.join("libdylib.dylib");
+        }
+        #[cfg(target_os = "windows")]
+        {
+            path = path.join("dylib");
         }
 
         path

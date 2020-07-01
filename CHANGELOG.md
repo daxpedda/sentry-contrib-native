@@ -20,6 +20,12 @@ and this project adheres to
 
 ### Security
 
+## [0.1.0-alpha-2] - 2020-07-01
+
+### Fixed
+
+- Fixed some issues with the documentation.
+
 ## [0.1.0-alpha] - 2020-07-01
 
 ### Added
@@ -27,6 +33,8 @@ and this project adheres to
 - Initial release.
 
 [unreleased]:
-  https://github.com/daxpedda/sentry-contrib-native/compare/v0.1.0-alpha...HEAD
-[0.0.1-alpha]:
+  https://github.com/daxpedda/sentry-contrib-native/compare/v0.1.0-alpha-2...HEAD
+[0.1.0-alpha-2]:
+  https://github.com/daxpedda/sentry-contrib-native/releases/tag/v0.1.0-alpha-2
+[0.1.0-alpha]:
   https://github.com/daxpedda/sentry-contrib-native/releases/tag/v0.1.0-alpha

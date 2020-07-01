@@ -1,6 +1,6 @@
 [package]
 name = "sentry-contrib-native-sys"
-version = "0.1.0-alpha"
+version = "0.1.0-alpha-2"
 authors = ["daxpedda <daxpedda@gmail.com>"]
 edition = "2018"
 links = "sentry-native"

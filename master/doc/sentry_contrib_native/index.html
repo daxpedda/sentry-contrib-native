@@ -24,8 +24,12 @@
 <li><a href="#tests">Tests</a></li>
 <li><a href="#alternatives">Alternatives</a></li>
 <li><a href="#changelog">Changelog</a></li>
-<li><a href="#license">License</a></li>
+<li><a href="#license">License</a>
+<ul>
 <li><a href="#contribution">Contribution</a></li>
+<li><a href="#attribution">Attribution</a></li>
+</ul>
+</li>
 </ul>
 <h2 id="description" class="section-header"><a href="#description">Description</a></h2>
 <p><strong>Unofficial</strong> bindings to the
@@ -108,10 +112,10 @@ with that: <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
 <li>x86_64-pc-windows-msvc</li>
 </ul>
 <p>See the <a href="https://github.com/daxpedda/sentry-contrib-native/actions">CI itself</a>
-for more detailed information. See
-<a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
-for more platform and feature support details there, this crate doesn't do
-anything fancy, so we mostly rely on <code>sentry-native</code> for support.</p>
+for more detailed information. See the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a> for more
+platform and feature support details there, this crate doesn't do anything
+fancy, so we mostly rely on <code>sentry-native</code> for support.</p>
 <h2 id="build" class="section-header"><a href="#build">Build</a></h2>
 <p>This crate relies on
 <a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
@@ -121,9 +125,8 @@ which in turn builds
 provided with the <code>SENTRY_NATIVE_INSTALL</code> environment variable.</p>
 <p>Additionally on any other platform than Windows, the development version of
 <code>curl</code> is required.</p>
-<p>See
-<a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
-for more details.</p>
+<p>See the <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a> for more
+details.</p>
 <h2 id="crate-features" class="section-header"><a href="#crate-features">Crate features</a></h2>
 <ul>
 <li><strong>default-transport</strong> - <strong>Enabled by default</strong>, will use <code>winhttp</code> on Windows
@@ -189,15 +192,25 @@ file for details.</p>
 <h2 id="license" class="section-header"><a href="#license">License</a></h2>
 <p>Licensed under either of</p>
 <ul>
-<li>Apache License, Version 2.0 (<a href="LICENSE-APACHE">LICENSE-APACHE</a> or
-http://www.apache.org/licenses/LICENSE-2.0)</li>
-<li>MIT license (<a href="LICENSE-MIT">LICENSE-MIT</a> or http://opensource.org/licenses/MIT)</li>
+<li>Apache License, Version 2.0
+(<a href="https://github.com/daxpedda/sentry-contrib-native/blob/master/LICENSE-APACHE">LICENSE-APACHE</a>
+or http://www.apache.org/licenses/LICENSE-2.0)</li>
+<li>MIT license
+(<a href="https://github.com/daxpedda/sentry-contrib-native/blob/master/LICENSE-MIT">LICENSE-MIT</a>
+or http://opensource.org/licenses/MIT)</li>
 </ul>
 <p>at your option.</p>
-<h2 id="contribution" class="section-header"><a href="#contribution">Contribution</a></h2>
+<h3 id="contribution" class="section-header"><a href="#contribution">Contribution</a></h3>
 <p>Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.</p>
+<h3 id="attribution" class="section-header"><a href="#attribution">Attribution</a></h3>
+<p>Used documentation from
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>:
+<a href="https://github.com/getsentry/sentry-native/blob/master/LICENSE">MIT</a></p>
+<p>See the
+<a href="https://github.com/daxpedda/sentry-contrib-native/blob/master/ATTRIBUTION">ATTRIBUTION</a>
+for more details.</p>
 </div><h2 id='reexports' class='section-header'><a href="#reexports">Re-exports</a></h2>
 <table><tr><td><code>pub use <a class="mod" href="https://docs.rs/http/0.2.1/http/index.html" title="mod http">http</a>;</code></td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table><tr class='module-item'><td><a class="struct" href="struct.Breadcrumb.html" title='sentry_contrib_native::Breadcrumb struct'>Breadcrumb</a></td><td class='docblock-short'><p>A Sentry breadcrumb.</p>

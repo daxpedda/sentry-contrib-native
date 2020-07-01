@@ -399,8 +399,8 @@ impl Envelope {
     }
 }
 
-/// Contains the pieces we need to send requests based on the DSN the user
-/// set on [`Options`]
+/// Contains the pieces that are needed to build correct headers for a request
+/// based on the given DSN.
 ///
 /// # Examples
 /// ```

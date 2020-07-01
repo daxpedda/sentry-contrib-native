@@ -59,7 +59,7 @@ pub use transport::{
 pub use user::User;
 pub use value::Value;
 
-/// [`sentry-contrib-native`] errors.
+/// Errors for this crate.
 #[derive(Debug, Error, PartialEq)]
 pub enum Error {
     /// Sample rate outside of allowed range.

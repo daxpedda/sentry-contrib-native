@@ -14,6 +14,7 @@ and this project adheres to
 
 - Improved links to the documentation for the `master` branch.
 - Improved general documentation.
+- Update `vsprintf` to the new official version.
 
 ### Deprecated
 

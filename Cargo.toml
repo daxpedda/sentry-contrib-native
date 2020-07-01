@@ -20,7 +20,7 @@ rmpv = "0.4"
 sys = { package = "sentry-contrib-native-sys", version = "0.1.0-alpha", path = "sentry-contrib-native-sys", default-features = false }
 thiserror = "1"
 url = { version = "2", optional = true }
-vsprintf = { package = "daxpedda-vsprintf", version = "1.0.2-pr" }
+vsprintf = "2"
 
 [dev-dependencies]
 anyhow = "1"

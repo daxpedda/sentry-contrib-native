@@ -48,14 +48,18 @@ async fn event() -> Result<()> {
         vec![(
             || {
                 // collect libs first before we load a foreign one
-                Event::new().capture();
+                let mut event = Event::new();
+                event.add_stacktrace(0);
+                event.capture();
 
                 let lib = Library::new(lib_path()).unwrap();
                 let func: Symbol<extern "C" fn() -> bool> = unsafe { lib.get(b"test\0") }.unwrap();
                 assert_eq!(true, func());
 
                 sentry::clear_modulecache();
-                Event::new().capture()
+                let mut event = Event::new();
+                event.add_stacktrace(0);
+                event.capture()
             },
             |event| {
                 assert_eq!("<unlabeled event>", event.title);

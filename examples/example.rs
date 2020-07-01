@@ -27,9 +27,10 @@ fn main() -> Result<()> {
     options.set_require_user_consent(true);
     let _shutdown = options.init()?;
 
-    match ask_user_for_consent() {
-        true => sentry::user_consent_give(),
-        false => sentry::user_consent_revoke(),
+    if ask_user_for_consent() {
+        sentry::user_consent_give()
+    } else {
+        sentry::user_consent_revoke()
     }
 
     // TODO: use extra, context and so on
@@ -53,7 +54,7 @@ const fn ask_user_for_consent() -> bool {
 }
 
 /// Let's say you have a function that can return an [`Err`].
-const fn function_that_can_go_wrong() -> Result<()> {
+fn function_that_can_go_wrong() -> Result<()> {
     // let's pretend something can go wrong here
     bail!("Oh no! Something (something)  went wrong!")
 }

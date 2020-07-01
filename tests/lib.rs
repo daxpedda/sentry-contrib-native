@@ -37,7 +37,7 @@ async fn event() -> Result<()> {
         }
         #[cfg(target_os = "windows")]
         {
-            path = path.join("dylib");
+            path = path.join("dylib.dll");
         }
 
         path
@@ -63,19 +63,16 @@ async fn event() -> Result<()> {
                 assert!(event.context.is_empty());
                 assert_eq!("", event.message);
                 assert_eq!(None, event.tags.get("logger"));
-                let last_lib = event
+                let libs = event
                     .entries
                     .get("debugmeta")
                     .and_then(|v| v.get("images"))
                     .and_then(Value::as_array)
-                    .and_then(|v| v.get(v.len() - 1))
-                    .and_then(Value::as_object)
                     .unwrap();
-                assert!(last_lib
-                    .get("code_file")
-                    .and_then(Value::as_str)
-                    .unwrap()
-                    .starts_with(lib_path().to_str().unwrap()));
+                assert!(libs
+                    .iter()
+                    .any(|v| v.get("code_file").and_then(Value::as_str).unwrap()
+                        == lib_path().to_str().unwrap()));
             },
         )],
     )

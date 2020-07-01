@@ -12,6 +12,8 @@ and this project adheres to
 
 ### Changed
 
+- Improved links to documentation for the `master` branch.
+
 ### Deprecated
 
 ### Removed

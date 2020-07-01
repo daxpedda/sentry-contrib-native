@@ -176,7 +176,7 @@ jobs:
       matrix:
         branch:
           - master
-          #- release
+          - release
 
     runs-on: ubuntu-latest
 
@@ -215,7 +215,7 @@ jobs:
       matrix:
         branch:
           - master
-          #- release
+          - release
 
     runs-on: ubuntu-latest
 
@@ -256,7 +256,7 @@ jobs:
           - windows-latest
         branch:
           - master
-          #- release
+          - release
 
     runs-on: ${{ matrix.os }}
 

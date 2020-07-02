@@ -12,7 +12,7 @@ mod util;
 
 use anyhow::Result;
 use libloading::{Library, Symbol};
-use sentry::{Event, User};
+use sentry::{Event, Level, User};
 use sentry_contrib_native as sentry;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
@@ -169,6 +169,30 @@ async fn lib() -> Result<()> {
                 |event| {
                     assert_eq!("<unlabeled event>", event.title);
                     assert_eq!(None, event.contexts.get("test context"));
+                },
+            ),
+            (
+                || {
+                    sentry::set_transaction("test transaction");
+                    let uuid = Event::new().capture();
+                    sentry::remove_transaction();
+                    uuid
+                },
+                |event| {
+                    assert_eq!("<unlabeled event>", event.title);
+                    assert_eq!("test transaction", event.tags.get("transaction").unwrap());
+                },
+            ),
+            (
+                || {
+                    sentry::set_level(Level::Info);
+                    let uuid = Event::new().capture();
+                    sentry::set_level(Level::Error);
+                    uuid
+                },
+                |event| {
+                    assert_eq!("<unlabeled event>", event.title);
+                    assert_eq!("info", event.tags.get("level").unwrap());
                 },
             ),
         ],

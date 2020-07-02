@@ -6,7 +6,7 @@ use anyhow::{anyhow, bail, Result};
 #[cfg(feature = "custom-transport")]
 use custom_transport::Transport;
 use event::{Event, Response};
-use futures_util::future;
+use futures_util::{future, FutureExt};
 use reqwest::{header::HeaderMap, Client};
 use sentry::{Options, Uuid};
 use sentry_contrib_native as sentry;
@@ -187,7 +187,7 @@ pub async fn events_failure(
 /// List of events to send, query and than run checks on.
 async fn events_internal(
     option: Option<fn(&mut Options)>,
-    events: Vec<(fn() -> Uuid, impl Fn(Option<Event>) + Send)>,
+    events: Vec<(fn() -> Uuid, impl Fn(Option<Event>) + 'static + Send)>,
     num_of_tries: u32,
     time_between_tries: Duration,
 ) -> Result<()> {
@@ -235,20 +235,24 @@ async fn events_internal(
         let client = client.clone();
         let api_url = api_url.clone();
 
-        tasks.push(async move {
-            // get event from the Sentry service
-            let response = event(client, api_url, uuid, num_of_tries, time_between_tries).await?;
-            let event = response.as_ref().map(|(event, _)| event.clone());
+        tasks.push(
+            tokio::spawn(async move {
+                // get event from the Sentry service
+                let response =
+                    event(client, api_url, uuid, num_of_tries, time_between_tries).await?;
+                let event = response.as_ref().map(|(event, _)| event.clone());
 
-            // run our checks against it
-            panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|_| {
-                if let Some((event, response)) = response {
-                    anyhow!("Failed:\nEvent: {:?}\nJson: {}", event, response)
-                } else {
-                    anyhow!("[Timeout]: {}", uuid)
-                }
+                // run our checks against it
+                panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|_| {
+                    if let Some((event, response)) = response {
+                        anyhow!("Failed:\nEvent: {:?}\nJson: {}", event, response)
+                    } else {
+                        anyhow!("[Timeout]: {}", uuid)
+                    }
+                })
             })
-        });
+            .map(|result| result?),
+        );
     }
 
     // poll all tasks

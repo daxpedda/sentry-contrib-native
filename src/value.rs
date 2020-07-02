@@ -1,6 +1,6 @@
 //! Sentry value implementation.
 
-use crate::{CToR, Error, Map, Object, RToC};
+use crate::{CToR, Error, Object, RToC};
 use rmpv::decode;
 use std::{
     collections::BTreeMap,
@@ -145,7 +145,7 @@ impl Value {
 
                 list
             }
-            Self::Map(old_map) => Map::new(old_map).into_raw(),
+            Self::Map(map) => map.into_raw(),
         }
     }
 

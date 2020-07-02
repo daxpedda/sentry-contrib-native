@@ -32,18 +32,42 @@ pub trait Object {
     }
 }
 
-/// A simple [`Object`] implementation for [`Value::Map`].
-pub struct Map(BTreeMap<String, Value>);
+/// Convenience trait to simplify passing a [`Value::Map`].
+///
+/// # Examples
+/// ```
+/// # use sentry_contrib_native::Map;
+/// # use std::collections::BTreeMap;
+/// fn accepts_map<M: Map>(map: M) {}
+///
+/// accepts_map(vec![("test", "test")]);
+///
+/// let mut map = BTreeMap::new();
+/// map.insert("test", "test");
+/// accepts_map(map);
+/// ```
+pub trait Map: Object {}
 
-impl Map {
-    /// Create a [`Value::Map`].
-    pub fn new(value: BTreeMap<String, Value>) -> Self {
-        Self(value)
+impl<K: Into<String>, V: Into<Value>> Map for Vec<(K, V)> {}
+impl<K: Into<String>, V: Into<Value>> Object for Vec<(K, V)> {
+    fn into_parts(self) -> (sys::Value, BTreeMap<String, Value>) {
+        let map = self
+            .into_iter()
+            .map(|(k, v)| (k.into(), v.into()))
+            .collect();
+
+        (unsafe { sys::value_new_object() }, map)
     }
 }
 
-impl Object for Map {
+impl<K: Into<String>, V: Into<Value>> Map for BTreeMap<K, V> {}
+impl<K: Into<String>, V: Into<Value>> Object for BTreeMap<K, V> {
     fn into_parts(self) -> (sys::Value, BTreeMap<String, Value>) {
-        (unsafe { sys::value_new_object() }, self.0)
+        let map = self
+            .into_iter()
+            .map(|(k, v)| (k.into(), v.into()))
+            .collect();
+
+        (unsafe { sys::value_new_object() }, map)
     }
 }

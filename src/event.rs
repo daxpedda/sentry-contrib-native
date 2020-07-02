@@ -1,6 +1,6 @@
 //! Sentry event implementation.
 
-use crate::{global_read, CToR, Level, Object, RToC, Value};
+use crate::{global_read, CToR, Level, Map, Object, RToC, Value};
 use std::{
     cmp::Ordering,
     collections::BTreeMap,
@@ -17,7 +17,6 @@ use std::{
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::Event;
-/// # use std::collections::BTreeMap;
 /// let mut event = Event::new();
 /// event.insert("extra", vec![("data", "test data")]);
 /// event.capture();
@@ -171,15 +170,17 @@ impl Event {
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Event;
-    /// # use std::collections::BTreeMap;
     /// let mut event = Event::new();
-    /// let mut exception = BTreeMap::new();
-    /// exception.insert("type".into(), "test exception".into());
-    /// exception.insert("value".into(), "test exception value".into());
-    /// event.add_exception(exception.into(), 0);
+    /// event.add_exception(
+    ///     vec![
+    ///         ("type", "test exception"),
+    ///         ("value", "test exception value"),
+    ///     ],
+    ///     0,
+    /// );
     /// event.capture();
     /// ```
-    pub fn add_exception(&mut self, mut exception: BTreeMap<String, Value>, len: usize) {
+    pub fn add_exception<M: Map + Into<Value>>(&mut self, exception: M, len: usize) {
         let stacktrace = Self::stacktrace(len)
             .remove("values")
             .and_then(|values| values.into_list().ok())
@@ -189,6 +190,10 @@ impl Event {
             .filter(Value::is_map)
             .expect("failed to move stacktrace");
 
+        let mut exception = exception
+            .into()
+            .into_map()
+            .expect("`Map` isn't `Value::Map`");
         exception.insert("stacktrace".into(), stacktrace);
         self.insert("exception", exception);
     }
@@ -412,10 +417,7 @@ fn event() -> anyhow::Result<()> {
     event.capture();
 
     let mut event = Event::new();
-    let mut exception = BTreeMap::new();
-    exception.insert("type".into(), "test type".into());
-    exception.insert("value".into(), "test value".into());
-    event.add_exception(exception, 0);
+    event.add_exception(vec![("type", "test type"), ("value", "test value")], 0);
 
     let exception = event.get("exception").unwrap().as_map().unwrap();
     assert_eq!(Some("test type"), exception.get("type").unwrap().as_str());

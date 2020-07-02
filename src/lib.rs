@@ -38,7 +38,8 @@ use ffi::{CPath, CToR, RToC};
 pub use http;
 pub use logger::Message;
 use logger::LOGGER;
-use object::{Map, Object};
+pub use object::Map;
+use object::Object;
 use options::{global_read, global_write, Ownership};
 pub use options::{Options, Shutdown};
 pub use panic::set_hook;
@@ -343,7 +344,7 @@ pub fn remove_user() {
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::set_tag;
-/// set_tag("test tag", "test");
+/// set_tag("test-tag", "test");
 /// ```
 pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
     let key = key.into().into_cstring();
@@ -360,8 +361,8 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{remove_tag, set_tag};
-/// set_tag("test tag", "test");
-/// remove_tag("test tag");
+/// set_tag("test-tag", "test");
+/// remove_tag("test-tag");
 /// ```
 pub fn remove_tag<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
@@ -409,9 +410,9 @@ pub fn remove_extra<S: Into<String>>(key: S) {
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::set_context;
-/// set_context("test context", "context x");
+/// set_context("test context", vec![("type", "os"), ("name", "Redox")]);
 /// ```
-pub fn set_context<S: Into<String>, V: Into<Value>>(key: S, value: V) {
+pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
@@ -426,7 +427,7 @@ pub fn set_context<S: Into<String>, V: Into<Value>>(key: S, value: V) {
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{remove_context, set_context};
-/// set_context("test context", "context x");
+/// set_context("test context", vec![("type", "os"), ("name", "Redox")]);
 /// remove_context("test context");
 /// ```
 pub fn remove_context<S: Into<String>>(key: S) {
@@ -705,7 +706,7 @@ fn threaded_stress() -> anyhow::Result<()> {
         |index| crate::remove_tag(index.to_string()),
         |index| crate::set_extra(index.to_string(), index),
         |index| crate::remove_extra(index.to_string()),
-        |index| crate::set_context(index.to_string(), index),
+        |index| crate::set_context(index.to_string(), vec![(index.to_string(), index)]),
         |index| crate::remove_context(index.to_string()),
         |index| crate::set_fingerprint(vec![index.to_string()]).unwrap(),
         |_| crate::remove_fingerprint(),

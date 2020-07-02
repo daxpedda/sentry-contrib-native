@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- New `Map` trait that improves API of `Event::add_exception` and `set_context`.
+
 ### Changed
 
 - Improved links to the documentation for the `master` branch.
@@ -25,6 +27,7 @@ and this project adheres to
 
 - Fixed `custom-transport` example which was crashing because of a
   use-after-free.
+- Corrected `set_tag` and `remove_tag` examples.
 
 ### Security
 

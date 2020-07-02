@@ -18,7 +18,7 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 
 #[tokio::test(threaded_scheduler)]
-async fn event() -> Result<()> {
+async fn lib() -> Result<()> {
     fn lib_path() -> PathBuf {
         let mut path = PathBuf::from(env!("OUT_DIR"))
             .parent()
@@ -43,43 +43,82 @@ async fn event() -> Result<()> {
         path
     }
 
-    util::events(
+    util::events_success(
         None,
-        vec![(
-            || {
-                // collect libs first before we load a foreign one
-                let mut event = Event::new();
-                event.add_stacktrace(0);
-                event.capture();
+        vec![
+            (
+                || {
+                    // collect libs first before we load a foreign one
+                    let mut event = Event::new();
+                    event.add_stacktrace(0);
+                    event.capture();
 
-                let lib = Library::new(lib_path()).unwrap();
-                let func: Symbol<extern "C" fn() -> bool> = unsafe { lib.get(b"test\0") }.unwrap();
-                assert_eq!(true, func());
+                    let lib = Library::new(lib_path()).unwrap();
+                    let func: Symbol<extern "C" fn() -> bool> =
+                        unsafe { lib.get(b"test\0") }.unwrap();
+                    assert_eq!(true, func());
 
-                sentry::clear_modulecache();
-                let mut event = Event::new();
-                event.add_stacktrace(0);
-                event.capture()
-            },
-            |event| {
-                let event = event.unwrap();
-                assert_eq!("<unlabeled event>", event.title);
-                assert_eq!("error", event.tags.get("level").unwrap());
-                assert!(event.context.is_empty());
-                assert_eq!("", event.message);
-                assert_eq!(None, event.tags.get("logger"));
-                let libs = event
-                    .entries
-                    .get("debugmeta")
-                    .and_then(|v| v.get("images"))
-                    .and_then(Value::as_array)
-                    .unwrap();
-                assert!(libs
-                    .iter()
-                    .any(|v| v.get("code_file").and_then(Value::as_str).unwrap()
+                    sentry::clear_modulecache();
+                    let mut event = Event::new();
+                    event.add_stacktrace(0);
+                    event.capture()
+                },
+                |event| {
+                    assert_eq!("<unlabeled event>", event.title);
+                    assert_eq!("error", event.tags.get("level").unwrap());
+                    assert!(event.context.is_empty());
+                    assert_eq!("", event.message);
+                    assert_eq!(None, event.tags.get("logger"));
+                    let libs = event
+                        .entries
+                        .get("debugmeta")
+                        .and_then(|v| v.get("images"))
+                        .and_then(Value::as_array)
+                        .unwrap();
+                    assert!(libs.iter().any(|v| v
+                        .get("code_file")
+                        .and_then(Value::as_str)
+                        .unwrap()
                         == lib_path().to_str().unwrap()));
-            },
-        )],
+                },
+            ),
+            (
+                || {
+                    // collect libs first before we load a foreign one
+                    let mut event = Event::new();
+                    event.add_stacktrace(0);
+                    event.capture();
+
+                    let lib = Library::new(lib_path()).unwrap();
+                    let func: Symbol<extern "C" fn() -> bool> =
+                        unsafe { lib.get(b"test\0") }.unwrap();
+                    assert_eq!(true, func());
+
+                    sentry::clear_modulecache();
+                    let mut event = Event::new();
+                    event.add_stacktrace(0);
+                    event.capture()
+                },
+                |event| {
+                    assert_eq!("<unlabeled event>", event.title);
+                    assert_eq!("error", event.tags.get("level").unwrap());
+                    assert!(event.context.is_empty());
+                    assert_eq!("", event.message);
+                    assert_eq!(None, event.tags.get("logger"));
+                    let libs = event
+                        .entries
+                        .get("debugmeta")
+                        .and_then(|v| v.get("images"))
+                        .and_then(Value::as_array)
+                        .unwrap();
+                    assert!(libs.iter().any(|v| v
+                        .get("code_file")
+                        .and_then(Value::as_str)
+                        .unwrap()
+                        == lib_path().to_str().unwrap()));
+                },
+            ),
+        ],
     )
     .await?;
 

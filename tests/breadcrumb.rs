@@ -16,8 +16,8 @@ use sentry_contrib_native as sentry;
 use serde_json::Value;
 
 #[tokio::test(threaded_scheduler)]
-async fn event() -> Result<()> {
-    util::events(
+async fn breadcrumb() -> Result<()> {
+    util::events_success(
         None,
         vec![
             (
@@ -26,7 +26,6 @@ async fn event() -> Result<()> {
                     Event::new().capture()
                 },
                 |event| {
-                    let event = event.unwrap();
                     assert_eq!("<unlabeled event>", event.title);
                     assert_eq!("error", event.tags.get("level").unwrap());
                     assert!(event.context.is_empty());
@@ -56,7 +55,6 @@ async fn event() -> Result<()> {
                     Event::new().capture()
                 },
                 |event| {
-                    let event = event.unwrap();
                     assert_eq!("<unlabeled event>", event.title);
                     assert_eq!("error", event.tags.get("level").unwrap());
                     assert!(event.context.is_empty());
@@ -88,7 +86,6 @@ async fn event() -> Result<()> {
                     Event::new().capture()
                 },
                 |event| {
-                    let event = event.unwrap();
                     assert_eq!("<unlabeled event>", event.title);
                     assert_eq!("error", event.tags.get("level").unwrap());
                     assert!(event.context.is_empty());

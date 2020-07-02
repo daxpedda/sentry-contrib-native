@@ -14,7 +14,7 @@ use anyhow::Result;
 
 #[tokio::test(threaded_scheduler)]
 async fn lib_failure() -> Result<()> {
-    util::events_failure(None,vec![]).await?;
+    util::events_failure(None, vec![]).await?;
 
     Ok(())
 }

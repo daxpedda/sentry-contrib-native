@@ -11,7 +11,7 @@ keywords = ["sentry", "crash", "crashpad", "breakpad", "minidump"]
 categories = ["api-bindings", "development-tools::debugging"]
 
 [workspace]
-members = ["sentry-contrib-native-sys", "tests/test/dylib"]
+members = ["sentry-contrib-native-sys", "tests/dylib"]
 
 [dependencies]
 http = { version = "0.2", optional = true }
@@ -24,7 +24,7 @@ vsprintf = "2"
 
 [dev-dependencies]
 anyhow = "1"
-dylib = { path = "tests/test/dylib" }
+dylib = { path = "tests/dylib" }
 futures-executor = "0.3"
 futures-util = "0.3"
 libloading = "0.6"

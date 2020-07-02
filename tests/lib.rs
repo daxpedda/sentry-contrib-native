@@ -8,7 +8,7 @@
 // stable clippy seems to have an issue with await
 #![allow(clippy::used_underscore_binding)]
 
-mod test;
+mod util;
 
 use anyhow::Result;
 use libloading::{Library, Symbol};
@@ -43,7 +43,7 @@ async fn event() -> Result<()> {
         path
     }
 
-    test::events(
+    util::events(
         None,
         vec![(
             || {
@@ -62,6 +62,7 @@ async fn event() -> Result<()> {
                 event.capture()
             },
             |event| {
+                let event = event.unwrap();
                 assert_eq!("<unlabeled event>", event.title);
                 assert_eq!("error", event.tags.get("level").unwrap());
                 assert!(event.context.is_empty());

@@ -8,7 +8,7 @@
 // stable clippy seems to have an issue with await
 #![allow(clippy::used_underscore_binding)]
 
-mod test;
+mod util;
 
 use anyhow::Result;
 use sentry::{Event, Options, Value};
@@ -16,7 +16,7 @@ use sentry_contrib_native as sentry;
 
 #[tokio::test(threaded_scheduler)]
 async fn event() -> Result<()> {
-    test::events(
+    util::events(
         Some(|options: &mut Options| {
             options.set_before_send(|mut value: Value| {
                 let event = value.as_mut_map().unwrap();
@@ -31,6 +31,7 @@ async fn event() -> Result<()> {
                 event.capture()
             },
             |event| {
+                let event = event.unwrap();
                 assert_eq!("<unlabeled event>", event.title);
                 assert_eq!("error", event.tags.get("level").unwrap());
                 assert!(event.context.is_empty());

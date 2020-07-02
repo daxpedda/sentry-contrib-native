@@ -8,7 +8,7 @@
 // stable clippy seems to have an issue with await
 #![allow(clippy::used_underscore_binding)]
 
-mod test;
+mod util;
 
 use anyhow::Result;
 use sentry::{Event, Level};
@@ -17,12 +17,13 @@ use std::collections::BTreeMap;
 
 #[tokio::test(threaded_scheduler)]
 async fn event() -> Result<()> {
-    test::events(
+    util::events(
         None,
         vec![
             (
                 || Event::new().capture(),
                 |event| {
+                    let event = event.unwrap();
                     assert_eq!("<unlabeled event>", event.title);
                     assert_eq!("error", event.tags.get("level").unwrap());
                     assert_eq!("", event.message);
@@ -36,6 +37,7 @@ async fn event() -> Result<()> {
                     event.capture()
                 },
                 |event| {
+                    let event = event.unwrap();
                     assert_eq!("<unlabeled event>", event.title);
                     assert_eq!("error", event.tags.get("level").unwrap());
                     assert_eq!(
@@ -49,6 +51,7 @@ async fn event() -> Result<()> {
             (
                 || Event::new_message(Level::Debug, None, "test message").capture(),
                 |event| {
+                    let event = event.unwrap();
                     assert_eq!("test message", event.title);
                     assert_eq!("debug", event.tags.get("level").unwrap());
                     assert_eq!("test message", event.message);
@@ -61,6 +64,7 @@ async fn event() -> Result<()> {
                         .capture()
                 },
                 |event| {
+                    let event = event.unwrap();
                     assert_eq!("test message", event.title);
                     assert_eq!("debug", event.tags.get("level").unwrap());
                     assert_eq!("test message", event.message);
@@ -74,6 +78,7 @@ async fn event() -> Result<()> {
                     event.capture()
                 },
                 |event| {
+                    let event = event.unwrap();
                     assert_eq!("<unlabeled event>", event.title);
                     assert_eq!("error", event.tags.get("level").unwrap());
                     assert_eq!("", event.message);
@@ -93,6 +98,7 @@ async fn event() -> Result<()> {
                     event.capture()
                 },
                 |event| {
+                    let event = event.unwrap();
                     assert_eq!("test exception type: test exception value", event.title);
                     assert_eq!("error", event.tags.get("level").unwrap());
                     assert_eq!("", event.message);

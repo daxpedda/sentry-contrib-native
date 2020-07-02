@@ -23,7 +23,7 @@ use url::Url;
 
 /// Number of tries to wait for Sentry to process an event. Sentry.io sometimes
 /// takes really long to process those.
-const NUM_OF_TRIES: u32 = 4;
+const NUM_OF_TRIES: u32 = 20;
 /// Time between tries.
 const TIME_BETWEEN_TRIES: Duration = Duration::from_secs(15);
 
@@ -98,7 +98,7 @@ fn slugs(response: &Value, id: &str) -> Option<(String, String)> {
 }
 
 /// Query event from Sentry service.
-pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<(Event, Value)> {
+pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<Option<(Event, Value)>> {
     // build UUID
     let uuid = uuid.to_plain();
 
@@ -118,7 +118,7 @@ pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<(Event, V
         let event = serde_json::from_value(response.clone())?;
 
         match event {
-            Response::Event(event) => return Ok((event, response)),
+            Response::Event(event) => return Ok(Some((event, response))),
             Response::NotFound { detail } => {
                 if detail != "Event not found" {
                     bail!("unknown message")
@@ -127,14 +127,14 @@ pub async fn event(client: Client, api_url: Url, uuid: Uuid) -> Result<(Event, V
         }
     }
 
-    Err(anyhow!("[Timeout]: {}", uuid))
+    Ok(None)
 }
 
 #[allow(clippy::type_complexity)]
 /// List of events to send, query and than run checks on.
 pub async fn events(
     option: Option<fn(&mut Options)>,
-    events: Vec<(fn() -> Uuid, fn(Event))>,
+    events: Vec<(fn() -> Uuid, fn(Option<Event>))>,
 ) -> Result<()> {
     // build the Sentry client
     let mut options = Options::new();
@@ -182,11 +182,17 @@ pub async fn events(
 
         tasks.push(async move {
             // get event from the Sentry service
-            let (event, response) = event(client, api_url, uuid).await?;
+            let response = event(client, api_url, uuid).await?;
+            let event = response.as_ref().map(|(event, _)| event.clone());
 
             // run our checks against it
-            panic::catch_unwind(AssertUnwindSafe(|| check(event.clone())))
-                .map_err(|_| anyhow!("Failed:\nEvent: {:?}\nJson: {}", event, response))
+            panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|_| {
+                if let Some((event, response)) = response {
+                    anyhow!("Failed:\nEvent: {:?}\nJson: {}", event, response)
+                } else {
+                    anyhow!("[Timeout]: {}", uuid)
+                }
+            })
         });
     }
 

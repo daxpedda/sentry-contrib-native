@@ -1108,7 +1108,7 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry value implementation.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">CToR</span>, <span class="ident">Error</span>, <span class="ident">Map</span>, <span class="ident">Object</span>, <span class="ident">RToC</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">CToR</span>, <span class="ident">Error</span>, <span class="ident">Object</span>, <span class="ident">RToC</span>};
 <span class="kw">use</span> <span class="ident">rmpv</span>::<span class="ident">decode</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections</span>::<span class="ident">BTreeMap</span>,
@@ -1253,7 +1253,7 @@
 
                 <span class="ident">list</span>
             }
-            <span class="self">Self</span>::<span class="ident">Map</span>(<span class="ident">old_map</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Map</span>::<span class="ident">new</span>(<span class="ident">old_map</span>).<span class="ident">into_raw</span>(),
+            <span class="self">Self</span>::<span class="ident">Map</span>(<span class="ident">map</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">map</span>.<span class="ident">into_raw</span>(),
         }
     }
 

@@ -451,10 +451,12 @@
 <span id="451">451</span>
 <span id="452">452</span>
 <span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry event implementation.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">global_read</span>, <span class="ident">CToR</span>, <span class="ident">Level</span>, <span class="ident">Object</span>, <span class="ident">RToC</span>, <span class="ident">Value</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">global_read</span>, <span class="ident">CToR</span>, <span class="ident">Level</span>, <span class="ident">Map</span>, <span class="ident">Object</span>, <span class="ident">RToC</span>, <span class="ident">Value</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">cmp</span>::<span class="ident">Ordering</span>,
     <span class="ident">collections</span>::<span class="ident">BTreeMap</span>,
@@ -471,7 +473,6 @@
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// # use sentry_contrib_native::Event;</span>
-<span class="doccomment">/// # use std::collections::BTreeMap;</span>
 <span class="doccomment">/// let mut event = Event::new();</span>
 <span class="doccomment">/// event.insert(&quot;extra&quot;, vec![(&quot;data&quot;, &quot;test data&quot;)]);</span>
 <span class="doccomment">/// event.capture();</span>
@@ -625,15 +626,17 @@
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// # use sentry_contrib_native::Event;</span>
-    <span class="doccomment">/// # use std::collections::BTreeMap;</span>
     <span class="doccomment">/// let mut event = Event::new();</span>
-    <span class="doccomment">/// let mut exception = BTreeMap::new();</span>
-    <span class="doccomment">/// exception.insert(&quot;type&quot;.into(), &quot;test exception&quot;.into());</span>
-    <span class="doccomment">/// exception.insert(&quot;value&quot;.into(), &quot;test exception value&quot;.into());</span>
-    <span class="doccomment">/// event.add_exception(exception.into(), 0);</span>
+    <span class="doccomment">/// event.add_exception(</span>
+    <span class="doccomment">///     vec![</span>
+    <span class="doccomment">///         (&quot;type&quot;, &quot;test exception&quot;),</span>
+    <span class="doccomment">///         (&quot;value&quot;, &quot;test exception value&quot;),</span>
+    <span class="doccomment">///     ],</span>
+    <span class="doccomment">///     0,</span>
+    <span class="doccomment">/// );</span>
     <span class="doccomment">/// event.capture();</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_exception</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">exception</span>: <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Value</span><span class="op">&gt;</span>, <span class="ident">len</span>: <span class="ident">usize</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_exception</span><span class="op">&lt;</span><span class="ident">M</span>: <span class="ident">Map</span> <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">exception</span>: <span class="ident">M</span>, <span class="ident">len</span>: <span class="ident">usize</span>) {
         <span class="kw">let</span> <span class="ident">stacktrace</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">stacktrace</span>(<span class="ident">len</span>)
             .<span class="ident">remove</span>(<span class="string">&quot;values&quot;</span>)
             .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">values</span><span class="op">|</span> <span class="ident">values</span>.<span class="ident">into_list</span>().<span class="ident">ok</span>())
@@ -643,6 +646,10 @@
             .<span class="ident">filter</span>(<span class="ident">Value</span>::<span class="ident">is_map</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;failed to move stacktrace&quot;</span>);
 
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">exception</span> <span class="op">=</span> <span class="ident">exception</span>
+            .<span class="ident">into</span>()
+            .<span class="ident">into_map</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;`Map` isn&#39;t `Value::Map`&quot;</span>);
         <span class="ident">exception</span>.<span class="ident">insert</span>(<span class="string">&quot;stacktrace&quot;</span>.<span class="ident">into</span>(), <span class="ident">stacktrace</span>);
         <span class="self">self</span>.<span class="ident">insert</span>(<span class="string">&quot;exception&quot;</span>, <span class="ident">exception</span>);
     }
@@ -866,10 +873,7 @@
     <span class="ident">event</span>.<span class="ident">capture</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">Event</span>::<span class="ident">new</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">exception</span> <span class="op">=</span> <span class="ident">BTreeMap</span>::<span class="ident">new</span>();
-    <span class="ident">exception</span>.<span class="ident">insert</span>(<span class="string">&quot;type&quot;</span>.<span class="ident">into</span>(), <span class="string">&quot;test type&quot;</span>.<span class="ident">into</span>());
-    <span class="ident">exception</span>.<span class="ident">insert</span>(<span class="string">&quot;value&quot;</span>.<span class="ident">into</span>(), <span class="string">&quot;test value&quot;</span>.<span class="ident">into</span>());
-    <span class="ident">event</span>.<span class="ident">add_exception</span>(<span class="ident">exception</span>, <span class="number">0</span>);
+    <span class="ident">event</span>.<span class="ident">add_exception</span>(<span class="macro">vec</span><span class="macro">!</span>[(<span class="string">&quot;type&quot;</span>, <span class="string">&quot;test type&quot;</span>), (<span class="string">&quot;value&quot;</span>, <span class="string">&quot;test value&quot;</span>)], <span class="number">0</span>);
 
     <span class="kw">let</span> <span class="ident">exception</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">get</span>(<span class="string">&quot;exception&quot;</span>).<span class="ident">unwrap</span>().<span class="ident">as_map</span>().<span class="ident">unwrap</span>();
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test type&quot;</span>), <span class="ident">exception</span>.<span class="ident">get</span>(<span class="string">&quot;type&quot;</span>).<span class="ident">unwrap</span>().<span class="ident">as_str</span>());

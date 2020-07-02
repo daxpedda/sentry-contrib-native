@@ -731,6 +731,7 @@
 <span id="731">731</span>
 <span id="732">732</span>
 <span id="733">733</span>
+<span id="734">734</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -772,7 +773,8 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">http</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">logger</span>::<span class="ident">Message</span>;
 <span class="kw">use</span> <span class="ident">logger</span>::<span class="ident">LOGGER</span>;
-<span class="kw">use</span> <span class="ident">object</span>::{<span class="ident">Map</span>, <span class="ident">Object</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">object</span>::<span class="ident">Map</span>;
+<span class="kw">use</span> <span class="ident">object</span>::<span class="ident">Object</span>;
 <span class="kw">use</span> <span class="ident">options</span>::{<span class="ident">global_read</span>, <span class="ident">global_write</span>, <span class="ident">Ownership</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">options</span>::{<span class="ident">Options</span>, <span class="ident">Shutdown</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">panic</span>::<span class="ident">set_hook</span>;
@@ -1077,7 +1079,7 @@
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// # use sentry_contrib_native::set_tag;</span>
-<span class="doccomment">/// set_tag(&quot;test tag&quot;, &quot;test&quot;);</span>
+<span class="doccomment">/// set_tag(&quot;test-tag&quot;, &quot;test&quot;);</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_tag</span><span class="op">&lt;</span><span class="ident">S1</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">S2</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="ident">S1</span>, <span class="ident">value</span>: <span class="ident">S2</span>) {
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
@@ -1094,8 +1096,8 @@
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// # use sentry_contrib_native::{remove_tag, set_tag};</span>
-<span class="doccomment">/// set_tag(&quot;test tag&quot;, &quot;test&quot;);</span>
-<span class="doccomment">/// remove_tag(&quot;test tag&quot;);</span>
+<span class="doccomment">/// set_tag(&quot;test-tag&quot;, &quot;test&quot;);</span>
+<span class="doccomment">/// remove_tag(&quot;test-tag&quot;);</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_tag</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="ident">S</span>) {
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
@@ -1143,9 +1145,9 @@
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// # use sentry_contrib_native::set_context;</span>
-<span class="doccomment">/// set_context(&quot;test context&quot;, &quot;context x&quot;);</span>
+<span class="doccomment">/// set_context(&quot;test context&quot;, vec![(&quot;type&quot;, &quot;os&quot;), (&quot;name&quot;, &quot;Redox&quot;)]);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_context</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">V</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="ident">S</span>, <span class="ident">value</span>: <span class="ident">V</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_context</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">M</span>: <span class="ident">Map</span> <span class="op">+</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="ident">S</span>, <span class="ident">value</span>: <span class="ident">M</span>) {
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">into</span>().<span class="ident">into_raw</span>();
 
@@ -1160,7 +1162,7 @@
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
 <span class="doccomment">/// # use sentry_contrib_native::{remove_context, set_context};</span>
-<span class="doccomment">/// set_context(&quot;test context&quot;, &quot;context x&quot;);</span>
+<span class="doccomment">/// set_context(&quot;test context&quot;, vec![(&quot;type&quot;, &quot;os&quot;), (&quot;name&quot;, &quot;Redox&quot;)]);</span>
 <span class="doccomment">/// remove_context(&quot;test context&quot;);</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_context</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="ident">S</span>) {
@@ -1439,7 +1441,7 @@
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">remove_tag</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_extra</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">remove_extra</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="macro">vec</span><span class="macro">!</span>[(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>)]),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">remove_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_fingerprint</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">index</span>.<span class="ident">to_string</span>()]).<span class="ident">unwrap</span>(),
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">remove_fingerprint</span>(),

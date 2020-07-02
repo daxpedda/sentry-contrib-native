@@ -46,7 +46,7 @@ async fn api_url(client: &Client) -> Result<Url> {
         .expect("no projet ID found")
         .to_owned();
 
-    // if we are connection to the official "sentry.io" server, remove the
+    // if we are connecting to the official "sentry.io" server, remove the
     // "o1234.ingest." part
     if let Some(domain) = api_url.domain() {
         if domain.ends_with(".ingest.sentry.io") {

@@ -13,7 +13,6 @@ mod util;
 use anyhow::Result;
 use sentry::{Event, Level};
 use sentry_contrib_native as sentry;
-use std::collections::BTreeMap;
 
 #[tokio::test(threaded_scheduler)]
 async fn event() -> Result<()> {
@@ -84,16 +83,17 @@ async fn event() -> Result<()> {
             (
                 || {
                     let mut event = Event::new();
-                    let mut exception = BTreeMap::new();
-
-                    exception.insert("type".into(), "test exception type".into());
-                    exception.insert("value".into(), "test exception value".into());
-
-                    event.add_exception(exception, 0);
+                    event.add_exception(
+                        vec![
+                            ("type", "test exception"),
+                            ("value", "test exception value"),
+                        ],
+                        0,
+                    );
                     event.capture()
                 },
                 |event| {
-                    assert_eq!("test exception type: test exception value", event.title);
+                    assert_eq!("test exception: test exception value", event.title);
                     assert_eq!("error", event.tags.get("level").unwrap());
                     assert_eq!("", event.message);
                     assert_eq!(None, event.tags.get("logger"));

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer};
 use serde_derive::Deserialize;
 use serde_json::Value;
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Deref};
 
 #[derive(Deserialize)]
 #[serde(untagged)]
@@ -15,10 +15,27 @@ pub struct Event {
     pub title: String,
     pub message: String,
     pub context: HashMap<String, Value>,
+    pub contexts: HashMap<String, Contexts>,
     #[serde(deserialize_with = "tags")]
     pub tags: HashMap<String, String>,
     #[serde(deserialize_with = "entries")]
     pub entries: HashMap<String, HashMap<String, Value>>,
+    pub user: Option<User>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub struct Contexts {
+    pub r#type: String,
+    #[serde(flatten)]
+    pub data: HashMap<String, Value>,
+}
+
+impl Deref for Contexts {
+    type Target = HashMap<String, Value>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.data
+    }
 }
 
 #[derive(Deserialize)]
@@ -57,4 +74,14 @@ where
     }
 
     Ok(map)
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub struct User {
+    pub data: Option<HashMap<String, Value>>,
+    pub email: Option<String>,
+    pub id: Option<String>,
+    pub ip_address: Option<String>,
+    pub name: Option<String>,
+    pub username: Option<String>,
 }

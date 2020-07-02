@@ -27,10 +27,6 @@ async fn breadcrumb() -> Result<()> {
                 },
                 |event| {
                     assert_eq!("<unlabeled event>", event.title);
-                    assert_eq!("error", event.tags.get("level").unwrap());
-                    assert!(event.context.is_empty());
-                    assert_eq!("", event.message);
-                    assert_eq!(None, event.tags.get("logger"));
                     let breadcrumb = event
                         .entries
                         .get("breadcrumbs")
@@ -56,10 +52,6 @@ async fn breadcrumb() -> Result<()> {
                 },
                 |event| {
                     assert_eq!("<unlabeled event>", event.title);
-                    assert_eq!("error", event.tags.get("level").unwrap());
-                    assert!(event.context.is_empty());
-                    assert_eq!("", event.message);
-                    assert_eq!(None, event.tags.get("logger"));
                     let breadcrumb = event
                         .entries
                         .get("breadcrumbs")
@@ -87,10 +79,6 @@ async fn breadcrumb() -> Result<()> {
                 },
                 |event| {
                     assert_eq!("<unlabeled event>", event.title);
-                    assert_eq!("error", event.tags.get("level").unwrap());
-                    assert!(event.context.is_empty());
-                    assert_eq!("", event.message);
-                    assert_eq!(None, event.tags.get("logger"));
                     let breadcrumb = event
                         .entries
                         .get("breadcrumbs")

@@ -21,6 +21,8 @@ pub struct Event {
     #[serde(deserialize_with = "entries")]
     pub entries: HashMap<String, HashMap<String, Value>>,
     pub user: Option<User>,
+    pub release: Option<Release>,
+    pub dist: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
@@ -84,4 +86,18 @@ pub struct User {
     pub ip_address: Option<String>,
     pub name: Option<String>,
     pub username: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Release {
+    pub short_version: Option<String>,
+    pub version: Option<String>,
+    pub version_info: Option<VersionInfo>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub struct VersionInfo {
+    pub description: String,
+    pub version: HashMap<String, String>,
 }

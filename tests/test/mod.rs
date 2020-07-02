@@ -23,9 +23,9 @@ use url::Url;
 
 /// Number of tries to wait for Sentry to process an event. Sentry.io sometimes
 /// takes really long to process those.
-const NUM_OF_TRIES: u32 = 20;
+const NUM_OF_TRIES: u32 = 4;
 /// Time between tries.
-const TIME_BETWEEN_TRIES: Duration = Duration::from_secs(30);
+const TIME_BETWEEN_TRIES: Duration = Duration::from_secs(15);
 
 /// Converts `SENTRY_DSN` environment variable to proper URL to Sentry API.
 async fn api_url(client: &Client) -> Result<Url> {

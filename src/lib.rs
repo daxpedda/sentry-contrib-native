@@ -338,9 +338,6 @@ pub fn remove_user() {
 
 /// Sets a tag.
 ///
-/// # Panics
-/// Panics if `key` or `value` contain any null bytes.
-///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::set_tag;
@@ -355,9 +352,6 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
 
 /// Removes the tag with the specified `key`.
 ///
-/// # Panics
-/// Panics if `key` contains any null bytes.
-///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{remove_tag, set_tag};
@@ -370,9 +364,6 @@ pub fn remove_tag<S: Into<String>>(key: S) {
 }
 
 /// Sets extra information.
-///
-/// # Panics
-/// Panics if `key` or `value` contain any null bytes.
 ///
 /// # Examples
 /// ```
@@ -388,9 +379,6 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
 
 /// Removes the extra with the specified `key`.
 ///
-/// # Panics
-/// Panics if `key` contains any null bytes.
-///
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::{remove_extra, set_extra};
@@ -403,9 +391,6 @@ pub fn remove_extra<S: Into<String>>(key: S) {
 }
 
 /// Sets a context object.
-///
-/// # Panics
-/// Panics if `key` or `value` contain any null bytes.
 ///
 /// # Examples
 /// ```
@@ -420,9 +405,6 @@ pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
 }
 
 /// Removes the context object with the specified key.
-///
-/// # Panics
-/// Panics if `key` contains any null bytes.
 ///
 /// # Examples
 /// ```
@@ -440,9 +422,6 @@ pub fn remove_context<S: Into<String>>(key: S) {
 ///
 /// # Errors
 /// Fails with [`Error::Fingerprints`] if `fingerprints` is longer than 32.
-///
-/// # Panics
-/// Panics if [`String`]s in `fingerprints` contain any null bytes.
 ///
 /// # Examples
 /// ```
@@ -524,9 +503,6 @@ pub fn remove_fingerprint() {
 }
 
 /// Sets the transaction.
-///
-/// # Panics
-/// Panics if `transaction` contains any null bytes.
 ///
 /// # Examples
 /// ```

@@ -48,9 +48,6 @@ impl Default for Value {
 impl Value {
     /// Creates a new Sentry value.
     ///
-    /// # Panics
-    /// Panics if `value` contains any null bytes.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Value;
@@ -121,8 +118,7 @@ impl Value {
     /// for deallocating [`sys::Value`].
     ///
     /// # Panics
-    /// - Panics if `self` contains any null bytes.
-    /// - Panics if Sentry failed to allocate memory.
+    /// Panics if Sentry failed to allocate memory.
     pub(crate) fn into_raw(self) -> sys::Value {
         match self {
             Self::Null => unsafe { sys::value_new_null() },

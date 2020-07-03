@@ -93,9 +93,6 @@ impl Breadcrumb {
 
     /// Adds the [`Breadcrumb`] to be sent in case of an [`Event::capture`].
     ///
-    /// # Panics
-    /// Panics if any [`String`] in `self` contains a null byte.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Breadcrumb;

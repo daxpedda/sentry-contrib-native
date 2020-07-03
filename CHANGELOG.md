@@ -14,6 +14,8 @@ and this project adheres to
 
 ### Changed
 
+- Changed null-byte handling, `String`s are not cut off at the first null-byte
+  position if any are found.
 - Improved links to the documentation for the `master` branch.
 - Improved general documentation.
 - Update `vsprintf` to the new official version.

@@ -200,9 +200,6 @@ impl Event {
 
     /// Sends the [`Event`].
     ///
-    /// # Panics
-    /// Panics if any [`String`] in `self` contains a null byte.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Event;

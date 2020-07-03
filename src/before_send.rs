@@ -47,10 +47,6 @@ pub trait BeforeSend: 'static + Send + Sync {
     /// The caller of this function will catch any unwinding panics and
     /// [`abort`] if any occured.
     ///
-    /// # Panics
-    /// Panics if any [`String`] in the returning [`Value`] contains a null
-    /// byte.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::{BeforeSend, Value};

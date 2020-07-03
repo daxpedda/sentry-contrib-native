@@ -232,9 +232,6 @@ impl Options {
 
     /// Sets the DSN.
     ///
-    /// # Panics
-    /// Panics if `dsn` contains any null bytes.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -317,9 +314,6 @@ impl Options {
 
     /// Sets the release.
     ///
-    /// # Panics
-    /// Panics if `release` contains any null bytes.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -347,9 +341,6 @@ impl Options {
     }
 
     /// Sets the environment.
-    ///
-    /// # Panics
-    /// Panics if `environment` contains any null bytes.
     ///
     /// # Examples
     /// ```
@@ -379,9 +370,6 @@ impl Options {
 
     /// Sets the distribution.
     ///
-    /// # Panics
-    /// Panics if `distribution` contains any null bytes.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -409,9 +397,6 @@ impl Options {
     }
 
     /// Configures the http proxy.
-    ///
-    /// # Panics
-    /// Panics if `proxy` contains any null bytes.
     ///
     /// # Examples
     /// ```
@@ -441,9 +426,6 @@ impl Options {
 
     /// Configures the path to a file containing SSL certificates for
     /// verification.
-    ///
-    /// # Panics
-    /// Panics if `path` contains any null bytes.
     ///
     /// # Examples
     /// ```
@@ -603,9 +585,6 @@ impl Options {
 
     /// Adds a new attachment to be sent along.
     ///
-    /// # Panics
-    /// Panics if `name` or `path` contain any null bytes.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -634,9 +613,6 @@ impl Options {
     ///
     /// It is recommended that library users set an explicit handler path,
     /// depending on the directory/executable structure of their app.
-    ///
-    /// # Panics
-    /// Panics if `path` contains any null bytes.
     ///
     /// # Examples
     /// ```
@@ -680,9 +656,6 @@ impl Options {
     ///
     /// It is recommended that library users set an explicit absolute path,
     /// depending on their apps runtime directory.
-    ///
-    /// # Panics
-    /// Panics if `path` contains any null bytes.
     ///
     /// # Examples
     /// ```

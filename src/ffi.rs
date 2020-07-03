@@ -25,30 +25,22 @@ type COsString = c_char;
 /// Helper trait to convert [`PathBuf`] to `Vec<COsString>`.
 pub trait CPath {
     /// Re-encodes `self` into an OS compatible `Vec<COsString>`.
-    ///
-    /// # Panics
-    /// Panics if `self` contains any null bytes.
     fn into_os_vec(self) -> Vec<COsString>;
 }
 
 impl CPath for PathBuf {
     fn into_os_vec(self) -> Vec<COsString> {
+        let path = self.into_os_string();
+
         #[cfg(windows)]
-        let path: Vec<_> = self.into_os_string().encode_wide().chain(Some(0)).collect();
+        let path = path.encode_wide();
         #[cfg(not(windows))]
-        let path: Vec<_> = self
-            .into_os_string()
+        let path = path
             .into_vec()
             .into_iter()
-            .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) })
-            .chain(Some(0))
-            .collect();
+            .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) });
 
-        if path[0..path.len() - 1].contains(&0) {
-            panic!("found null byte")
-        }
-
-        path
+        path.take_while(|ch| *ch != 0).chain(Some(0)).collect()
     }
 }
 
@@ -83,14 +75,15 @@ impl CToR for *const c_char {
 /// Helper trait to convert [`String`] to [`CString`].
 pub trait RToC {
     /// Re-encodes `self` into a [`CString`].
-    ///
-    /// # Panics
-    /// Panics if `self` contains any null bytes.
     fn into_cstring(self) -> CString;
 }
 
 impl RToC for String {
-    fn into_cstring(self) -> CString {
+    fn into_cstring(mut self) -> CString {
+        if let Some(position) = self.find('\0') {
+            self.truncate(position);
+        }
+
         CString::new(self).expect("found null byte")
     }
 }
@@ -101,17 +94,6 @@ pub fn catch<R>(fun: impl FnOnce() -> R) -> R {
         Ok(ret) => ret,
         Err(_) => process::abort(),
     }
-}
-
-#[cfg(test)]
-macro_rules! invalid {
-    ($name:ident, $test:expr) => {
-        #[test]
-        #[should_panic]
-        fn $name() {
-            $test;
-        }
-    };
 }
 
 #[cfg(test)]
@@ -146,14 +128,13 @@ mod cpath {
     fn valid() {
         assert_eq!("abcdefgh\0", convert("abcdefgh"));
         assert_eq!("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0", convert("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️"));
+        assert_eq!("abcdefgh\0", convert("abcdefgh\0"));
+        assert_eq!("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0", convert("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0"));
+        assert_eq!("\0", convert("\0abcdefgh"));
+        assert_eq!("\0", convert("\0🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️"));
+        assert_eq!("abcd\0", convert("abcd\0efgh"));
+        assert_eq!("🤦‍♂️🤦‍♀️\0", convert("🤦‍♂️🤦‍♀️\0🤷‍♂️🤷‍♀️"));
     }
-
-    invalid!(invalid_1, convert("abcdefgh\0"));
-    invalid!(invalid_2, convert("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0"));
-    invalid!(invalid_3, convert("\0abcdefgh"));
-    invalid!(invalid_4, convert("\0🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️"));
-    invalid!(invalid_5, convert("abcd\0efgh"));
-    invalid!(invalid_6, convert("🤦‍♂️🤦‍♀️\0🤷‍♂️🤷‍♀️"));
 }
 
 #[cfg(test)]
@@ -176,10 +157,12 @@ mod ctor {
         assert_eq!(None, unsafe { ptr::null::<c_char>().as_str() });
     }
 
-    invalid!(invalid, {
+    #[test]
+    #[should_panic]
+    fn invalid() {
         let string = CString::new(vec![0xfe, 0xfe, 0xff, 0xff]).unwrap();
         unsafe { string.as_ptr().as_str() };
-    });
+    }
 }
 
 #[cfg(test)]
@@ -201,14 +184,13 @@ mod rtoc {
     fn valid() {
         assert_eq!("abcdefgh", convert("abcdefgh"));
         assert_eq!("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️", convert("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️"));
+        assert_eq!("abcdefgh", convert("abcdefgh\0"));
+        assert_eq!("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️", convert("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0"));
+        assert_eq!("", convert("\0abcdefgh"));
+        assert_eq!("", convert("\0🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️"));
+        assert_eq!("abcd", convert("abcd\0efgh"));
+        assert_eq!("🤦‍♂️🤦‍♀️", convert("🤦‍♂️🤦‍♀️\0🤷‍♂️🤷‍♀️"));
     }
-
-    invalid!(invalid_1, convert("abcdefgh\0"));
-    invalid!(invalid_2, convert("🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0"));
-    invalid!(invalid_3, convert("\0abcdefgh"));
-    invalid!(invalid_4, convert("\0🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️"));
-    invalid!(invalid_5, convert("abcd\0efgh"));
-    invalid!(invalid_6, convert("🤦‍♂️🤦‍♀️\0🤷‍♂️🤷‍♀️"));
 }
 
 #[cfg(test)]

@@ -72,9 +72,6 @@ impl User {
 
     /// Sets the specified user.
     ///
-    /// # Panics
-    /// Panics if any [`String`] contains a null byte.
-    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::User;

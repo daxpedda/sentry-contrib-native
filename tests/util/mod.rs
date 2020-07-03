@@ -7,7 +7,7 @@ use anyhow::{anyhow, bail, Error, Result};
 use custom_transport::Transport;
 use event::{Event, Response};
 use futures_util::{future, FutureExt};
-use reqwest::{header::HeaderMap, Client};
+use reqwest::{header::HeaderMap, Client, StatusCode};
 use sentry::{Options, Uuid};
 use sentry_contrib_native as sentry;
 use serde_json::Value;
@@ -155,12 +155,17 @@ async fn event(
         time::delay_for(time_between_tries).await;
 
         // get that event!
-        let response = request
-            .send()
-            .await?
-            .error_for_status()?
-            .json::<Value>()
-            .await?;
+        let response = match request.send().await?.error_for_status() {
+            Ok(response) => response.json::<Value>().await?,
+            Err(error) => {
+                if let Some(StatusCode::NOT_FOUND) = error.status() {
+                    continue;
+                } else {
+                    bail!(error)
+                }
+            }
+        };
+
         let event = serde_json::from_value(response.clone())?;
 
         match event {

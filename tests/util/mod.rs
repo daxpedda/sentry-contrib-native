@@ -2,7 +2,7 @@
 pub mod custom_transport;
 mod event;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Error, Result};
 #[cfg(feature = "custom-transport")]
 use custom_transport::Transport;
 use event::{Event, Response};
@@ -35,104 +35,151 @@ const NUM_OF_TRIES_FAILURE: u32 = 1;
 #[allow(dead_code)]
 const TIME_BETWEEN_TRIES_FAILURE: Duration = Duration::from_secs(60);
 
-/// Converts `SENTRY_DSN` environment variable to proper URL to Sentry API.
-async fn api_url(client: &Client) -> Result<Url> {
-    // build url to Sentry API
-    let mut api_url = Url::parse(&env::var("SENTRY_DSN")?)?;
-    // get the project ID before we drop it
-    let project_id = api_url
-        .path_segments()
-        .and_then(|mut path| path.next())
-        .expect("no projet ID found")
-        .to_owned();
-
-    // if we are connecting to the official "sentry.io" server, remove the
-    // "o1234.ingest." part
-    if let Some(domain) = api_url.domain() {
-        if domain.ends_with(".ingest.sentry.io") {
-            api_url.set_host(Some("sentry.io"))?;
-        }
-    }
-
-    // clean what we don't need: username, password and path
-    api_url.set_username("").expect("failed to clear username");
-    api_url
-        .set_password(None)
-        .expect("failed to clear username");
-    api_url
-        .path_segments_mut()
-        .expect("failed to clear path")
-        .clear();
-    // add what we do need: "/api/0/projects/"
-    let api_url = api_url.join("api/")?.join("0/")?.join("projects/")?;
-
-    // extract organization and project slug
-    let (organization_slug, project_slug) = {
-        // ask the Sentry API to give us a list of all projects, they also contain
-        // organization slugs
-        let response = client.get(api_url.clone()).send().await?.json().await?;
-
-        // extract them!
-        slugs(&response, &project_id).expect("couldn't get project or organization slug")
-    };
-
-    // put everything together:
-    // "/api/0/projects/{organization_slug}/{project_slug}/events/"
-    Ok(api_url
-        .join(&format!("{}/", organization_slug))?
-        .join(&format!("{}/", project_slug))?
-        .join("events/")?)
+#[derive(Clone)]
+struct ApiUrl {
+    base: Url,
+    organization_slug: String,
+    project_slug: String,
 }
 
-/// Extracts organization and project slug from JSON response.
-fn slugs(response: &Value, id: &str) -> Option<(String, String)> {
-    for project in response.as_array()? {
-        let project = project.as_object()?;
+impl ApiUrl {
+    /// Converts `SENTRY_DSN` environment variable to proper URL to Sentry API.
+    async fn new(client: &Client) -> Result<Self> {
+        // build url to Sentry API
+        let mut api_url = Url::parse(&env::var("SENTRY_DSN")?)?;
+        // get the project ID before we drop it
+        let project_id = api_url
+            .path_segments()
+            .and_then(|mut path| path.next())
+            .expect("no projet ID found")
+            .to_owned();
 
-        if project.get("id")?.as_str().unwrap() == id {
-            return Some((
-                project
-                    .get("organization")?
-                    .as_object()?
-                    .get("slug")?
-                    .as_str()?
-                    .to_owned(),
-                project.get("slug")?.as_str()?.to_owned(),
-            ));
+        // if we are connecting to the official "sentry.io" server, remove the
+        // "o1234.ingest." part
+        if let Some(domain) = api_url.domain() {
+            if domain.ends_with(".ingest.sentry.io") {
+                api_url.set_host(Some("sentry.io"))?;
+            }
         }
+
+        // clean what we don't need: username, password and path
+        api_url.set_username("").expect("failed to clear username");
+        api_url
+            .set_password(None)
+            .expect("failed to clear username");
+        api_url
+            .path_segments_mut()
+            .expect("failed to clear path")
+            .clear();
+        // add what we do need: "/api/0/projects/"
+        let base = api_url.join("api/")?.join("0/")?;
+
+        // extract organization and project slug
+        let (organization_slug, project_slug) = {
+            // ask the Sentry API to give us a list of all projects, they also contain
+            // organization slugs
+            let response = client
+                .get(base.join("projects/")?)
+                .send()
+                .await?
+                .error_for_status()?
+                .json()
+                .await?;
+
+            // extract them!
+            Self::slugs(&response, &project_id).expect("couldn't get project or organization slug")
+        };
+
+        // put everything together:
+        // "/api/0/projects/{organization_slug}/{project_slug}/events/"
+        Ok(Self {
+            base,
+            organization_slug,
+            project_slug,
+        })
     }
 
-    None
+    /// Extracts organization and project slug from JSON response.
+    fn slugs(response: &Value, id: &str) -> Option<(String, String)> {
+        for project in response.as_array()? {
+            let project = project.as_object()?;
+
+            if project.get("id")?.as_str().unwrap() == id {
+                return Some((
+                    project
+                        .get("organization")?
+                        .as_object()?
+                        .get("slug")?
+                        .as_str()?
+                        .to_owned(),
+                    project.get("slug")?.as_str()?.to_owned(),
+                ));
+            }
+        }
+
+        None
+    }
+
+    fn event(&self, uuid: Uuid) -> Result<Url> {
+        self.base
+            .join("projects/")?
+            .join(&format!("{}/", self.organization_slug))?
+            .join(&format!("{}/", self.project_slug))?
+            .join("events/")?
+            .join(&format!("{}/", uuid.to_plain()))
+            .map_err(Into::into)
+    }
+
+    fn attachments(&self, uuid: Uuid) -> Result<Url> {
+        self.base
+            .join(&format!("{}/", self.organization_slug))?
+            .join(&format!("{}/", self.project_slug))?
+            .join("events/")?
+            .join(&format!("{}/", uuid.to_plain()))?
+            .join("attachments/")
+            .map_err(Into::into)
+    }
 }
 
 /// Query event from Sentry service.
-pub async fn event(
+async fn event(
     client: Client,
-    api_url: Url,
+    api_url: ApiUrl,
     uuid: Uuid,
     num_of_tries: u32,
     time_between_tries: Duration,
 ) -> Result<Option<(Event, Value)>> {
-    // build UUID
-    let uuid = uuid.to_plain();
-
     // build API URL
-    let api_url = api_url.join(&format!("{}/", uuid))?;
+    let event_api_url = api_url.event(uuid)?;
 
     // we want to keep retrying until the message arrives at Sentry
     for _ in 0..num_of_tries {
         // build request
-        let request = client.get(api_url.clone());
+        let request = client.get(event_api_url.clone());
 
         // wait for the event to arrive at Sentry first!
         time::delay_for(time_between_tries).await;
 
         // get that event!
-        let response = request.send().await?.json::<Value>().await?;
+        let response = request
+            .send()
+            .await?
+            .error_for_status()?
+            .json::<Value>()
+            .await?;
         let event = serde_json::from_value(response.clone())?;
 
         match event {
-            Response::Event(event) => return Ok(Some((event, response))),
+            Response::Event(event) => {
+                /*let attachments = client
+                .get(api_url.attachments(uuid)?)
+                .send()
+                .await?
+                .error_for_status()?
+                .json::<Value>()
+                .await?;*/
+                return Ok(Some((event, response)));
+            }
             Response::NotFound { detail } => {
                 if detail != "Event not found" {
                     bail!("unknown message")
@@ -226,7 +273,7 @@ async fn events_internal(
     let client = Client::builder().default_headers(headers).build()?;
 
     // build API URL by querying Sentry service for organization and project slug
-    let api_url = api_url(&client).await?;
+    let api_url = ApiUrl::new(&client).await?;
 
     // store check workers
     let mut tasks = Vec::new();
@@ -243,11 +290,17 @@ async fn events_internal(
                 let event = response.as_ref().map(|(event, _)| event.clone());
 
                 // run our checks against it
-                panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|_| {
+                panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|error| {
                     if let Some((event, response)) = response {
-                        anyhow!("Failed:\nEvent: {:?}\nJson: {}", event, response)
+                        eprintln!("Failed:\nEvent: {:?}\nJson: {}", event, response)
                     } else {
-                        anyhow!("[Timeout]: {}", uuid)
+                        eprintln!("[Timeout]: {}", uuid)
+                    }
+
+                    if let Ok(error) = error.downcast::<Error>() {
+                        *error
+                    } else {
+                        anyhow!("unknown error")
                     }
                 })
             })

@@ -23,6 +23,8 @@ pub struct Event {
     pub user: Option<User>,
     pub release: Option<Release>,
     pub dist: Option<String>,
+    #[serde(default)]
+    pub attachments: Vec<Attachment>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
@@ -100,4 +102,12 @@ pub struct Release {
 pub struct VersionInfo {
     pub description: String,
     pub version: HashMap<String, String>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub struct Attachment {
+    pub id: String,
+    pub name: String,
+    pub sha1: String,
+    pub size: usize,
 }

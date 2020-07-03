@@ -13,6 +13,8 @@ mod util;
 use anyhow::Result;
 use sentry::Event;
 use sentry_contrib_native as sentry;
+use sha1::{Digest, Sha1};
+use std::fs;
 
 #[tokio::test(threaded_scheduler)]
 async fn options() -> Result<()> {
@@ -43,6 +45,13 @@ async fn options() -> Result<()> {
 
                 assert_eq!("release-pgo", event.dist.unwrap());
                 assert_eq!("release-pgo", event.tags.get("dist").unwrap());
+
+                let attachment = event.attachments.get(0).unwrap();
+                let content = fs::read_to_string("tests/res/attachment.txt").unwrap();
+                let hash = hex::encode(Sha1::digest(content.as_bytes()));
+                assert_eq!("attachment.txt", attachment.name);
+                assert_eq!(hash, attachment.sha1);
+                assert_eq!(content.len(), attachment.size);
             },
         )],
     )

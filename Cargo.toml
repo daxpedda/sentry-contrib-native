@@ -25,10 +25,12 @@ vsprintf = "2"
 [dev-dependencies]
 anyhow = "1"
 dylib = { path = "tests/res/dylib" }
+hex = "0.4"
 futures-executor = "0.3"
 futures-util = "0.3"
 libloading = "0.6"
 parking_lot = "0.11"
+rand = "0.7"
 reqwest = { version = "0.10", default-features = false, features = [
   "blocking",
   "brotli",
@@ -41,6 +43,7 @@ rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-ma
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
+sha-1 = "0.9"
 tokio = { version = "0.2", features = ["macros", "rt-threaded"] }
 url = "2"
 

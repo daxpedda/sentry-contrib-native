@@ -131,13 +131,7 @@ impl ApiUrl {
     }
 
     fn attachments(&self, uuid: Uuid) -> Result<Url> {
-        self.base
-            .join(&format!("{}/", self.organization_slug))?
-            .join(&format!("{}/", self.project_slug))?
-            .join("events/")?
-            .join(&format!("{}/", uuid.to_plain()))?
-            .join("attachments/")
-            .map_err(Into::into)
+        self.event(uuid)?.join("attachments/").map_err(Into::into)
     }
 }
 
@@ -170,14 +164,16 @@ async fn event(
         let event = serde_json::from_value(response.clone())?;
 
         match event {
-            Response::Event(event) => {
-                /*let attachments = client
-                .get(api_url.attachments(uuid)?)
-                .send()
-                .await?
-                .error_for_status()?
-                .json::<Value>()
-                .await?;*/
+            Response::Event(mut event) => {
+                let attachments = client
+                    .get(api_url.attachments(uuid)?)
+                    .send()
+                    .await?
+                    .error_for_status()?
+                    .json::<Value>()
+                    .await?;
+                event.attachments = serde_json::from_value(attachments)?;
+
                 return Ok(Some((event, response)));
             }
             Response::NotFound { detail } => {

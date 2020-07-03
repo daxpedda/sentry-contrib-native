@@ -4,7 +4,7 @@
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">User</span>::<span class="ident">new</span>();
 <span class="ident">user</span>.<span class="ident">insert</span>(<span class="string">&quot;id&quot;</span>, <span class="number">1</span>);
 <span class="ident">user</span>.<span class="ident">set</span>();</pre></div>
-</div><h2 id='implementations' class='small-section-header'>Implementations<a href='#implementations' class='anchor'></a></h2><h3 id='impl' class='impl'><code class='in-band'>impl <a class="struct" href="../sentry_contrib_native/struct.User.html" title="struct sentry_contrib_native::User">User</a></code><a href='#impl' class='anchor'></a><a class='srclink' href='../src/sentry_contrib_native/user.rs.html#47-93' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.new' class="method"><code id='new.v'><span class="docblock attributes">#[must_use]</span>pub fn <a href='#method.new' class='fnname'>new</a>() -&gt; Self</code><a class='srclink' href='../src/sentry_contrib_native/user.rs.html#57-59' title='goto source code'>[src]</a></h4><div class='docblock'><p>Creates a new user.</p>
+</div><h2 id='implementations' class='small-section-header'>Implementations<a href='#implementations' class='anchor'></a></h2><h3 id='impl' class='impl'><code class='in-band'>impl <a class="struct" href="../sentry_contrib_native/struct.User.html" title="struct sentry_contrib_native::User">User</a></code><a href='#impl' class='anchor'></a><a class='srclink' href='../src/sentry_contrib_native/user.rs.html#47-90' title='goto source code'>[src]</a></h3><div class='impl-items'><h4 id='method.new' class="method"><code id='new.v'><span class="docblock attributes">#[must_use]</span>pub fn <a href='#method.new' class='fnname'>new</a>() -&gt; Self</code><a class='srclink' href='../src/sentry_contrib_native/user.rs.html#57-59' title='goto source code'>[src]</a></h4><div class='docblock'><p>Creates a new user.</p>
 <h1 id="examples-1" class="section-header"><a href="#examples-1">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">User</span>::<span class="ident">new</span>();</pre></div>
@@ -13,9 +13,7 @@
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">User</span>::<span class="ident">new</span>();
 <span class="ident">user</span>.<span class="ident">insert</span>(<span class="string">&quot;id&quot;</span>, <span class="number">1</span>);</pre></div>
-</div><h4 id='method.set' class="method"><code id='set.v'>pub fn <a href='#method.set' class='fnname'>set</a>(self)</code><a class='srclink' href='../src/sentry_contrib_native/user.rs.html#85-92' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sets the specified user.</p>
-<h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
-<p>Panics if any <a href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="`String`"><code>String</code></a> contains a null byte.</p>
+</div><h4 id='method.set' class="method"><code id='set.v'>pub fn <a href='#method.set' class='fnname'>set</a>(self)</code><a class='srclink' href='../src/sentry_contrib_native/user.rs.html#82-89' title='goto source code'>[src]</a></h4><div class='docblock'><p>Sets the specified user.</p>
 <h1 id="examples-3" class="section-header"><a href="#examples-3">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">User</span>::<span class="ident">new</span>();
@@ -255,7 +253,7 @@ yield elements from min (inclusive) to max (exclusive).
 The range may also be entered as <code>(Bound&lt;T&gt;, Bound&lt;T&gt;)</code>, so for example
 <code>range((Excluded(4), Included(10)))</code> will yield a left-exclusive, right-inclusive
 range from 4 to 10.</p>
-<h1 id="panics-1" class="section-header"><a href="#panics-1">Panics</a></h1>
+<h1 id="panics" class="section-header"><a href="#panics">Panics</a></h1>
 <p>Panics if range <code>start &gt; end</code>.
 Panics if range <code>start == end</code> and both bounds are <code>Excluded</code>.</p>
 <h1 id="examples-19" class="section-header"><a href="#examples-19">Examples</a></h1>
@@ -279,7 +277,7 @@ yield elements from min (inclusive) to max (exclusive).
 The range may also be entered as <code>(Bound&lt;T&gt;, Bound&lt;T&gt;)</code>, so for example
 <code>range((Excluded(4), Included(10)))</code> will yield a left-exclusive, right-inclusive
 range from 4 to 10.</p>
-<h1 id="panics-2" class="section-header"><a href="#panics-2">Panics</a></h1>
+<h1 id="panics-1" class="section-header"><a href="#panics-1">Panics</a></h1>
 <p>Panics if range <code>start &gt; end</code>.
 Panics if range <code>start == end</code> and both bounds are <code>Excluded</code>.</p>
 <h1 id="examples-20" class="section-header"><a href="#examples-20">Examples</a></h1>

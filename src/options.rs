@@ -932,6 +932,7 @@ fn threaded_stress() -> anyhow::Result<()> {
     use crate::test;
     use std::{convert::TryFrom, sync::Arc, thread};
 
+    #[allow(clippy::type_complexity)]
     fn spawns(tests: Vec<fn(Arc<RwLock<Options>>, usize)>) -> Options {
         let options = Arc::new(RwLock::new(Options::new()));
 

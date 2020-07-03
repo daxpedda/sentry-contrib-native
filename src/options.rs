@@ -957,14 +957,10 @@ fn options_fail() -> anyhow::Result<()> {
 #[rusty_fork::test_fork(timeout_ms = 60000)]
 fn threaded_stress() -> anyhow::Result<()> {
     use crate::test;
-    use std::{
-        convert::TryFrom,
-        sync::{Arc, Mutex, MutexGuard},
-        thread,
-    };
+    use std::{convert::TryFrom, sync::Arc, thread};
 
-    fn spawns(tests: Vec<fn(MutexGuard<Options>, usize)>) -> Options {
-        let options = Arc::new(Mutex::new(Options::new()));
+    fn spawns(tests: Vec<fn(Arc<RwLock<Options>>, usize)>) -> Options {
+        let options = Arc::new(RwLock::new(Options::new()));
 
         let mut spawns = Vec::with_capacity(tests.len());
         for test in tests {
@@ -976,10 +972,7 @@ fn threaded_stress() -> anyhow::Result<()> {
                 for index in 0..100 {
                     let options = Arc::clone(&options);
 
-                    handles.push(thread::spawn(move || {
-                        let options = options.lock().unwrap();
-                        test(options, index)
-                    }))
+                    handles.push(thread::spawn(move || test(options, index)))
                 }
 
                 handles
@@ -999,57 +992,80 @@ fn threaded_stress() -> anyhow::Result<()> {
     test::set_hook();
 
     let options = spawns(vec![
-        |mut options, _| options.set_before_send(|value| value),
-        |mut options, index| options.set_dsn(index.to_string()),
-        |options, _| println!("{:?}", options.dsn()),
-        |mut options, index| {
+        |options, _| options.write().unwrap().set_before_send(|value| value),
+        |options, index| options.write().unwrap().set_dsn(index.to_string()),
+        |options, _| println!("{:?}", options.read().unwrap().dsn()),
+        |options, index| {
             let sample_rate = f64::from(u32::try_from(index).unwrap()) / 100.;
-            options.set_sample_rate(sample_rate).unwrap()
+            options
+                .write()
+                .unwrap()
+                .set_sample_rate(sample_rate)
+                .unwrap()
         },
-        |options, _| println!("{:?}", options.sample_rate()),
-        |mut options, index| options.set_release(index.to_string()),
-        |options, _| println!("{:?}", options.release()),
-        |mut options, index| options.set_environment(index.to_string()),
-        |options, _| println!("{:?}", options.environment()),
-        |mut options, index| options.set_distribution(index.to_string()),
-        |options, _| println!("{:?}", options.distribution()),
-        |mut options, index| options.set_http_proxy(index.to_string()),
-        |options, _| println!("{:?}", options.http_proxy()),
-        |mut options, index| options.set_ca_certs(index.to_string()),
-        |options, _| println!("{:?}", options.ca_certs()),
-        |mut options, index| {
-            options.set_debug(match index % 2 {
+        |options, _| println!("{:?}", options.read().unwrap().sample_rate()),
+        |options, index| options.write().unwrap().set_release(index.to_string()),
+        |options, _| println!("{:?}", options.read().unwrap().release()),
+        |options, index| options.write().unwrap().set_environment(index.to_string()),
+        |options, _| println!("{:?}", options.read().unwrap().environment()),
+        |options, index| options.write().unwrap().set_distribution(index.to_string()),
+        |options, _| println!("{:?}", options.read().unwrap().distribution()),
+        |options, index| options.write().unwrap().set_http_proxy(index.to_string()),
+        |options, _| println!("{:?}", options.read().unwrap().http_proxy()),
+        |options, index| options.write().unwrap().set_ca_certs(index.to_string()),
+        |options, _| println!("{:?}", options.read().unwrap().ca_certs()),
+        |options, index| {
+            options.write().unwrap().set_debug(match index % 2 {
                 0 => false,
                 1 => true,
                 _ => unreachable!(),
             })
         },
-        |options, _| println!("{:?}", options.debug()),
-        |mut options, index| {
-            options.set_require_user_consent(match index % 2 {
-                0 => false,
-                1 => true,
-                _ => unreachable!(),
-            })
+        |options, _| println!("{:?}", options.read().unwrap().debug()),
+        |options, index| {
+            options
+                .write()
+                .unwrap()
+                .set_require_user_consent(match index % 2 {
+                    0 => false,
+                    1 => true,
+                    _ => unreachable!(),
+                })
         },
-        |options, _| println!("{:?}", options.require_user_consent()),
-        |mut options, index| {
-            options.set_symbolize_stacktraces(match index % 2 {
-                0 => false,
-                1 => true,
-                _ => unreachable!(),
-            })
+        |options, _| println!("{:?}", options.write().unwrap().require_user_consent()),
+        |options, index| {
+            options
+                .write()
+                .unwrap()
+                .set_symbolize_stacktraces(match index % 2 {
+                    0 => false,
+                    1 => true,
+                    _ => unreachable!(),
+                })
         },
-        |options, _| println!("{:?}", options.symbolize_stacktraces()),
-        |mut options, index| options.add_attachment(index.to_string(), index.to_string()),
-        |mut options, index| options.set_handler_path(index.to_string()),
-        |mut options, index| options.set_database_path(index.to_string()),
-        |mut options, index| {
-            options.set_system_crash_reporter(match index % 2 {
-                0 => false,
-                1 => true,
-                _ => unreachable!(),
-            })
+        |options, _| println!("{:?}", options.read().unwrap().symbolize_stacktraces()),
+        |options, index| {
+            options
+                .write()
+                .unwrap()
+                .add_attachment(index.to_string(), index.to_string())
+        },
+        |options, index| options.write().unwrap().set_handler_path(index.to_string()),
+        |options, index| {
+            options
+                .write()
+                .unwrap()
+                .set_database_path(index.to_string())
+        },
+        |options, index| {
+            options
+                .write()
+                .unwrap()
+                .set_system_crash_reporter(match index % 2 {
+                    0 => false,
+                    1 => true,
+                    _ => unreachable!(),
+                })
         },
     ]);
 

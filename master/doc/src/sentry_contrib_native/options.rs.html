@@ -1089,6 +1089,7 @@
 <span id="1089">1089</span>
 <span id="1090">1090</span>
 <span id="1091">1091</span>
+<span id="1092">1092</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry options implementation.</span>
 
@@ -2024,6 +2025,7 @@
     <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">test</span>;
     <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">convert</span>::<span class="ident">TryFrom</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>, <span class="ident">thread</span>};
 
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">type_complexity</span>)]</span>
     <span class="kw">fn</span> <span class="ident">spawns</span>(<span class="ident">tests</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">fn</span>(<span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Options</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">usize</span>)<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Options</span> {
         <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">Options</span>::<span class="ident">new</span>()));
 

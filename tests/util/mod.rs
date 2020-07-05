@@ -392,6 +392,8 @@ pub async fn external_events(events: Vec<(String, fn(Event))>) -> Result<()> {
                 let user_id = hex::encode(id);
                 let mut child = Command::new(example)
                     .stdin(Stdio::piped())
+                    .stdout(Stdio::inherit())
+                    .stderr(Stdio::inherit())
                     .spawn()
                     .expect("make sure to build the panic example first!");
                 child.stdin.as_mut().unwrap().write_all(&id).await?;

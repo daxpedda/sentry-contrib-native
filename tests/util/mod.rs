@@ -37,6 +37,8 @@ const NUM_OF_TRIES_FAILURE: u32 = 1;
 #[allow(dead_code)]
 const TIME_BETWEEN_TRIES_FAILURE: Duration = Duration::from_secs(60);
 
+/// Interface to store URL to Sentry's Web API and easily generate specific
+/// endpoint URLs.
 #[derive(Clone)]
 struct ApiUrl {
     base: Url,
@@ -45,7 +47,8 @@ struct ApiUrl {
 }
 
 impl ApiUrl {
-    /// Converts `SENTRY_DSN` environment variable to proper URL to Sentry API.
+    /// Converts `SENTRY_DSN` environment variable to proper API URL to Sentry's
+    /// Web API.
     async fn new(client: &Client) -> Result<Self> {
         // build url to Sentry API
         let mut api_url = Url::parse(&env::var("SENTRY_DSN")?)?;
@@ -92,8 +95,6 @@ impl ApiUrl {
             Self::slugs(&response, &project_id).expect("couldn't get project or organization slug")
         };
 
-        // put everything together:
-        // "/api/0/projects/{organization_slug}/{project_slug}/events/"
         Ok(Self {
             base,
             organization_slug,
@@ -122,6 +123,7 @@ impl ApiUrl {
         None
     }
 
+    /// Get event by UUID endpoint.
     fn event(&self, uuid: Uuid) -> Result<Url> {
         self.base
             .join("projects/")?
@@ -132,10 +134,12 @@ impl ApiUrl {
             .map_err(Into::into)
     }
 
+    /// Get attachments of an event by UUID endpoint.
     fn attachments(&self, uuid: Uuid) -> Result<Url> {
         self.event(uuid)?.join("attachments/").map_err(Into::into)
     }
 
+    /// Get all issues that have the given user ID.
     fn issues(&self, user_id: &str) -> Result<Url> {
         let mut url = self
             .base
@@ -150,6 +154,7 @@ impl ApiUrl {
         Ok(url)
     }
 
+    /// Get all events of an issue with the given ID.
     fn events(&self, issue: &str) -> Result<Url> {
         self.base
             .join("issues/")?
@@ -159,6 +164,7 @@ impl ApiUrl {
     }
 }
 
+/// Initialize [`Client`] with defaults and build [`ApiUrl`].
 async fn init() -> Result<(Client, ApiUrl)> {
     // get API token set by the user
     let token = env::var("SENTRY_TOKEN")?;
@@ -176,13 +182,14 @@ async fn init() -> Result<(Client, ApiUrl)> {
     Ok((client, api_url))
 }
 
+/// Query the Web API with the given endpoint.
 async fn query(
     client: &Client,
     api_url: Url,
     num_of_tries: u32,
     time_between_tries: Duration,
 ) -> Result<Option<Value>> {
-    // we want to keep retrying until the message arrives at Sentry
+    // we want to keep retrying until the event arrives at Sentry
     for _ in 0..num_of_tries {
         // build request
         let request = client.get(api_url.clone());
@@ -207,7 +214,7 @@ async fn query(
 }
 
 #[allow(clippy::type_complexity, dead_code)]
-/// Handle success only.
+/// Query events with the given [`Uuid`] and run given checks on them.
 pub async fn events_success(
     option: Option<fn(&mut Options)>,
     events: Vec<(fn() -> Uuid, fn(Event))>,
@@ -227,7 +234,7 @@ pub async fn events_success(
 }
 
 #[allow(dead_code)]
-/// Handle success only.
+/// Query events with the given [`Uuid`] and make sure they never arrived.
 pub async fn events_failure(
     option: Option<fn(&mut Options)>,
     events: Vec<fn() -> Uuid>,
@@ -246,7 +253,7 @@ pub async fn events_failure(
     .await
 }
 
-/// List of events to send, query and than run checks on.
+/// Query events with the given [`Uuid`] and run given checks on them.
 async fn events_internal(
     option: Option<fn(&mut Options)>,
     events: Vec<(fn() -> Uuid, impl Fn(Option<Event>) + 'static + Send)>,
@@ -277,9 +284,10 @@ async fn events_internal(
         checks.push(check);
     }
 
+    // initialize HTTP client
     let (client, api_url) = init().await?;
 
-    // store check workers
+    // store tokio tasks
     let mut tasks = Vec::new();
 
     for (uuid, check) in uuids.into_iter().zip(checks) {
@@ -295,12 +303,16 @@ async fn events_internal(
 
                 // run our checks against it
                 panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|error| {
+                    // if there was response and the check failed print everything do dump that
+                    // information in the CI
                     if let Some((event, response)) = response {
                         eprintln!("Failed:\nEvent: {:?}\nJson: {}", event, response)
+                    // if there was no response than we timed out
                     } else {
                         eprintln!("[Timeout]: {}", uuid)
                     }
 
+                    // return that error
                     if let Ok(error) = error.downcast::<Error>() {
                         *error
                     } else {
@@ -347,11 +359,13 @@ async fn event(
     Ok(None)
 }
 
-/// List of events to send, query and than run checks on.
+/// Run external example in a process, feed it a user id and search for it
+/// through Web API.
 #[allow(dead_code)]
 pub async fn external_events(events: Vec<(String, fn(Event))>) -> Result<()> {
     let (client, api_url) = init().await?;
 
+    // build path to example
     let example_path = PathBuf::from(env!("OUT_DIR"))
         .parent()
         .and_then(Path::parent)
@@ -373,6 +387,7 @@ pub async fn external_events(events: Vec<(String, fn(Event))>) -> Result<()> {
 
         tasks.push(
             tokio::spawn(async move {
+                // build user ID
                 let id: [u8; 16] = rand::random();
                 let user_id = hex::encode(id);
                 let mut child = Command::new(example)
@@ -407,10 +422,13 @@ pub async fn external_events(events: Vec<(String, fn(Event))>) -> Result<()> {
     Ok(())
 }
 
+/// Query event by user ID.
 #[allow(dead_code)]
 async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Result<Option<Event>> {
     let mut issues = None;
 
+    // timeout check is here because we also need to check if the response array
+    // contains anything
     for _ in 0..NUM_OF_TRIES_SUCCESS {
         if let Some(value) = query(
             client,
@@ -432,6 +450,7 @@ async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Res
     }
 
     let issues = issues.context(format!("[Timeout]: {}", user_id))?;
+    // there should be only one issue with that user ID
     let issue = issues[0]
         .as_object()
         .unwrap()
@@ -440,6 +459,7 @@ async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Res
         .as_str()
         .unwrap();
 
+    // get the event
     let events: Vec<MinEvent> = serde_json::from_value(
         query(
             client,
@@ -451,12 +471,15 @@ async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Res
         .unwrap(),
     )?;
 
+    // search for the event that has the user ID
     for event in events {
         if let Some(user) = event.user {
             if let Some(id) = user.id {
                 if id == user_id {
                     let uuid: [u8; 16] = hex::decode(event.event_id)?.as_slice().try_into()?;
                     let uuid = Uuid::from(uuid);
+                    // we didn't get the whole event, just a minified version, query for the full
+                    // one
                     return Ok(
                         self::event(client, api_url.clone(), uuid, 1, Duration::default())
                             .await?

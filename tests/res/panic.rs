@@ -11,7 +11,8 @@ mod custom_transport;
 #[cfg(feature = "custom-transport")]
 use custom_transport::Transport;
 
-fn main() -> Result<()> {
+#[tokio::main(threaded_scheduler)]
+async fn main() -> Result<()> {
     sentry::set_hook(None, None);
 
     let mut options = Options::new();

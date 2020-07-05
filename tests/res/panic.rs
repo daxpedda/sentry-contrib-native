@@ -5,6 +5,7 @@ use std::io::{self, Read};
 
 #[cfg(feature = "custom-transport")]
 #[path = "../util/custom_transport.rs"]
+#[rustfmt::skip]
 mod custom_transport;
 
 #[cfg(feature = "custom-transport")]

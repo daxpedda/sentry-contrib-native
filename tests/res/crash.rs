@@ -6,9 +6,21 @@ use std::{
     ptr,
 };
 
+#[cfg(feature = "custom-transport")]
+#[path = "../util/custom_transport.rs"]
+mod custom_transport;
+
+#[cfg(feature = "custom-transport")]
+use custom_transport::Transport;
+
 fn main() -> Result<()> {
     sentry::set_hook(None, None);
-    let _shutdown = Options::new().init()?;
+
+    let mut options = Options::new();
+    options.set_debug(true);
+    #[cfg(feature = "custom-transport")]
+    options.set_transport(Transport::new);
+    let _shutdown = options.init()?;
 
     let mut buffer = [0; 16];
     io::stdin().read_exact(&mut buffer)?;

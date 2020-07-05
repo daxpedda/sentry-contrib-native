@@ -88,7 +88,7 @@ pub fn set_hook(
             event = before_send(event);
         }
 
-        eprintln!("{}", event.capture());
+        event.capture();
 
         if let Some(hook) = &hook {
             hook(panic_info);

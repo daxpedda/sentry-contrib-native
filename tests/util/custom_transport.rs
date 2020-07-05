@@ -8,13 +8,15 @@ use std::{convert::TryInto, str::FromStr, time::Duration};
 use tokio::{
     sync::mpsc::{self, Receiver, Sender},
     task::{JoinError, JoinHandle},
+    time,
 };
+
+type Payload = Map<JoinHandle<Result<()>>, fn(Result<Result<()>, JoinError>) -> Result<()>>;
 
 pub struct Transport {
     dsn: Dsn,
-    receiver:
-        Receiver<Map<JoinHandle<Result<()>>, fn(Result<Result<()>, JoinError>) -> Result<()>>>,
-    sender: Sender<Map<JoinHandle<Result<()>>, fn(Result<Result<()>, JoinError>) -> Result<()>>>,
+    receiver: Receiver<Payload>,
+    sender: Sender<Payload>,
     client: Client,
 }
 
@@ -59,11 +61,13 @@ impl SentryTransport for Transport {
         });
     }
 
-    fn shutdown(mut self: Box<Self>, _timeout: Duration) -> TransportShutdown {
+    fn shutdown(mut self: Box<Self>, timeout: Duration) -> TransportShutdown {
         executor::block_on(async {
             let mut ret = TransportShutdown::Success;
 
-            while let Some(task) = self.receiver.recv().await {
+            time::delay_for(timeout).await;
+
+            while let Ok(task) = self.receiver.try_recv() {
                 if let Err(error) = task.await {
                     eprintln!("{}", error);
                     ret = TransportShutdown::TimedOut;

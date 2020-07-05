@@ -44,7 +44,7 @@ serde = "1"
 serde_derive = "1"
 serde_json = "1"
 sha-1 = "0.9"
-tokio = { version = "0.2", features = ["macros", "rt-threaded"] }
+tokio = { version = "0.2", features = ["macros", "process", "rt-threaded"] }
 url = "2"
 
 [features]
@@ -57,6 +57,10 @@ test = []
 [[example]]
 name = "custom-transport"
 required-features = ["custom-transport"]
+
+[[example]]
+name = "crash"
+path = "tests/res/crash.rs"
 
 [[example]]
 name = "panic"

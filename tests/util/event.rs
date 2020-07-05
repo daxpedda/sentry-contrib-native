@@ -107,5 +107,7 @@ pub struct Attachment {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct MinEvent {
+    #[serde(rename = "eventID")]
+    pub event_id: String,
     pub user: Option<User>,
 }

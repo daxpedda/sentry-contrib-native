@@ -16,9 +16,11 @@ use std::{
     env,
     iter::FromIterator,
     panic::{self, AssertUnwindSafe},
+    path::{Path, PathBuf},
+    process::Stdio,
     time::Duration,
 };
-use tokio::time;
+use tokio::{io::AsyncWriteExt, process::Command, time};
 use url::Url;
 
 /// Number of tries to wait for Sentry to process an event. Sentry.io sometimes
@@ -345,10 +347,68 @@ async fn event(
     Ok(None)
 }
 
+/// List of events to send, query and than run checks on.
 #[allow(dead_code)]
-pub async fn user_id(user_id: String) -> Result<()> {
+pub async fn external_events(events: Vec<(String, fn(Event))>) -> Result<()> {
     let (client, api_url) = init().await?;
 
+    let example_path = PathBuf::from(env!("OUT_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .and_then(Path::parent)
+        .unwrap()
+        .join("examples");
+
+    // store check workers
+    let mut tasks = Vec::new();
+
+    for (example, check) in events {
+        let client = client.clone();
+        let api_url = api_url.clone();
+
+        #[cfg(not(target_os = "windows"))]
+        let example = example_path.join(example);
+        #[cfg(target_os = "windows")]
+        let example = example_path.join(format!("{}.exe", example));
+
+        tasks.push(
+            tokio::spawn(async move {
+                let id: [u8; 16] = rand::random();
+                let user_id = hex::encode(id);
+                let mut child = Command::new(example)
+                    .stdin(Stdio::piped())
+                    .spawn()
+                    .expect("make sure to build the panic example first!");
+                child.stdin.as_mut().unwrap().write_all(&id).await?;
+
+                assert!(!child.await?.success());
+
+                // get event from the Sentry service
+                let event = event_by_user(&client, api_url, user_id)
+                    .await?
+                    .context("no event arrived")?;
+
+                // run our checks against it
+                panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|error| {
+                    if let Ok(error) = error.downcast::<Error>() {
+                        *error
+                    } else {
+                        anyhow!("unknown error")
+                    }
+                })
+            })
+            .map(|result| result?),
+        );
+    }
+
+    // poll all tasks
+    future::try_join_all(tasks).await?;
+
+    Ok(())
+}
+
+#[allow(dead_code)]
+async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Result<Option<Event>> {
     let issues = query(
         &client,
         api_url.issues(&user_id)?,
@@ -380,11 +440,17 @@ pub async fn user_id(user_id: String) -> Result<()> {
         if let Some(user) = event.user {
             if let Some(id) = user.id {
                 if id == user_id {
-                    return Ok(());
+                    let uuid: [u8; 16] = hex::decode(event.event_id)?.as_slice().try_into()?;
+                    let uuid = Uuid::from(uuid);
+                    return Ok(
+                        self::event(&client, api_url.clone(), uuid, 1, Duration::default())
+                            .await?
+                            .map(|(event, _)| event),
+                    );
                 }
             }
         }
     }
 
-    Err(anyhow!("failed to find event"))
+    Ok(None)
 }

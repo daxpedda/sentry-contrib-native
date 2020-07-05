@@ -1,11 +1,11 @@
 #[cfg(feature = "custom-transport")]
 pub mod custom_transport;
-mod event;
+pub mod event;
 
-use anyhow::{anyhow, bail, Error, Result};
+use anyhow::{anyhow, bail, Context, Error, Result};
 #[cfg(feature = "custom-transport")]
 use custom_transport::Transport;
-use event::{Event, Response};
+use event::{Event, MinEvent};
 use futures_util::{future, FutureExt};
 use reqwest::{header::HeaderMap, Client, StatusCode};
 use sentry::{Options, Uuid};
@@ -133,30 +133,64 @@ impl ApiUrl {
     fn attachments(&self, uuid: Uuid) -> Result<Url> {
         self.event(uuid)?.join("attachments/").map_err(Into::into)
     }
+
+    fn issues(&self, user_id: &str) -> Result<Url> {
+        let mut url = self
+            .base
+            .join("projects/")?
+            .join(&format!("{}/", self.organization_slug))?
+            .join(&format!("{}/", self.project_slug))?
+            .join("issues/")?;
+        url.query_pairs_mut()
+            .append_pair("query", &format!("user.id:{}", user_id));
+        url.query_pairs_mut().append_pair("statsPeriod", "24h");
+
+        Ok(url)
+    }
+
+    fn events(&self, issue: &str) -> Result<Url> {
+        self.base
+            .join("issues/")?
+            .join(&format!("{}/", issue))?
+            .join("events/")
+            .map_err(Into::into)
+    }
 }
 
-/// Query event from Sentry service.
-async fn event(
-    client: Client,
-    api_url: ApiUrl,
-    uuid: Uuid,
+async fn init() -> Result<(Client, ApiUrl)> {
+    // get API token set by the user
+    let token = env::var("SENTRY_TOKEN")?;
+
+    // build our HTTP client
+    let headers = HeaderMap::from_iter(Some((
+        "Authorization".try_into()?,
+        format!("Bearer {}", token).try_into()?,
+    )));
+    let client = Client::builder().default_headers(headers).build()?;
+
+    // build API URL by querying Sentry service for organization and project slug
+    let api_url = ApiUrl::new(&client).await?;
+
+    Ok((client, api_url))
+}
+
+async fn query(
+    client: &Client,
+    api_url: Url,
     num_of_tries: u32,
     time_between_tries: Duration,
-) -> Result<Option<(Event, Value)>> {
-    // build API URL
-    let event_api_url = api_url.event(uuid)?;
-
+) -> Result<Option<Value>> {
     // we want to keep retrying until the message arrives at Sentry
     for _ in 0..num_of_tries {
         // build request
-        let request = client.get(event_api_url.clone());
+        let request = client.get(api_url.clone());
 
         // wait for the event to arrive at Sentry first!
         time::delay_for(time_between_tries).await;
 
         // get that event!
-        let response = match request.send().await?.error_for_status() {
-            Ok(response) => response.json::<Value>().await?,
+        match request.send().await?.error_for_status() {
+            Ok(response) => return response.json().await.map_err(Into::into),
             Err(error) => {
                 if let Some(StatusCode::NOT_FOUND) = error.status() {
                     continue;
@@ -165,28 +199,6 @@ async fn event(
                 }
             }
         };
-
-        let event = serde_json::from_value(response.clone())?;
-
-        match event {
-            Response::Event(mut event) => {
-                let attachments = client
-                    .get(api_url.attachments(uuid)?)
-                    .send()
-                    .await?
-                    .error_for_status()?
-                    .json::<Value>()
-                    .await?;
-                event.attachments = serde_json::from_value(attachments)?;
-
-                return Ok(Some((event, response)));
-            }
-            Response::NotFound { detail } => {
-                if detail != "Event not found" {
-                    bail!("unknown message")
-                }
-            }
-        }
     }
 
     Ok(None)
@@ -263,18 +275,7 @@ async fn events_internal(
         checks.push(check);
     }
 
-    // get API token set by the user
-    let token = env::var("SENTRY_TOKEN")?;
-
-    // build our HTTP client
-    let headers = HeaderMap::from_iter(Some((
-        "Authorization".try_into()?,
-        format!("Bearer {}", token).try_into()?,
-    )));
-    let client = Client::builder().default_headers(headers).build()?;
-
-    // build API URL by querying Sentry service for organization and project slug
-    let api_url = ApiUrl::new(&client).await?;
+    let (client, api_url) = init().await?;
 
     // store check workers
     let mut tasks = Vec::new();
@@ -287,7 +288,7 @@ async fn events_internal(
             tokio::spawn(async move {
                 // get event from the Sentry service
                 let response =
-                    event(client, api_url, uuid, num_of_tries, time_between_tries).await?;
+                    event(&client, api_url, uuid, num_of_tries, time_between_tries).await?;
                 let event = response.as_ref().map(|(event, _)| event.clone());
 
                 // run our checks against it
@@ -313,4 +314,77 @@ async fn events_internal(
     future::try_join_all(tasks).await?;
 
     Ok(())
+}
+
+/// Query event from Sentry service.
+async fn event(
+    client: &Client,
+    api_url: ApiUrl,
+    uuid: Uuid,
+    num_of_tries: u32,
+    time_between_tries: Duration,
+) -> Result<Option<(Event, Value)>> {
+    if let Some(response) = query(
+        client,
+        api_url.event(uuid)?,
+        num_of_tries,
+        time_between_tries,
+    )
+    .await?
+    {
+        let mut event: Event = serde_json::from_value(response.clone())?;
+
+        if let Some(attachments) =
+            query(client, api_url.attachments(uuid)?, 1, Duration::default()).await?
+        {
+            event.attachments = serde_json::from_value(attachments)?;
+            return Ok(Some((event, response)));
+        }
+    }
+
+    Ok(None)
+}
+
+#[allow(dead_code)]
+pub async fn user_id(user_id: String) -> Result<()> {
+    let (client, api_url) = init().await?;
+
+    let issues = query(
+        &client,
+        api_url.issues(&user_id)?,
+        NUM_OF_TRIES_SUCCESS,
+        TIME_BETWEEN_TRIES_SUCCESS,
+    )
+    .await?
+    .context(format!("[Timeout]: {}", user_id))?;
+    let issue = issues.as_array().unwrap()[0]
+        .as_object()
+        .unwrap()
+        .get("id")
+        .unwrap()
+        .as_str()
+        .unwrap();
+
+    let events: Vec<MinEvent> = serde_json::from_value(
+        query(
+            &client,
+            api_url.events(issue)?,
+            NUM_OF_TRIES_SUCCESS,
+            TIME_BETWEEN_TRIES_SUCCESS,
+        )
+        .await?
+        .unwrap(),
+    )?;
+
+    for event in events {
+        if let Some(user) = event.user {
+            if let Some(id) = user.id {
+                if id == user_id {
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    Err(anyhow!("failed to find event"))
 }

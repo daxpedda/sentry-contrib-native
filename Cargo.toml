@@ -58,6 +58,10 @@ test = []
 name = "custom-transport"
 required-features = ["custom-transport"]
 
+[[example]]
+name = "panic"
+path = "tests/res/panic.rs"
+
 [package.metadata.docs.rs]
 features = ["custom-transport", "nightly"]
 no-default-features = true

@@ -3,13 +3,6 @@ use serde_derive::Deserialize;
 use serde_json::Value;
 use std::{collections::HashMap, ops::Deref};
 
-#[derive(Deserialize)]
-#[serde(untagged)]
-pub enum Response {
-    Event(Event),
-    NotFound { detail: String },
-}
-
 #[derive(Clone, Debug, Deserialize)]
 pub struct Event {
     pub title: String,
@@ -110,4 +103,9 @@ pub struct Attachment {
     pub name: String,
     pub sha1: String,
     pub size: usize,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct MinEvent {
+    pub user: Option<User>,
 }

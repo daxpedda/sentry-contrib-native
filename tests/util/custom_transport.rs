@@ -1,19 +1,20 @@
-use anyhow::{Error, Result};
+use anyhow::Result;
 use futures_executor as executor;
+use futures_util::{future::Map, FutureExt};
 use reqwest::Client;
 use sentry::{Dsn, Options, RawEnvelope, Transport as SentryTransport, TransportShutdown};
 use sentry_contrib_native as sentry;
 use std::{convert::TryInto, str::FromStr, time::Duration};
 use tokio::{
     sync::mpsc::{self, Receiver, Sender},
-    task::JoinHandle,
-    time,
+    task::{JoinError, JoinHandle},
 };
 
 pub struct Transport {
     dsn: Dsn,
-    receiver: Receiver<JoinHandle<Result<()>>>,
-    sender: Sender<JoinHandle<Result<()>>>,
+    receiver:
+        Receiver<Map<JoinHandle<Result<()>>, fn(Result<Result<()>, JoinError>) -> Result<()>>>,
+    sender: Sender<Map<JoinHandle<Result<()>>, fn(Result<Result<()>, JoinError>) -> Result<()>>>,
     client: Client,
 }
 
@@ -40,36 +41,36 @@ impl SentryTransport for Transport {
 
         tokio::spawn(async move {
             sender
-                .send(tokio::spawn(async move {
-                    let request = envelope
-                        .to_request(dsn.clone())
-                        .map(|body| body.as_bytes().to_vec());
-                    client
-                        .execute(request.try_into().unwrap())
-                        .await?
-                        .error_for_status()?;
+                .send(
+                    tokio::spawn(async move {
+                        let request = envelope
+                            .to_request(dsn.clone())
+                            .map(|body| body.as_bytes().to_vec());
+                        client
+                            .execute(request.try_into().unwrap())
+                            .await?
+                            .error_for_status()?;
 
-                    Ok(())
-                }))
+                        Ok(())
+                    })
+                    .map(|result| result?),
+                )
                 .await
         });
     }
 
-    fn shutdown(mut self: Box<Self>, timeout: Duration) -> TransportShutdown {
+    fn shutdown(mut self: Box<Self>, _timeout: Duration) -> TransportShutdown {
         executor::block_on(async {
-            let result = time::timeout(timeout, async {
-                while let Some(task) = self.receiver.recv().await {
-                    task.await??;
+            let mut ret = TransportShutdown::Success;
+
+            while let Some(task) = self.receiver.recv().await {
+                if let Err(error) = task.await {
+                    eprintln!("{}", error);
+                    ret = TransportShutdown::TimedOut;
                 }
-
-                Result::<_, Error>::Ok(TransportShutdown::Success)
-            })
-            .await;
-
-            match result {
-                Ok(result) => result.expect("task panicked"),
-                Err(_) => TransportShutdown::TimedOut,
             }
+
+            ret
         })
     }
 }

@@ -4,11 +4,10 @@ use futures_util::{future::Map, FutureExt};
 use reqwest::Client;
 use sentry::{Dsn, Options, RawEnvelope, Transport as SentryTransport, TransportShutdown};
 use sentry_contrib_native as sentry;
-use std::{convert::TryInto, str::FromStr, time::Duration};
+use std::{convert::TryInto, process, str::FromStr, time::Duration};
 use tokio::{
     sync::mpsc::{self, Receiver, Sender},
     task::{JoinError, JoinHandle},
-    time,
 };
 
 type Payload = Map<JoinHandle<Result<()>>, fn(Result<Result<()>, JoinError>) -> Result<()>>;
@@ -41,7 +40,7 @@ impl SentryTransport for Transport {
         let mut sender = self.sender.clone();
         let client = self.client.clone();
 
-        tokio::spawn(async move {
+        if let Err(error) = executor::block_on(async move {
             sender
                 .send(
                     tokio::spawn(async move {
@@ -58,14 +57,15 @@ impl SentryTransport for Transport {
                     .map(|result| result?),
                 )
                 .await
-        });
+        }) {
+            eprintln!("{}", error);
+            process::abort();
+        }
     }
 
-    fn shutdown(mut self: Box<Self>, timeout: Duration) -> TransportShutdown {
+    fn shutdown(mut self: Box<Self>, _timeout: Duration) -> TransportShutdown {
         executor::block_on(async {
             let mut ret = TransportShutdown::Success;
-
-            time::delay_for(timeout).await;
 
             while let Ok(task) = self.receiver.try_recv() {
                 if let Err(error) = task.await {

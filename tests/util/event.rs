@@ -106,6 +106,7 @@ pub struct Attachment {
 }
 
 #[derive(Clone, Debug, Deserialize)]
+#[allow(clippy::module_name_repetitions)]
 pub struct MinEvent {
     #[serde(rename = "eventID")]
     pub event_id: String,

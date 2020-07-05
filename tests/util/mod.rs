@@ -409,15 +409,30 @@ pub async fn external_events(events: Vec<(String, fn(Event))>) -> Result<()> {
 
 #[allow(dead_code)]
 async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Result<Option<Event>> {
-    let issues = query(
-        &client,
-        api_url.issues(&user_id)?,
-        NUM_OF_TRIES_SUCCESS,
-        TIME_BETWEEN_TRIES_SUCCESS,
-    )
-    .await?
-    .context(format!("[Timeout]: {}", user_id))?;
-    let issue = issues.as_array().unwrap()[0]
+    let mut issues = None;
+
+    for _ in 0..NUM_OF_TRIES_SUCCESS {
+        if let Some(value) = query(
+            client,
+            api_url.issues(&user_id)?,
+            1,
+            TIME_BETWEEN_TRIES_SUCCESS,
+        )
+        .await?
+        {
+            if let Value::Array(value) = value {
+                if value.is_empty() {
+                    continue;
+                } else {
+                    issues = Some(value);
+                    break;
+                }
+            }
+        }
+    }
+
+    let issues = issues.context(format!("[Timeout]: {}", user_id))?;
+    let issue = issues[0]
         .as_object()
         .unwrap()
         .get("id")
@@ -427,7 +442,7 @@ async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Res
 
     let events: Vec<MinEvent> = serde_json::from_value(
         query(
-            &client,
+            client,
             api_url.events(issue)?,
             NUM_OF_TRIES_SUCCESS,
             TIME_BETWEEN_TRIES_SUCCESS,
@@ -443,7 +458,7 @@ async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Res
                     let uuid: [u8; 16] = hex::decode(event.event_id)?.as_slice().try_into()?;
                     let uuid = Uuid::from(uuid);
                     return Ok(
-                        self::event(&client, api_url.clone(), uuid, 1, Duration::default())
+                        self::event(client, api_url.clone(), uuid, 1, Duration::default())
                             .await?
                             .map(|(event, _)| event),
                     );

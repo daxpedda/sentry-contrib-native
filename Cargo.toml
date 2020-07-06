@@ -1,6 +1,6 @@
 [package]
 name = "sentry-contrib-native"
-version = "0.1.0-alpha-3"
+version = "0.1.0-rc"
 authors = ["daxpedda <daxpedda@gmail.com>"]
 edition = "2018"
 description = "Unofficial bindings to the Sentry Native SDK for Rust."

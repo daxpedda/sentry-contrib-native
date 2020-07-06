@@ -10,6 +10,20 @@ and this project adheres to
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.1.0-rc] - 2020-07-06
+
+### Added
+
 - New `Map` trait that improves API of `Event::add_exception` and `set_context`.
 
 ### Changed
@@ -21,17 +35,11 @@ and this project adheres to
 - Update `vsprintf` to the new official version.
 - Improved `custom-transport` example.
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Fixed `custom-transport` example which was crashing because of a
   use-after-free.
 - Corrected `set_tag` and `remove_tag` examples.
-
-### Security
 
 ## [0.1.0-alpha-2] - 2020-07-01
 
@@ -46,7 +54,9 @@ and this project adheres to
 - Initial release.
 
 [unreleased]:
-  https://github.com/daxpedda/sentry-contrib-native/compare/v0.1.0-alpha-2...HEAD
+  https://github.com/daxpedda/sentry-contrib-native/compare/v0.1.0-rc...HEAD
+[0.1.0-rc]:
+  https://github.com/daxpedda/sentry-contrib-native/releases/tag/v0.1.0-rc
 [0.1.0-alpha-2]:
   https://github.com/daxpedda/sentry-contrib-native/releases/tag/v0.1.0-alpha-2
 [0.1.0-alpha]:

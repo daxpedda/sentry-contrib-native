@@ -13,11 +13,9 @@ mod util;
 
 use anyhow::Result;
 use serde_json::Value;
-//use sha1::{Digest, Sha1};
-use std::{
-    //fs,
-    path::{Path, PathBuf},
-};
+// use sha1::{Digest, Sha1};
+// use std::fs;
+use std::path::{Path, PathBuf};
 
 fn lib_path() -> PathBuf {
     let mut path = PathBuf::from(env!("OUT_DIR"))

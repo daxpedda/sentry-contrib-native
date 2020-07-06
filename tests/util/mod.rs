@@ -2,7 +2,7 @@
 pub mod custom_transport;
 pub mod event;
 
-use anyhow::{anyhow, bail, Context, Error, Result};
+use anyhow::{anyhow, bail, Error, Result};
 #[cfg(feature = "custom-transport")]
 use custom_transport::Transport;
 use event::{Event, MinEvent};
@@ -299,14 +299,13 @@ async fn events_internal(
                 // get event from the Sentry service
                 let response =
                     event(&client, api_url, uuid, num_of_tries, time_between_tries).await?;
-                let event = response.as_ref().map(|(event, _)| event.clone());
+                let event = response.clone();
 
                 // run our checks against it
                 panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|error| {
-                    // if there was response and the check failed print everything do dump that
-                    // information in the CI
-                    if let Some((event, response)) = response {
-                        eprintln!("Failed:\nEvent: {:?}\nJson: {}", event, response)
+                    // if there was a response and the check failed dump that information in the CI
+                    if let Some(event) = response {
+                        eprintln!("Event: {:?}", event)
                     // if there was no response than we timed out
                     } else {
                         eprintln!("[Timeout]: {}", uuid)
@@ -337,7 +336,7 @@ async fn event(
     uuid: Uuid,
     num_of_tries: u32,
     time_between_tries: Duration,
-) -> Result<Option<(Event, Value)>> {
+) -> Result<Option<Event>> {
     if let Some(response) = query(
         client,
         api_url.event(uuid)?,
@@ -346,23 +345,46 @@ async fn event(
     )
     .await?
     {
-        let mut event: Event = serde_json::from_value(response.clone())?;
+        let mut event: Event = serde_json::from_value(response)?;
 
         if let Some(attachments) =
             query(client, api_url.attachments(uuid)?, 1, Duration::default()).await?
         {
             event.attachments = serde_json::from_value(attachments)?;
-            return Ok(Some((event, response)));
+            return Ok(Some(event));
         }
     }
 
     Ok(None)
 }
 
+#[allow(dead_code)]
+pub async fn external_events_success(events: Vec<(String, fn(Event))>) -> Result<()> {
+    let events = events
+        .into_iter()
+        .map(|(event, check)| (event, move |event: Option<Event>| check(event.unwrap())))
+        .collect();
+
+    external_events_internal(events, NUM_OF_TRIES_SUCCESS, TIME_BETWEEN_TRIES_SUCCESS).await
+}
+
+#[allow(dead_code)]
+pub async fn external_events_failure(events: Vec<String>) -> Result<()> {
+    let events = events
+        .into_iter()
+        .map(|event| (event, move |event: Option<Event>| assert!(event.is_none())))
+        .collect();
+
+    external_events_internal(events, NUM_OF_TRIES_FAILURE, TIME_BETWEEN_TRIES_FAILURE).await
+}
+
 /// Run external example in a process, feed it a user id and search for it
 /// through Web API.
-#[allow(dead_code)]
-pub async fn external_events(events: Vec<(String, fn(Event))>) -> Result<()> {
+async fn external_events_internal(
+    events: Vec<(String, impl Fn(Option<Event>) + 'static + Send)>,
+    num_of_tries: u32,
+    time_between_tries: Duration,
+) -> Result<()> {
     let (client, api_url) = init().await?;
 
     // build path to example
@@ -401,12 +423,25 @@ pub async fn external_events(events: Vec<(String, fn(Event))>) -> Result<()> {
                 assert!(!child.await?.success());
 
                 // get event from the Sentry service
-                let event = event_by_user(&client, api_url, user_id)
-                    .await?
-                    .context("no event arrived")?;
+                let event = event_by_user(
+                    &client,
+                    api_url,
+                    user_id.clone(),
+                    num_of_tries,
+                    time_between_tries,
+                )
+                .await?;
 
                 // run our checks against it
-                panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|error| {
+                panic::catch_unwind(AssertUnwindSafe(|| check(event.clone()))).map_err(|error| {
+                    // if there was a response and the check failed dump that information in the CI
+                    if let Some(event) = event {
+                        eprintln!("Event: {:?}", event)
+                    // if there was no response than we timed out
+                    } else {
+                        eprintln!("[Timeout]: {}", user_id)
+                    }
+
                     if let Ok(error) = error.downcast::<Error>() {
                         *error
                     } else {
@@ -426,19 +461,19 @@ pub async fn external_events(events: Vec<(String, fn(Event))>) -> Result<()> {
 
 /// Query event by user ID.
 #[allow(dead_code)]
-async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Result<Option<Event>> {
+async fn event_by_user(
+    client: &Client,
+    api_url: ApiUrl,
+    user_id: String,
+    num_of_tries: u32,
+    time_between_tries: Duration,
+) -> Result<Option<Event>> {
     let mut issues = None;
 
     // timeout check is here because we also need to check if the response array
     // contains anything
-    for _ in 0..NUM_OF_TRIES_SUCCESS {
-        if let Some(value) = query(
-            client,
-            api_url.issues(&user_id)?,
-            1,
-            TIME_BETWEEN_TRIES_SUCCESS,
-        )
-        .await?
+    for _ in 0..num_of_tries {
+        if let Some(value) = query(client, api_url.issues(&user_id)?, 1, time_between_tries).await?
         {
             if let Value::Array(value) = value {
                 if value.is_empty() {
@@ -451,7 +486,11 @@ async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Res
         }
     }
 
-    let issues = issues.context(format!("[Timeout]: {}", user_id))?;
+    let issues = match issues {
+        None => return Ok(None),
+        Some(issues) => issues,
+    };
+
     // there should be only one issue with that user ID
     let issue = issues[0]
         .as_object()
@@ -485,7 +524,7 @@ async fn event_by_user(client: &Client, api_url: ApiUrl, user_id: String) -> Res
                     return Ok(
                         self::event(client, api_url.clone(), uuid, 1, Duration::default())
                             .await?
-                            .map(|(event, _)| event),
+                            .map(|event| event),
                     );
                 }
             }

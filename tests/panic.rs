@@ -14,5 +14,5 @@ use anyhow::Result;
 
 #[tokio::test(threaded_scheduler)]
 async fn panic() -> Result<()> {
-    util::external_events(vec![("panic".into(), |_| {})]).await
+    util::external_events_success(vec![("panic".into(), |_| {})]).await
 }

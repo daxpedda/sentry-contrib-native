@@ -5,8 +5,8 @@
     clippy::pedantic,
     missing_docs
 )]
-// stable clippy seems to have an issue with await
 #![cfg(any(target_os = "macos", target_os = "windows"))]
+// stable clippy seems to have an issue with await
 #![allow(clippy::used_underscore_binding)]
 
 mod util;
@@ -15,5 +15,5 @@ use anyhow::Result;
 
 #[tokio::test(threaded_scheduler)]
 async fn crash() -> Result<()> {
-    util::external_events(vec![("crash".into(), |_| {})]).await
+    util::external_events_success(vec![("crash".into(), |_| {})]).await
 }

@@ -1,15 +1,14 @@
-use anyhow::Result;
-use sentry::{Options, User};
-use sentry_contrib_native as sentry;
-use std::io::{self, Read};
-
 #[cfg(feature = "custom-transport")]
 #[path = "../util/custom_transport.rs"]
 #[rustfmt::skip]
 mod custom_transport;
 
+use anyhow::Result;
 #[cfg(feature = "custom-transport")]
 use custom_transport::Transport;
+use sentry::{Options, User};
+use sentry_contrib_native as sentry;
+use std::io::{self, Read};
 
 #[tokio::main(threaded_scheduler)]
 async fn main() -> Result<()> {

@@ -17,32 +17,32 @@ use sentry_contrib_native as sentry;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 
-#[tokio::test(threaded_scheduler)]
-async fn lib() -> Result<()> {
-    fn lib_path() -> PathBuf {
-        let mut path = PathBuf::from(env!("OUT_DIR"))
-            .parent()
-            .and_then(Path::parent)
-            .and_then(Path::parent)
-            .unwrap()
-            .join("deps");
+fn lib_path() -> PathBuf {
+    let mut path = PathBuf::from(env!("OUT_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .and_then(Path::parent)
+        .unwrap()
+        .join("deps");
 
-        #[cfg(target_os = "linux")]
-        {
-            path = path.join("libdylib.so");
-        }
-        #[cfg(target_os = "macos")]
-        {
-            path = path.join("libdylib.dylib");
-        }
-        #[cfg(target_os = "windows")]
-        {
-            path = path.join("dylib.dll");
-        }
-
-        path
+    #[cfg(target_os = "linux")]
+    {
+        path = path.join("libdylib.so");
+    }
+    #[cfg(target_os = "macos")]
+    {
+        path = path.join("libdylib.dylib");
+    }
+    #[cfg(target_os = "windows")]
+    {
+        path = path.join("dylib.dll");
     }
 
+    path
+}
+
+#[tokio::test(threaded_scheduler)]
+async fn lib() -> Result<()> {
     util::events_success(
         Some(|options| options.set_require_user_consent(true)),
         vec![

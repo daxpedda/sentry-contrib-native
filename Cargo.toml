@@ -63,6 +63,10 @@ name = "crash"
 path = "tests/res/crash.rs"
 
 [[example]]
+name = "crash_failure"
+path = "tests/res/crash_failure.rs"
+
+[[example]]
 name = "panic"
 path = "tests/res/panic.rs"
 

@@ -60,21 +60,17 @@ jobs:
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Test
-        if: always() && steps.build.outcome == 'success'
+        if: always()
         run:
           cargo -v test --features test ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
       - name: Example
-        if:
-          always() && steps.build.outcome == 'success' &&
-          matrix.feature.default-transport
+        if: always() && matrix.feature.default-transport
         run:
           cargo -v run --example example --features test ${{ matrix.feature.name
           }} ${{ matrix.rust.feature }}
       - name: Custom transport example
-        if:
-          always() && steps.build.outcome == 'success' &&
-          matrix.feature.custom-transport
+        if: always() && matrix.feature.custom-transport
         run:
           cargo -v run --example custom-transport --features test ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}

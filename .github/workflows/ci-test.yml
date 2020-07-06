@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - ci-test
+
+jobs:
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        rust:
+          - { channel: stable, continue-on-error: false, feature: "" }
+          - { channel: beta, continue-on-error: false, feature: "" }
+          - {
+              channel: nightly,
+              continue-on-error: true,
+              feature: --features nightly,
+            }
+        feature:
+          - {
+              name: "--no-default-features --features custom-transport",
+              default-transport: false,
+              custom-transport: true,
+            }
+          - { name: "", default-transport: true, custom-transport: false }
+        os:
+          - macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+      SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust.channel }}
+          components: rustfmt, clippy
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Get sentry-native commit
+        id: sentry_native
+        run:
+          echo "::set-output name=version::$(git submodule status | cut -d ' '
+          -f 2)"
+      - name: Cache sentry-native
+        uses: actions/cache@v2
+        with:
+          path: ~/sentry-native
+          key:
+            ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
+            matrix.feature.default-transport }}
+      - name: Set SENTRY_NATIVE_INSTALL
+        run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
+      - name: Test
+        if: always() && steps.build.outcome == 'success'
+        run:
+          cargo -v test --features test ${{ matrix.feature.name }} ${{
+          matrix.rust.feature }}
+      - name: Example
+        if:
+          always() && steps.build.outcome == 'success' &&
+          matrix.feature.default-transport
+        run:
+          cargo -v run --example example --features test ${{ matrix.feature.name
+          }} ${{ matrix.rust.feature }}
+      - name: Custom transport example
+        if:
+          always() && steps.build.outcome == 'success' &&
+          matrix.feature.custom-transport
+        run:
+          cargo -v run --example custom-transport --features test ${{
+          matrix.feature.name }} ${{ matrix.rust.feature }}

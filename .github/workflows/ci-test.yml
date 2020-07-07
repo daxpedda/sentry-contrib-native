@@ -64,13 +64,3 @@ jobs:
         run:
           cargo -v test --features test ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
-      - name: Example
-        if: always() && matrix.feature.default-transport
-        run:
-          cargo -v run --example example --features test ${{ matrix.feature.name
-          }} ${{ matrix.rust.feature }}
-      - name: Custom transport example
-        if: always() && matrix.feature.custom-transport
-        run:
-          cargo -v run --example custom-transport --features test ${{
-          matrix.feature.name }} ${{ matrix.rust.feature }}

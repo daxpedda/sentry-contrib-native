@@ -401,7 +401,10 @@ pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    unsafe { sys::set_context(key.as_ptr(), value) }
+    {
+        let _lock = global_write();
+        unsafe { sys::set_context(key.as_ptr(), value) }
+    }
 }
 
 /// Removes the context object with the specified key.
@@ -415,7 +418,10 @@ pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
 pub fn remove_context<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
-    unsafe { sys::remove_context(key.as_ptr()) }
+    {
+        let _lock = global_write();
+        unsafe { sys::remove_context(key.as_ptr()) }
+    }
 }
 
 /// Sets the event fingerprint.

@@ -18,6 +18,9 @@ and this project adheres to
 
 ### Fixed
 
+- Fixed `set_context` and `remove_context` to be thread-safe, they could crash
+  the application otherwise.
+
 ### Security
 
 ## [0.1.0-rc] - 2020-07-06

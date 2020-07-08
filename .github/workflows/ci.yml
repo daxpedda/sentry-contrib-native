@@ -4,11 +4,9 @@ on:
   push:
     branches-ignore:
       - gh-pages
-      - ci-test
   pull_request:
     branches-ignore:
       - gh-pages
-      - ci-test
   schedule:
     - cron: 0 0 * * *
 

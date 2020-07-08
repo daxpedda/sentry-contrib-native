@@ -198,13 +198,18 @@ async fn query(
         time::delay_for(time_between_tries).await;
 
         // get that event!
-        #[allow(clippy::unnested_or_patterns)]
         match request.send().await?.error_for_status() {
             Ok(response) => return response.json().await.map_err(Into::into),
-            Err(error) => match error.status() {
-                Some(StatusCode::NOT_FOUND) | Some(StatusCode::TOO_MANY_REQUESTS) => continue,
-                _ => bail!(error),
-            },
+            Err(error) => {
+                if let Some(error) = error.status() {
+                    match error {
+                        StatusCode::NOT_FOUND | StatusCode::TOO_MANY_REQUESTS => continue,
+                        _ => bail!(error),
+                    }
+                } else {
+                    bail!(error)
+                }
+            }
         };
     }
 

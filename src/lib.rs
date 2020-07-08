@@ -243,81 +243,46 @@ pub fn clear_modulecache() {
     unsafe { sys::clear_modulecache() }
 }
 
-/// Gives user consent.
-///
-/// # Examples
-/// ```
-/// # use sentry_contrib_native::{Consent, Options, user_consent_get, user_consent_give};
-/// # fn main() -> anyhow::Result<()> {
-/// let mut options = Options::new();
-/// options.set_require_user_consent(true);
-/// let _shutdown = options.init()?;
-///
-/// user_consent_give();
-/// assert_eq!(Consent::Given, user_consent_get());
-/// # Ok(()) }
-/// ```
-pub fn user_consent_give() {
-    let _lock = global_read();
-    unsafe { sys::user_consent_give() }
-}
-
-/// Revokes user consent.
-///
-/// # Examples
-/// ```
-/// # use sentry_contrib_native::{Consent, Options, user_consent_get, user_consent_revoke};
-/// # fn main() -> anyhow::Result<()> {
-/// let mut options = Options::new();
-/// options.set_require_user_consent(true);
-/// let _shutdown = options.init()?;
-///
-/// user_consent_revoke();
-/// assert_eq!(Consent::Revoked, user_consent_get());
-/// # Ok(()) }
-/// ```
-pub fn user_consent_revoke() {
-    let _lock = global_read();
-    unsafe { sys::user_consent_revoke() }
-}
-
 /// Resets the user consent (back to unknown).
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Consent, Options, user_consent_get, user_consent_give, user_consent_reset};
+/// # use sentry_contrib_native::{Consent, Options, user_consent, set_user_consent};
 /// # fn main() -> anyhow::Result<()> {
 /// let mut options = Options::new();
 /// options.set_require_user_consent(true);
 /// let _shutdown = options.init()?;
 ///
-/// user_consent_give();
-/// assert_eq!(Consent::Given, user_consent_get());
-/// user_consent_reset();
-/// assert_eq!(Consent::Unknown, user_consent_get());
+/// set_user_consent(Consent::Given);
+/// assert_eq!(Consent::Given, user_consent());
 /// # Ok(()) }
 /// ```
-pub fn user_consent_reset() {
+pub fn set_user_consent(consent: Consent) {
     let _lock = global_read();
-    unsafe { sys::user_consent_reset() }
+
+    match consent {
+        Consent::Unknown => unsafe { sys::user_consent_reset() },
+        Consent::Revoked => unsafe { sys::user_consent_revoke() },
+        Consent::Given => unsafe { sys::user_consent_give() },
+    }
 }
 
 /// Checks the current state of user consent.
 ///
 /// # Examples
 /// ```
-/// # use sentry_contrib_native::{Consent, user_consent_get, user_consent_give, Options};
+/// # use sentry_contrib_native::{Consent, user_consent, set_user_consent, Options};
 /// # fn main() -> anyhow::Result<()> {
 /// let mut options = Options::new();
 /// options.set_require_user_consent(true);
 /// let _shutdown = options.init()?;
 ///
-/// user_consent_give();
-/// assert_eq!(Consent::Given, user_consent_get());
+/// set_user_consent(Consent::Given);
+/// assert_eq!(Consent::Given, user_consent());
 /// # Ok(()) }
 /// ```
 #[must_use]
-pub fn user_consent_get() -> Consent {
+pub fn user_consent() -> Consent {
     Consent::from_raw(unsafe { sys::user_consent_get() })
 }
 
@@ -610,27 +575,27 @@ fn level() {
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
 fn consent() -> anyhow::Result<()> {
-    assert_eq!(Consent::Unknown, crate::user_consent_get());
+    assert_eq!(Consent::Unknown, crate::user_consent());
 
-    crate::user_consent_give();
-    assert_eq!(Consent::Unknown, crate::user_consent_get());
+    crate::set_user_consent(Consent::Unknown);
+    assert_eq!(Consent::Unknown, crate::user_consent());
 
-    crate::user_consent_revoke();
-    assert_eq!(Consent::Unknown, crate::user_consent_get());
+    crate::set_user_consent(Consent::Revoked);
+    assert_eq!(Consent::Unknown, crate::user_consent());
 
-    crate::user_consent_reset();
-    assert_eq!(Consent::Unknown, crate::user_consent_get());
+    crate::set_user_consent(Consent::Given);
+    assert_eq!(Consent::Unknown, crate::user_consent());
 
     let _shutdown = Options::new().init()?;
 
-    crate::user_consent_give();
-    assert_eq!(Consent::Given, crate::user_consent_get());
+    crate::set_user_consent(Consent::Given);
+    assert_eq!(Consent::Given, crate::user_consent());
 
-    crate::user_consent_revoke();
-    assert_eq!(Consent::Revoked, crate::user_consent_get());
+    crate::set_user_consent(Consent::Revoked);
+    assert_eq!(Consent::Revoked, crate::user_consent());
 
-    crate::user_consent_reset();
-    assert_eq!(Consent::Unknown, crate::user_consent_get());
+    crate::set_user_consent(Consent::Unknown);
+    assert_eq!(Consent::Unknown, crate::user_consent());
 
     Ok(())
 }
@@ -697,11 +662,16 @@ fn threaded_stress() -> anyhow::Result<()> {
 
     spawns(vec![
         |_| crate::clear_modulecache(),
-        |_| crate::user_consent_give(),
-        |_| crate::user_consent_revoke(),
-        |_| crate::user_consent_reset(),
+        |index| {
+            crate::set_user_consent(match index % 3 {
+                0 => Consent::Unknown,
+                1 => Consent::Given,
+                2 => Consent::Revoked,
+                _ => unreachable!(),
+            })
+        },
         |_| {
-            let _ = crate::user_consent_get();
+            let _ = crate::user_consent();
         },
         |index| {
             let mut user = User::new();

@@ -12,6 +12,10 @@ and this project adheres to
 
 ### Changed
 
+- Replaced `user_consent_give`, `user_consent_revoke` and `user_consent_reset`
+  with `set_user_consent`.
+- Renamed `user_consent_get` to `user_consent`.
+
 ### Deprecated
 
 ### Removed
@@ -19,7 +23,7 @@ and this project adheres to
 ### Fixed
 
 - Fixed thread-safety in almost all functions, they could crash the application
-  otherwise.
+  otherwise or cause undefined behaviour.
 
 ### Security
 

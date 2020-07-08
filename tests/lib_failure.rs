@@ -11,7 +11,7 @@
 mod util;
 
 use anyhow::Result;
-use sentry::Event;
+use sentry::{Consent, Event};
 use sentry_contrib_native as sentry;
 
 #[tokio::test(threaded_scheduler)]
@@ -20,13 +20,13 @@ async fn lib_failure() -> Result<()> {
         Some(|options| options.set_require_user_consent(true)),
         vec![
             || {
-                sentry::user_consent_give();
-                sentry::user_consent_revoke();
+                sentry::set_user_consent(Consent::Given);
+                sentry::set_user_consent(Consent::Revoked);
                 Event::new().capture()
             },
             || {
-                sentry::user_consent_give();
-                sentry::user_consent_reset();
+                sentry::set_user_consent(Consent::Given);
+                sentry::set_user_consent(Consent::Unknown);
                 Event::new().capture()
             },
         ],

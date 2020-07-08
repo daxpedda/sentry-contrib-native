@@ -5,7 +5,7 @@ use crate::{
     RToC, Transport, TransportState, BEFORE_SEND, LOGGER,
 };
 #[cfg(doc)]
-use crate::{shutdown, user_consent_give, user_consent_revoke, Event};
+use crate::{set_user_consent, shutdown, Consent, Event};
 use once_cell::sync::Lazy;
 #[cfg(feature = "test")]
 use std::env;
@@ -513,8 +513,8 @@ impl Options {
     /// Enables or disabled user consent requirements for uploads.
     ///
     /// This disables uploads until the user has given the consent to the SDK.
-    /// Consent itself is given with [`user_consent_give`] and revoked with
-    /// [`user_consent_revoke`].
+    /// Consent itself is given with [`set_user_consent`] and [`Consent::Given`]
+    /// or revoked with [`Consent::Revoked`].
     ///
     /// # Examples
     /// ```

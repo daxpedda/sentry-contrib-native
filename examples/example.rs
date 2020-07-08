@@ -9,7 +9,7 @@
 //! Example on how to use [`sentry-contrib-native`].
 
 use anyhow::{bail, Result};
-use sentry::{Event, Level, Options};
+use sentry::{Consent, Event, Level, Options};
 use sentry_contrib_native as sentry;
 use std::panic;
 
@@ -28,9 +28,9 @@ fn main() -> Result<()> {
     let _shutdown = options.init()?;
 
     if ask_user_for_consent() {
-        sentry::user_consent_give()
+        sentry::set_user_consent(Consent::Given)
     } else {
-        sentry::user_consent_revoke()
+        sentry::set_user_consent(Consent::Revoked)
     }
 
     // TODO: use extra, context and so on

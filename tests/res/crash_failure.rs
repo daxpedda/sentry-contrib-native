@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sentry::{Options, User};
+use sentry::{Consent, Options, User};
 use sentry_contrib_native as sentry;
 use std::{
     io::{self, Read},
@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
     options.set_transport(Transport::new);
     let _shutdown = options.init()?;
 
-    sentry::user_consent_revoke();
+    sentry::set_user_consent(Consent::Revoked);
 
     let mut buffer = [0; 16];
     io::stdin().read_exact(&mut buffer)?;

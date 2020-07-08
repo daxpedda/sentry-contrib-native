@@ -12,7 +12,7 @@ mod util;
 
 use anyhow::Result;
 use libloading::{Library, Symbol};
-use sentry::{Event, Level, User};
+use sentry::{Consent, Event, Level, User};
 use sentry_contrib_native as sentry;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
@@ -48,7 +48,7 @@ async fn lib() -> Result<()> {
         vec![
             (
                 || {
-                    sentry::user_consent_give();
+                    sentry::set_user_consent(Consent::Given);
                     Event::new().capture()
                 },
                 |event| {

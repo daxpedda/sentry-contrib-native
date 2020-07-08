@@ -26,10 +26,10 @@ use url::Url;
 /// Number of tries to wait for Sentry to process an event. Sentry.io sometimes
 /// takes really long to process those.
 #[allow(dead_code)]
-const NUM_OF_TRIES_SUCCESS: u32 = 40;
+const NUM_OF_TRIES_SUCCESS: u32 = 20;
 /// Time between tries.
 #[allow(dead_code)]
-const TIME_BETWEEN_TRIES_SUCCESS: Duration = Duration::from_secs(15);
+const TIME_BETWEEN_TRIES_SUCCESS: Duration = Duration::from_secs(30);
 /// [`NUM_OF_TRIES_SUCCESS`] for failure.
 #[allow(dead_code)]
 const NUM_OF_TRIES_FAILURE: u32 = 1;
@@ -198,15 +198,13 @@ async fn query(
         time::delay_for(time_between_tries).await;
 
         // get that event!
+        #[allow(clippy::unnested_or_patterns)]
         match request.send().await?.error_for_status() {
             Ok(response) => return response.json().await.map_err(Into::into),
-            Err(error) => {
-                if let Some(StatusCode::NOT_FOUND) = error.status() {
-                    continue;
-                } else {
-                    bail!(error)
-                }
-            }
+            Err(error) => match error.status() {
+                Some(StatusCode::NOT_FOUND) | Some(StatusCode::TOO_MANY_REQUESTS) => continue,
+                _ => bail!(error),
+            },
         };
     }
 

@@ -709,11 +709,6 @@
 <span id="709">709</span>
 <span id="710">710</span>
 <span id="711">711</span>
-<span id="712">712</span>
-<span id="713">713</span>
-<span id="714">714</span>
-<span id="715">715</span>
-<span id="716">716</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -960,81 +955,46 @@
     <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">clear_modulecache</span>() }
 }
 
-<span class="doccomment">/// Gives user consent.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use sentry_contrib_native::{Consent, Options, user_consent_get, user_consent_give};</span>
-<span class="doccomment">/// # fn main() -&gt; anyhow::Result&lt;()&gt; {</span>
-<span class="doccomment">/// let mut options = Options::new();</span>
-<span class="doccomment">/// options.set_require_user_consent(true);</span>
-<span class="doccomment">/// let _shutdown = options.init()?;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// user_consent_give();</span>
-<span class="doccomment">/// assert_eq!(Consent::Given, user_consent_get());</span>
-<span class="doccomment">/// # Ok(()) }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_consent_give</span>() {
-    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_read</span>();
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">user_consent_give</span>() }
-}
-
-<span class="doccomment">/// Revokes user consent.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use sentry_contrib_native::{Consent, Options, user_consent_get, user_consent_revoke};</span>
-<span class="doccomment">/// # fn main() -&gt; anyhow::Result&lt;()&gt; {</span>
-<span class="doccomment">/// let mut options = Options::new();</span>
-<span class="doccomment">/// options.set_require_user_consent(true);</span>
-<span class="doccomment">/// let _shutdown = options.init()?;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// user_consent_revoke();</span>
-<span class="doccomment">/// assert_eq!(Consent::Revoked, user_consent_get());</span>
-<span class="doccomment">/// # Ok(()) }</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_consent_revoke</span>() {
-    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_read</span>();
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">user_consent_revoke</span>() }
-}
-
 <span class="doccomment">/// Resets the user consent (back to unknown).</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use sentry_contrib_native::{Consent, Options, user_consent_get, user_consent_give, user_consent_reset};</span>
+<span class="doccomment">/// # use sentry_contrib_native::{Consent, Options, user_consent, set_user_consent};</span>
 <span class="doccomment">/// # fn main() -&gt; anyhow::Result&lt;()&gt; {</span>
 <span class="doccomment">/// let mut options = Options::new();</span>
 <span class="doccomment">/// options.set_require_user_consent(true);</span>
 <span class="doccomment">/// let _shutdown = options.init()?;</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// user_consent_give();</span>
-<span class="doccomment">/// assert_eq!(Consent::Given, user_consent_get());</span>
-<span class="doccomment">/// user_consent_reset();</span>
-<span class="doccomment">/// assert_eq!(Consent::Unknown, user_consent_get());</span>
+<span class="doccomment">/// set_user_consent(Consent::Given);</span>
+<span class="doccomment">/// assert_eq!(Consent::Given, user_consent());</span>
 <span class="doccomment">/// # Ok(()) }</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_consent_reset</span>() {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_user_consent</span>(<span class="ident">consent</span>: <span class="ident">Consent</span>) {
     <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_read</span>();
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">user_consent_reset</span>() }
+
+    <span class="kw">match</span> <span class="ident">consent</span> {
+        <span class="ident">Consent</span>::<span class="ident">Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">user_consent_reset</span>() },
+        <span class="ident">Consent</span>::<span class="ident">Revoked</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">user_consent_revoke</span>() },
+        <span class="ident">Consent</span>::<span class="ident">Given</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">user_consent_give</span>() },
+    }
 }
 
 <span class="doccomment">/// Checks the current state of user consent.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// ```</span>
-<span class="doccomment">/// # use sentry_contrib_native::{Consent, user_consent_get, user_consent_give, Options};</span>
+<span class="doccomment">/// # use sentry_contrib_native::{Consent, user_consent, set_user_consent, Options};</span>
 <span class="doccomment">/// # fn main() -&gt; anyhow::Result&lt;()&gt; {</span>
 <span class="doccomment">/// let mut options = Options::new();</span>
 <span class="doccomment">/// options.set_require_user_consent(true);</span>
 <span class="doccomment">/// let _shutdown = options.init()?;</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// user_consent_give();</span>
-<span class="doccomment">/// assert_eq!(Consent::Given, user_consent_get());</span>
+<span class="doccomment">/// set_user_consent(Consent::Given);</span>
+<span class="doccomment">/// assert_eq!(Consent::Given, user_consent());</span>
 <span class="doccomment">/// # Ok(()) }</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_consent_get</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Consent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_consent</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Consent</span> {
     <span class="ident">Consent</span>::<span class="ident">from_raw</span>(<span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">user_consent_get</span>() })
 }
 
@@ -1050,6 +1010,7 @@
 <span class="doccomment">/// remove_user();</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_user</span>() {
+    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
     <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">remove_user</span>() }
 }
 
@@ -1064,7 +1025,10 @@
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
 
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">set_tag</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">value</span>.<span class="ident">as_ptr</span>()) }
+    {
+        <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">set_tag</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">value</span>.<span class="ident">as_ptr</span>()) }
+    }
 }
 
 <span class="doccomment">/// Removes the tag with the specified `key`.</span>
@@ -1077,7 +1041,11 @@
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_tag</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="ident">S</span>) {
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">remove_tag</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>()) }
+
+    {
+        <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">remove_tag</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>()) }
+    }
 }
 
 <span class="doccomment">/// Sets extra information.</span>
@@ -1091,7 +1059,10 @@
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">into</span>().<span class="ident">into_raw</span>();
 
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">set_extra</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">value</span>) }
+    {
+        <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">set_extra</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>(), <span class="ident">value</span>) }
+    }
 }
 
 <span class="doccomment">/// Removes the extra with the specified `key`.</span>
@@ -1104,7 +1075,11 @@
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_extra</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">key</span>: <span class="ident">S</span>) {
     <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">remove_extra</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>()) }
+
+    {
+        <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">remove_extra</span>(<span class="ident">key</span>.<span class="ident">as_ptr</span>()) }
+    }
 }
 
 <span class="doccomment">/// Sets a context object.</span>
@@ -1171,43 +1146,46 @@
             <span class="kw-2">*</span><span class="ident">raw_fingerprint</span> <span class="op">=</span> <span class="ident">fingerprint</span>.<span class="ident">as_ptr</span>();
         }
 
-        <span class="kw">unsafe</span> {
-            <span class="ident">sys</span>::<span class="ident">set_fingerprint</span>(
-                <span class="ident">raw_fingerprints</span>[<span class="number">0</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">1</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">2</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">3</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">4</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">5</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">6</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">7</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">8</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">9</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">10</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">11</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">12</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">13</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">14</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">15</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">16</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">17</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">18</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">19</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">20</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">21</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">22</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">23</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">24</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">25</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">26</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">27</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">28</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">29</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">30</span>],
-                <span class="ident">raw_fingerprints</span>[<span class="number">31</span>],
-                <span class="ident">ptr</span>::<span class="ident">null</span>::<span class="op">&lt;</span><span class="ident">c_char</span><span class="op">&gt;</span>(),
-            )
-        };
+        {
+            <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
+            <span class="kw">unsafe</span> {
+                <span class="ident">sys</span>::<span class="ident">set_fingerprint</span>(
+                    <span class="ident">raw_fingerprints</span>[<span class="number">0</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">1</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">2</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">3</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">4</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">5</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">6</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">7</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">8</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">9</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">10</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">11</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">12</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">13</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">14</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">15</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">16</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">17</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">18</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">19</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">20</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">21</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">22</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">23</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">24</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">25</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">26</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">27</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">28</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">29</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">30</span>],
+                    <span class="ident">raw_fingerprints</span>[<span class="number">31</span>],
+                    <span class="ident">ptr</span>::<span class="ident">null</span>::<span class="op">&lt;</span><span class="ident">c_char</span><span class="op">&gt;</span>(),
+                )
+            };
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1222,6 +1200,7 @@
 <span class="doccomment">/// remove_fingerprint();</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_fingerprint</span>() {
+    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
     <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">remove_fingerprint</span>() }
 }
 
@@ -1234,7 +1213,11 @@
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_transaction</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">transaction</span>: <span class="ident">S</span>) {
     <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span> <span class="ident">transaction</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-    <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">set_transaction</span>(<span class="ident">transaction</span>.<span class="ident">as_ptr</span>()) }
+
+    {
+        <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
+        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">set_transaction</span>(<span class="ident">transaction</span>.<span class="ident">as_ptr</span>()) }
+    }
 }
 
 <span class="doccomment">/// Removes the transaction.</span>
@@ -1246,6 +1229,7 @@
 <span class="doccomment">/// remove_transaction();</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_transaction</span>() {
+    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
     <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">remove_transaction</span>() }
 }
 
@@ -1257,6 +1241,7 @@
 <span class="doccomment">/// set_level(Level::Debug);</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_level</span>(<span class="ident">level</span>: <span class="ident">Level</span>) {
+    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
     <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">set_level</span>(<span class="ident">level</span>.<span class="ident">into_raw</span>()) }
 }
 
@@ -1265,7 +1250,7 @@
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// TODO</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_session</span>() {
-    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_read</span>();
+    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
     <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">start_session</span>() }
 }
 
@@ -1274,7 +1259,7 @@
 <span class="doccomment">/// # Examples</span>
 <span class="doccomment">/// TODO</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_session</span>() {
-    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_read</span>();
+    <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
     <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">end_session</span>() }
 }
 
@@ -1302,27 +1287,27 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">test_fork</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
 <span class="kw">fn</span> <span class="ident">consent</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent_get</span>());
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
-    <span class="kw">crate</span>::<span class="ident">user_consent_give</span>();
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent_get</span>());
+    <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
-    <span class="kw">crate</span>::<span class="ident">user_consent_revoke</span>();
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent_get</span>());
+    <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Revoked</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
-    <span class="kw">crate</span>::<span class="ident">user_consent_reset</span>();
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent_get</span>());
+    <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Given</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
     <span class="kw">let</span> <span class="ident">_shutdown</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>().<span class="ident">init</span>()<span class="question-mark">?</span>;
 
-    <span class="kw">crate</span>::<span class="ident">user_consent_give</span>();
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Given</span>, <span class="kw">crate</span>::<span class="ident">user_consent_get</span>());
+    <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Given</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Given</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
-    <span class="kw">crate</span>::<span class="ident">user_consent_revoke</span>();
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Revoked</span>, <span class="kw">crate</span>::<span class="ident">user_consent_get</span>());
+    <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Revoked</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Revoked</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
-    <span class="kw">crate</span>::<span class="ident">user_consent_reset</span>();
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent_get</span>());
+    <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
     <span class="prelude-val">Ok</span>(())
 }
@@ -1389,11 +1374,16 @@
 
     <span class="ident">spawns</span>(<span class="macro">vec</span><span class="macro">!</span>[
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">clear_modulecache</span>(),
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">user_consent_give</span>(),
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">user_consent_revoke</span>(),
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">user_consent_reset</span>(),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> {
+            <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">3</span> {
+                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Consent</span>::<span class="ident">Unknown</span>,
+                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Consent</span>::<span class="ident">Given</span>,
+                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Consent</span>::<span class="ident">Revoked</span>,
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+            })
+        },
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">user_consent_get</span>();
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">user_consent</span>();
         },
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">User</span>::<span class="ident">new</span>();

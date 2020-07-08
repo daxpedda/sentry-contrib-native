@@ -1098,7 +1098,7 @@
     <span class="ident">RToC</span>, <span class="ident">Transport</span>, <span class="ident">TransportState</span>, <span class="ident">BEFORE_SEND</span>, <span class="ident">LOGGER</span>,
 };
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">shutdown</span>, <span class="ident">user_consent_give</span>, <span class="ident">user_consent_revoke</span>, <span class="ident">Event</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">set_user_consent</span>, <span class="ident">shutdown</span>, <span class="ident">Consent</span>, <span class="ident">Event</span>};
 <span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::<span class="ident">Lazy</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>;
@@ -1606,8 +1606,8 @@
     <span class="doccomment">/// Enables or disabled user consent requirements for uploads.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This disables uploads until the user has given the consent to the SDK.</span>
-    <span class="doccomment">/// Consent itself is given with [`user_consent_give`] and revoked with</span>
-    <span class="doccomment">/// [`user_consent_revoke`].</span>
+    <span class="doccomment">/// Consent itself is given with [`set_user_consent`] and [`Consent::Given`]</span>
+    <span class="doccomment">/// or revoked with [`Consent::Revoked`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>

@@ -1,6 +1,6 @@
 //! Sentry event implementation.
 
-use crate::{global_read, CToR, Level, Map, Object, RToC, Value};
+use crate::{global_write, CToR, Level, Map, Object, RToC, Value};
 use std::{
     cmp::Ordering,
     collections::BTreeMap,
@@ -213,7 +213,7 @@ impl Event {
         let event = self.into_raw();
 
         {
-            let _lock = global_read();
+            let _lock = global_write();
             Uuid(unsafe { sys::capture_event(event) })
         }
     }

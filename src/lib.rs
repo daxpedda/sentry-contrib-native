@@ -333,6 +333,7 @@ pub fn user_consent_get() -> Consent {
 /// remove_user();
 /// ```
 pub fn remove_user() {
+    let _lock = global_write();
     unsafe { sys::remove_user() }
 }
 
@@ -347,7 +348,10 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
     let key = key.into().into_cstring();
     let value = value.into().into_cstring();
 
-    unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
+    {
+        let _lock = global_write();
+        unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
+    }
 }
 
 /// Removes the tag with the specified `key`.
@@ -360,7 +364,11 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
 /// ```
 pub fn remove_tag<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
-    unsafe { sys::remove_tag(key.as_ptr()) }
+
+    {
+        let _lock = global_write();
+        unsafe { sys::remove_tag(key.as_ptr()) }
+    }
 }
 
 /// Sets extra information.
@@ -374,7 +382,10 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    unsafe { sys::set_extra(key.as_ptr(), value) }
+    {
+        let _lock = global_write();
+        unsafe { sys::set_extra(key.as_ptr(), value) }
+    }
 }
 
 /// Removes the extra with the specified `key`.
@@ -387,7 +398,11 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
 /// ```
 pub fn remove_extra<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
-    unsafe { sys::remove_extra(key.as_ptr()) }
+
+    {
+        let _lock = global_write();
+        unsafe { sys::remove_extra(key.as_ptr()) }
+    }
 }
 
 /// Sets a context object.
@@ -454,43 +469,46 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(
             *raw_fingerprint = fingerprint.as_ptr();
         }
 
-        unsafe {
-            sys::set_fingerprint(
-                raw_fingerprints[0],
-                raw_fingerprints[1],
-                raw_fingerprints[2],
-                raw_fingerprints[3],
-                raw_fingerprints[4],
-                raw_fingerprints[5],
-                raw_fingerprints[6],
-                raw_fingerprints[7],
-                raw_fingerprints[8],
-                raw_fingerprints[9],
-                raw_fingerprints[10],
-                raw_fingerprints[11],
-                raw_fingerprints[12],
-                raw_fingerprints[13],
-                raw_fingerprints[14],
-                raw_fingerprints[15],
-                raw_fingerprints[16],
-                raw_fingerprints[17],
-                raw_fingerprints[18],
-                raw_fingerprints[19],
-                raw_fingerprints[20],
-                raw_fingerprints[21],
-                raw_fingerprints[22],
-                raw_fingerprints[23],
-                raw_fingerprints[24],
-                raw_fingerprints[25],
-                raw_fingerprints[26],
-                raw_fingerprints[27],
-                raw_fingerprints[28],
-                raw_fingerprints[29],
-                raw_fingerprints[30],
-                raw_fingerprints[31],
-                ptr::null::<c_char>(),
-            )
-        };
+        {
+            let _lock = global_write();
+            unsafe {
+                sys::set_fingerprint(
+                    raw_fingerprints[0],
+                    raw_fingerprints[1],
+                    raw_fingerprints[2],
+                    raw_fingerprints[3],
+                    raw_fingerprints[4],
+                    raw_fingerprints[5],
+                    raw_fingerprints[6],
+                    raw_fingerprints[7],
+                    raw_fingerprints[8],
+                    raw_fingerprints[9],
+                    raw_fingerprints[10],
+                    raw_fingerprints[11],
+                    raw_fingerprints[12],
+                    raw_fingerprints[13],
+                    raw_fingerprints[14],
+                    raw_fingerprints[15],
+                    raw_fingerprints[16],
+                    raw_fingerprints[17],
+                    raw_fingerprints[18],
+                    raw_fingerprints[19],
+                    raw_fingerprints[20],
+                    raw_fingerprints[21],
+                    raw_fingerprints[22],
+                    raw_fingerprints[23],
+                    raw_fingerprints[24],
+                    raw_fingerprints[25],
+                    raw_fingerprints[26],
+                    raw_fingerprints[27],
+                    raw_fingerprints[28],
+                    raw_fingerprints[29],
+                    raw_fingerprints[30],
+                    raw_fingerprints[31],
+                    ptr::null::<c_char>(),
+                )
+            };
+        }
 
         Ok(())
     }
@@ -505,6 +523,7 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(
 /// remove_fingerprint();
 /// ```
 pub fn remove_fingerprint() {
+    let _lock = global_write();
     unsafe { sys::remove_fingerprint() }
 }
 
@@ -517,7 +536,11 @@ pub fn remove_fingerprint() {
 /// ```
 pub fn set_transaction<S: Into<String>>(transaction: S) {
     let transaction = transaction.into().into_cstring();
-    unsafe { sys::set_transaction(transaction.as_ptr()) }
+
+    {
+        let _lock = global_write();
+        unsafe { sys::set_transaction(transaction.as_ptr()) }
+    }
 }
 
 /// Removes the transaction.
@@ -529,6 +552,7 @@ pub fn set_transaction<S: Into<String>>(transaction: S) {
 /// remove_transaction();
 /// ```
 pub fn remove_transaction() {
+    let _lock = global_write();
     unsafe { sys::remove_transaction() }
 }
 
@@ -540,6 +564,7 @@ pub fn remove_transaction() {
 /// set_level(Level::Debug);
 /// ```
 pub fn set_level(level: Level) {
+    let _lock = global_write();
     unsafe { sys::set_level(level.into_raw()) }
 }
 
@@ -548,7 +573,7 @@ pub fn set_level(level: Level) {
 /// # Examples
 /// TODO
 pub fn start_session() {
-    let _lock = global_read();
+    let _lock = global_write();
     unsafe { sys::start_session() }
 }
 
@@ -557,7 +582,7 @@ pub fn start_session() {
 /// # Examples
 /// TODO
 pub fn end_session() {
-    let _lock = global_read();
+    let _lock = global_write();
     unsafe { sys::end_session() }
 }
 

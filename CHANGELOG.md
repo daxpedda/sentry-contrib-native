@@ -18,8 +18,8 @@ and this project adheres to
 
 ### Fixed
 
-- Fixed `set_context` and `remove_context` to be thread-safe, they could crash
-  the application otherwise.
+- Fixed thread-safety in almost all functions, they could crash the application
+  otherwise.
 
 ### Security
 

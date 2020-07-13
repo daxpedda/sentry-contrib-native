@@ -51,6 +51,11 @@ url = "2"
 default = ["default-transport"]
 default-transport = ["sys/default-transport"]
 custom-transport = ["http", "url"]
+backend-none = ["sys/backend-none"]
+backend-crashpad = ["sys/backend-crashpad"]
+backend-breakpad = ["sys/backend-breakpad"]
+backend-inproc = ["sys/backend-inproc"]
+
 nightly = ["sys/nightly"]
 test = []
 

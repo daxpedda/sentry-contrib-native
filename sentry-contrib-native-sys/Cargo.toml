@@ -19,6 +19,10 @@ cmake = "0.1"
 default = ["default-transport"]
 default-transport = []
 nightly = []
+backend-none = []
+backend-crashpad = []
+backend-breakpad = []
+backend-inproc = []
 
 [package.metadata.docs.rs]
 features = ["nightly"]

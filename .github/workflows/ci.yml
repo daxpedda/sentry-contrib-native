@@ -70,7 +70,9 @@ jobs:
             }
         feature:
           - {
-              name: "--no-default-features --features custom-transport",
+              name:
+                "--no-default-features --features
+                backend-default,custom-transport",
               default-transport: false,
               custom-transport: true,
             }
@@ -245,7 +247,9 @@ jobs:
             }
         feature:
           - {
-              name: "--no-default-features --features custom-transport",
+              name:
+                "--no-default-features --features
+                backend-default,custom-transport",
               default-transport: false,
               custom-transport: true,
             }

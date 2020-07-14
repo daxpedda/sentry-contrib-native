@@ -30,8 +30,17 @@ For more details see
 
 ## Crate features
 
+- **backend-default** - **Enabled by default**, will use Crashpad on MacOS and
+  Windows, Breakpad on Linux and InProc for Android. See `SENTRY_BACKEND` at the
+  [Sentry Native SDK](https://github.com/getsentry/sentry-native).
 - **default-transport** - **Enabled by default**, will use `winhttp` on Windows
   and `curl` everywhere else as the default transport.
+- **backend-crashpad** - Will use Crashpad. See `SENTRY_BACKEND` at the
+  [Sentry Native SDK](https://github.com/getsentry/sentry-native).
+- **backend-breakpad** - Will use Breakpad. See `SENTRY_BACKEND` at the
+  [Sentry Native SDK](https://github.com/getsentry/sentry-native).
+- **backend-inproc** - Will use InProc. See `SENTRY_BACKEND` at the
+  [Sentry Native SDK](https://github.com/getsentry/sentry-native).
 - **nightly** - Enables full documentation through
   [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html).
 

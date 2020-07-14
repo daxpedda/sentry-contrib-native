@@ -6,12 +6,12 @@ use std::{
     ptr,
 };
 
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 #[path = "../util/custom_transport.rs"]
 #[rustfmt::skip]
 mod custom_transport;
 
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 use custom_transport::Transport;
 
 #[tokio::main(threaded_scheduler)]
@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
     let mut options = Options::new();
     options.set_debug(true);
     options.set_require_user_consent(true);
-    #[cfg(feature = "custom-transport")]
+    #[cfg(feature = "transport-custom")]
     options.set_transport(Transport::new);
     let _shutdown = options.init()?;
 

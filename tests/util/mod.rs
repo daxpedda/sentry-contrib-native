@@ -1,9 +1,9 @@
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 pub mod custom_transport;
 pub mod event;
 
 use anyhow::{anyhow, bail, Error, Result};
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 use custom_transport::Transport;
 use event::{Event, MinEvent};
 use futures_util::{future, FutureExt};
@@ -267,7 +267,7 @@ async fn events_internal(
     let mut options = Options::new();
     options.set_debug(true);
     options.set_logger(|level, message| eprintln!("[{}]: {}", level, message));
-    #[cfg(feature = "custom-transport")]
+    #[cfg(feature = "transport-custom")]
     options.set_transport(Transport::new);
 
     // apply custom configuration

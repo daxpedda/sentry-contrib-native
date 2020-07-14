@@ -1,10 +1,10 @@
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 #[path = "../util/custom_transport.rs"]
 #[rustfmt::skip]
 mod custom_transport;
 
 use anyhow::Result;
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 use custom_transport::Transport;
 use sentry::{Options, User};
 use sentry_contrib_native as sentry;
@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
 
     let mut options = Options::new();
     options.set_debug(true);
-    #[cfg(feature = "custom-transport")]
+    #[cfg(feature = "transport-custom")]
     options.set_transport(Transport::new);
     let _shutdown = options.init()?;
 

@@ -15,7 +15,7 @@ use std::{
 #[cfg(doc)]
 use std::{process::abort, sync::Mutex};
 pub use sys::SDK_USER_AGENT;
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 use ::{
     http::{HeaderMap, HeaderValue, Request as HttpRequest},
     std::{
@@ -27,8 +27,8 @@ use ::{
 };
 
 /// Sentry errors.
-#[cfg(feature = "custom-transport")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+#[cfg(feature = "transport-custom")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 #[derive(Debug, Error, PartialEq)]
 pub enum Error {
     /// Failed to parse DSN URL.
@@ -48,7 +48,7 @@ pub enum Error {
     Host,
 }
 
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 impl From<Infallible> for Error {
     fn from(from: Infallible) -> Self {
         match from {}
@@ -56,8 +56,8 @@ impl From<Infallible> for Error {
 }
 
 /// The [`http::Request`] request your [`Transport`] is expected to send.
-#[cfg(feature = "custom-transport")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+#[cfg(feature = "transport-custom")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 pub type Request = HttpRequest<Envelope>;
 
 /// The MIME type for Sentry envelopes.
@@ -93,11 +93,11 @@ impl Shutdown {
 /// # Examples
 /// ```
 /// # /*
-/// #![cfg(feature = "custom-transport")]
+/// #![cfg(feature = "transport-custom")]
 ///
 /// # */
 /// # fn main() -> anyhow::Result<()> {
-/// # #[cfg(feature = "custom-transport")]
+/// # #[cfg(feature = "transport-custom")]
 /// # {
 /// # use sentry_contrib_native::{Dsn, Event, Options, RawEnvelope, test, Transport};
 /// # use std::convert::TryInto;
@@ -146,7 +146,7 @@ impl Shutdown {
 /// # } Ok(()) }
 /// ```
 /// See the
-/// [`custom-transport`](https://github.com/daxpedda/sentry-contrib-native/blob/master/examples/custom-transport.rs)
+/// [`transport-custom`](https://github.com/daxpedda/sentry-contrib-native/blob/master/examples/transport-custom.rs)
 /// example for a more sophisticated implementation.
 pub trait Transport: 'static + Send + Sync {
     /// Sends the specified Envelope to a Sentry service.
@@ -250,11 +250,11 @@ pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> bool {
 ///
 /// # Examples
 /// ```
-/// # #[cfg(feature = "custom-transport")]
+/// # #[cfg(feature = "transport-custom")]
 /// # use sentry_contrib_native::{Dsn, Request};
 /// # use sentry_contrib_native::{Envelope, RawEnvelope, Transport, Value};
 /// struct CustomTransport {
-///     #[cfg(feature = "custom-transport")]
+///     #[cfg(feature = "transport-custom")]
 ///     dsn: Dsn,
 /// };
 ///
@@ -265,7 +265,7 @@ pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> bool {
 ///         // serialize it, maybe move this to another thread to prevent blocking
 ///         let envelope: Envelope = raw_envelope.serialize();
 ///         // or convert it into a `Request` right away!
-///         #[cfg(feature = "custom-transport")]
+///         #[cfg(feature = "transport-custom")]
 ///         let request: Request = raw_envelope.to_request(self.dsn.clone());
 ///     }
 /// }
@@ -305,8 +305,8 @@ impl RawEnvelope {
     /// [`Dsn`].
     ///
     /// For more information see [`Envelope::into_request`].
-    #[cfg(feature = "custom-transport")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+    #[cfg(feature = "transport-custom")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
     #[must_use]
     pub fn to_request(&self, dsn: Dsn) -> Request {
         self.serialize().into_request(dsn)
@@ -317,11 +317,11 @@ impl RawEnvelope {
 ///
 /// # Examples
 /// ```
-/// # #[cfg(feature = "custom-transport")]
+/// # #[cfg(feature = "transport-custom")]
 /// # use sentry_contrib_native::{Dsn, Request};
 /// # use sentry_contrib_native::{Envelope, RawEnvelope, Transport, Value};
 /// struct CustomTransport {
-///     #[cfg(feature = "custom-transport")]
+///     #[cfg(feature = "transport-custom")]
 ///     dsn: Dsn,
 /// };
 ///
@@ -332,7 +332,7 @@ impl RawEnvelope {
 ///         // look at that body!
 ///         println!("{:?}", envelope.as_bytes());
 ///         // let's build the whole `Request`
-///         #[cfg(feature = "custom-transport")]
+///         #[cfg(feature = "transport-custom")]
 ///         let request: Request = envelope.into_request(self.dsn.clone());
 ///     }
 /// }
@@ -384,8 +384,8 @@ impl Envelope {
     /// The `body` in the request is an [`Envelope`], which implements
     /// `AsRef<[u8]>` to retrieve the actual bytes that should be sent as the
     /// body.
-    #[cfg(feature = "custom-transport")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+    #[cfg(feature = "transport-custom")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
     #[must_use]
     pub fn into_request(self, dsn: Dsn) -> Request {
         let mut request = HttpRequest::builder();
@@ -405,11 +405,11 @@ impl Envelope {
 /// # Examples
 /// ```
 /// # /*
-/// #![cfg(feature = "custom-transport")]
+/// #![cfg(feature = "transport-custom")]
 ///
 /// # */
 /// # fn main() -> anyhow::Result<()> {
-/// # #[cfg(feature = "custom-transport")]
+/// # #[cfg(feature = "transport-custom")]
 /// # {
 /// # use sentry_contrib_native::{Dsn, Event, http::HeaderMap, Options, RawEnvelope, test, Transport};
 ///
@@ -452,8 +452,8 @@ impl Envelope {
 /// options.set_transport(CustomTransport::new);
 /// # } Ok(()) }
 /// ```
-#[cfg(feature = "custom-transport")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+#[cfg(feature = "transport-custom")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Dsn {
     /// The auth header value
@@ -462,8 +462,8 @@ pub struct Dsn {
     url: String,
 }
 
-#[cfg(feature = "custom-transport")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+#[cfg(feature = "transport-custom")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 impl Dsn {
     /// Creates a new [`Dsn`] from a [`str`].
     ///
@@ -548,8 +548,8 @@ impl Dsn {
 
     /// Yields a [`HeaderMap`] to build a correct HTTP request with this
     /// [`Dsn`].
-    #[cfg(feature = "custom-transport")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+    #[cfg(feature = "transport-custom")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
     #[must_use]
     pub fn to_headers(&self) -> HeaderMap {
         let mut headers = HeaderMap::new();
@@ -566,7 +566,7 @@ impl Dsn {
     }
 }
 
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 impl FromStr for Dsn {
     type Err = crate::Error;
 
@@ -575,7 +575,7 @@ impl FromStr for Dsn {
     }
 }
 
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 impl TryFrom<&str> for Dsn {
     type Error = crate::Error;
 
@@ -585,8 +585,8 @@ impl TryFrom<&str> for Dsn {
 }
 
 /// [`Parts`] aquired from [`Dsn::into_parts`].
-#[cfg(feature = "custom-transport")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+#[cfg(feature = "transport-custom")]
+#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Parts {
     /// The auth header value
@@ -595,7 +595,7 @@ pub struct Parts {
     pub url: String,
 }
 
-#[cfg(all(test, feature = "custom-transport"))]
+#[cfg(all(test, feature = "transport-custom"))]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
 fn transport() -> anyhow::Result<()> {
     use crate::Event;
@@ -658,7 +658,7 @@ fn transport() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(all(test, feature = "custom-transport"))]
+#[cfg(all(test, feature = "transport-custom"))]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
 fn dsn() -> anyhow::Result<()> {
     use crate::Event;

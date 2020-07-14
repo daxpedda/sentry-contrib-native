@@ -153,7 +153,7 @@ details.
 - **backend-default** - **Enabled by default**, will use Crashpad on MacOS and
   Windows, Breakpad on Linux and InProc for Android. See `SENTRY_BACKEND` at the
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
-- **default-transport** - **Enabled by default**, will use `winhttp` on Windows
+- **transport-default** - **Enabled by default**, will use `winhttp` on Windows
   and `curl` everywhere else as the default transport.
 - **backend-crashpad** - Will use Crashpad. See `SENTRY_BACKEND` at the
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
@@ -161,7 +161,11 @@ details.
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
 - **backend-inproc** - Will use InProc. See `SENTRY_BACKEND` at the
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
-- **custom-transport** - Adds helper types and methods to custom transport.
+- **transport-custom** - Adds helper types and methods to custom transport.
+- **nightly** - Enables full documentation through
+  [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html)
+  and
+  [`feature(doc_cfg)`](https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html).
 - **test** - Corrects testing for documentation tests and examples.
   - Automatically sets the DSN to the `SENTRY_DSN` environment variable, no
     matter what is set through `Options::set_dsn`.
@@ -170,10 +174,6 @@ details.
   - Automatically puts the crashhandler path to the correct path, taking into
     account `SENTRY_NATIVE_INSTALL`, no matter what is set through
     `Options::set_handler_path`.
-- **nightly** - Enables full documentation through
-  [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html)
-  and
-  [`feature(doc_cfg)`](https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html).
 
 ## Deployment
 

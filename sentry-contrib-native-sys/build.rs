@@ -133,7 +133,7 @@ fn main() -> Result<()> {
 
     match target_os.as_str() {
         "windows" => {
-            if cfg!(feature = "default-transport") {
+            if cfg!(feature = "transport-default") {
                 println!("cargo:rustc-link-lib=winhttp");
             }
 
@@ -141,7 +141,7 @@ fn main() -> Result<()> {
             println!("cargo:rustc-link-lib=shlwapi");
         }
         "macos" => {
-            if cfg!(feature = "default-transport") {
+            if cfg!(feature = "transport-default") {
                 println!("cargo:rustc-link-lib=curl");
             }
 
@@ -149,7 +149,7 @@ fn main() -> Result<()> {
             println!("cargo:rustc-link-lib=dylib=c++");
         }
         "linux" => {
-            if cfg!(feature = "default-transport") {
+            if cfg!(feature = "transport-default") {
                 println!("cargo:rustc-link-lib=curl");
             }
 
@@ -176,7 +176,7 @@ fn build(source: &Path, install: Option<&Path>, backend: Backend) -> Result<Path
         cmake_config.out_dir(install);
     }
 
-    if cfg!(not(feature = "default-transport")) {
+    if cfg!(not(feature = "transport-default")) {
         cmake_config.define("SENTRY_TRANSPORT", "none");
     }
 

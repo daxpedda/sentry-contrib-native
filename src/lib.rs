@@ -34,7 +34,7 @@ use before_send::{Data as BeforeSendData, BEFORE_SEND};
 pub use breadcrumb::Breadcrumb;
 pub use event::{Event, Interface, Uuid};
 use ffi::{CPath, CToR, RToC};
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 pub use http;
 pub use logger::Message;
 use logger::LOGGER;
@@ -51,7 +51,7 @@ use std::{
 };
 use thiserror::Error;
 use transport::State as TransportState;
-#[cfg(feature = "custom-transport")]
+#[cfg(feature = "transport-custom")]
 pub use transport::{Dsn, Error as TransportError, Parts, Request};
 pub use transport::{
     Envelope, RawEnvelope, Shutdown as TransportShutdown, Transport, API_VERSION, ENVELOPE_MIME,
@@ -82,8 +82,8 @@ pub enum Error {
     #[error("list of fingerprints is too long")]
     Fingerprints,
     /// Failed at custom transport.
-    #[cfg(feature = "custom-transport")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "custom-transport")))]
+    #[cfg(feature = "transport-custom")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
     #[error("failed at custom transport")]
     Transport(#[from] TransportError),
 }

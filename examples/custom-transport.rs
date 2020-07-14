@@ -8,7 +8,7 @@
 // stable clippy seems to have an issue with await
 #![allow(clippy::used_underscore_binding)]
 
-//! Example how to use [`reqwest`] with the feature `custom-transport`.
+//! Example how to use [`reqwest`] with the feature `transport-custom`.
 
 use anyhow::{anyhow, Result};
 use parking_lot::{Condvar, Mutex};

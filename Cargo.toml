@@ -59,7 +59,7 @@ nightly = ["sys/nightly"]
 test = []
 
 [[example]]
-name = "transport-custom"
+name = "custom-transport"
 required-features = ["transport-custom"]
 
 [[example]]

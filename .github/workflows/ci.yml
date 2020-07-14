@@ -163,7 +163,7 @@ jobs:
           always() && steps.build.outcome == 'success' &&
           matrix.feature.transport-custom
         run:
-          cargo -v run --example transport-custom --features test ${{
+          cargo -v run --example custom-transport --features test ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'
@@ -344,7 +344,7 @@ jobs:
           always() && steps.build.outcome == 'success' &&
           matrix.feature.transport-custom
         run:
-          cargo -v run --example transport-custom --features test ${{
+          cargo -v run --example custom-transport --features test ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'

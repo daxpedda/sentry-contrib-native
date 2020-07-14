@@ -746,7 +746,7 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">breadcrumb</span>::<span class="ident">Breadcrumb</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">event</span>::{<span class="ident">Event</span>, <span class="ident">Interface</span>, <span class="ident">Uuid</span>};
 <span class="kw">use</span> <span class="ident">ffi</span>::{<span class="ident">CPath</span>, <span class="ident">CToR</span>, <span class="ident">RToC</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-custom&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">http</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">logger</span>::<span class="ident">Message</span>;
 <span class="kw">use</span> <span class="ident">logger</span>::<span class="ident">LOGGER</span>;
@@ -763,7 +763,7 @@
 };
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 <span class="kw">use</span> <span class="ident">transport</span>::<span class="ident">State</span> <span class="kw">as</span> <span class="ident">TransportState</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-custom&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">transport</span>::{<span class="ident">Dsn</span>, <span class="ident">Error</span> <span class="kw">as</span> <span class="ident">TransportError</span>, <span class="ident">Parts</span>, <span class="ident">Request</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">transport</span>::{
     <span class="ident">Envelope</span>, <span class="ident">RawEnvelope</span>, <span class="ident">Shutdown</span> <span class="kw">as</span> <span class="ident">TransportShutdown</span>, <span class="ident">Transport</span>, <span class="ident">API_VERSION</span>, <span class="ident">ENVELOPE_MIME</span>,
@@ -794,8 +794,8 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;list of fingerprints is too long&quot;</span>)]</span>
     <span class="ident">Fingerprints</span>,
     <span class="doccomment">/// Failed at custom transport.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-custom&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-custom&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed at custom transport&quot;</span>)]</span>
     <span class="ident">Transport</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">TransportError</span>),
 }

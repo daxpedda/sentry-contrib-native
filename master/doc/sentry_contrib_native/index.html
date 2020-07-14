@@ -124,8 +124,8 @@ which in turn builds
 <a href="https://github.com/getsentry/sentry-native">Sentry's Native SDK</a>. This requires
 <a href="https://cmake.org">CMake</a> or alternatively a pre-installed version can be
 provided with the <code>SENTRY_NATIVE_INSTALL</code> environment variable.</p>
-<p>Additionally on any other platform than Windows, the development version of
-<code>curl</code> is required.</p>
+<p>Additionally on any other platform than Windows, the development version of Curl
+is required.</p>
 <p>See the <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a> for more
 details.</p>
 <h2 id="crate-features" class="section-header"><a href="#crate-features">Crate features</a></h2>
@@ -133,15 +133,19 @@ details.</p>
 <li><strong>backend-default</strong> - <strong>Enabled by default</strong>, will use Crashpad on MacOS and
 Windows, Breakpad on Linux and InProc for Android. See <code>SENTRY_BACKEND</code> at the
 <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
-<li><strong>default-transport</strong> - <strong>Enabled by default</strong>, will use <code>winhttp</code> on Windows
-and <code>curl</code> everywhere else as the default transport.</li>
+<li><strong>transport-default</strong> - <strong>Enabled by default</strong>, will use WinHttp on Windows
+and Curl everywhere else as the default transport.</li>
 <li><strong>backend-crashpad</strong> - Will use Crashpad. See <code>SENTRY_BACKEND</code> at the
 <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
 <li><strong>backend-breakpad</strong> - Will use Breakpad. See <code>SENTRY_BACKEND</code> at the
 <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
 <li><strong>backend-inproc</strong> - Will use InProc. See <code>SENTRY_BACKEND</code> at the
 <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
-<li><strong>custom-transport</strong> - Adds helper types and methods to custom transport.</li>
+<li><strong>transport-custom</strong> - Adds helper types and methods to custom transport.</li>
+<li><strong>nightly</strong> - Enables full documentation through
+<a href="https://doc.rust-lang.org/unstable-book/language-features/external-doc.html"><code>feature(external_doc)</code></a>
+and
+<a href="https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html"><code>feature(doc_cfg)</code></a>.</li>
 <li><strong>test</strong> - Corrects testing for documentation tests and examples.
 <ul>
 <li>Automatically sets the DSN to the <code>SENTRY_DSN</code> environment variable, no
@@ -153,10 +157,6 @@ account <code>SENTRY_NATIVE_INSTALL</code>, no matter what is set through
 <code>Options::set_handler_path</code>.</li>
 </ul>
 </li>
-<li><strong>nightly</strong> - Enables full documentation through
-<a href="https://doc.rust-lang.org/unstable-book/language-features/external-doc.html"><code>feature(external_doc)</code></a>
-and
-<a href="https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html"><code>feature(doc_cfg)</code></a>.</li>
 </ul>
 <h2 id="deployment" class="section-header"><a href="#deployment">Deployment</a></h2>
 <p>By default, when deploying a binary for MacOS or Windows, it has to be shipped
@@ -225,12 +225,12 @@ for more details.</p>
 </div><h2 id='reexports' class='section-header'><a href="#reexports">Re-exports</a></h2>
 <table><tr><td><code>pub use <a class="mod" href="https://docs.rs/http/0.2.1/http/index.html" title="mod http">http</a>;</code></td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table><tr class='module-item'><td><a class="struct" href="struct.Breadcrumb.html" title='sentry_contrib_native::Breadcrumb struct'>Breadcrumb</a></td><td class='docblock-short'><p>A Sentry breadcrumb.</p>
-</td></tr><tr class='module-item'><td><a class="struct" href="struct.Dsn.html" title='sentry_contrib_native::Dsn struct'>Dsn</a></td><td class='docblock-short'><span class="stab portability"><code>feature="custom-transport"</code></span><p>Contains the pieces that are needed to build correct headers for a request
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Dsn.html" title='sentry_contrib_native::Dsn struct'>Dsn</a></td><td class='docblock-short'><span class="stab portability"><code>feature="transport-custom"</code></span><p>Contains the pieces that are needed to build correct headers for a request
 based on the given DSN.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Envelope.html" title='sentry_contrib_native::Envelope struct'>Envelope</a></td><td class='docblock-short'><p>The actual body which transports send to Sentry.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Event.html" title='sentry_contrib_native::Event struct'>Event</a></td><td class='docblock-short'><p>A Sentry event.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Options.html" title='sentry_contrib_native::Options struct'>Options</a></td><td class='docblock-short'><p>The Sentry client options.</p>
-</td></tr><tr class='module-item'><td><a class="struct" href="struct.Parts.html" title='sentry_contrib_native::Parts struct'>Parts</a></td><td class='docblock-short'><span class="stab portability"><code>feature="custom-transport"</code></span><p><a href="../sentry_contrib_native/struct.Parts.html" title="`Parts`"><code>Parts</code></a> aquired from <a href="../sentry_contrib_native/struct.Dsn.html#method.into_parts" title="`Dsn::into_parts`"><code>Dsn::into_parts</code></a>.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Parts.html" title='sentry_contrib_native::Parts struct'>Parts</a></td><td class='docblock-short'><span class="stab portability"><code>feature="transport-custom"</code></span><p><a href="../sentry_contrib_native/struct.Parts.html" title="`Parts`"><code>Parts</code></a> aquired from <a href="../sentry_contrib_native/struct.Dsn.html#method.into_parts" title="`Dsn::into_parts`"><code>Dsn::into_parts</code></a>.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.RawEnvelope.html" title='sentry_contrib_native::RawEnvelope struct'>RawEnvelope</a></td><td class='docblock-short'><p>Wrapper for the raw Envelope that we should send to Sentry.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Shutdown.html" title='sentry_contrib_native::Shutdown struct'>Shutdown</a></td><td class='docblock-short'><p>Automatically shuts down the Sentry client on drop.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.User.html" title='sentry_contrib_native::User struct'>User</a></td><td class='docblock-short'><p>A Sentry user.</p>
@@ -241,7 +241,7 @@ based on the given DSN.</p>
 </td></tr><tr class='module-item'><td><a class="enum" href="enum.Interface.html" title='sentry_contrib_native::Interface enum'>Interface</a></td><td class='docblock-short'><p>Sentry event interface.</p>
 </td></tr><tr class='module-item'><td><a class="enum" href="enum.Level.html" title='sentry_contrib_native::Level enum'>Level</a></td><td class='docblock-short'><p>Sentry event level.</p>
 </td></tr><tr class='module-item'><td><a class="enum" href="enum.Message.html" title='sentry_contrib_native::Message enum'>Message</a></td><td class='docblock-short'><p>Message received for custom logger.</p>
-</td></tr><tr class='module-item'><td><a class="enum" href="enum.TransportError.html" title='sentry_contrib_native::TransportError enum'>TransportError</a></td><td class='docblock-short'><span class="stab portability"><code>feature="custom-transport"</code></span><p>Sentry errors.</p>
+</td></tr><tr class='module-item'><td><a class="enum" href="enum.TransportError.html" title='sentry_contrib_native::TransportError enum'>TransportError</a></td><td class='docblock-short'><span class="stab portability"><code>feature="transport-custom"</code></span><p>Sentry errors.</p>
 </td></tr><tr class='module-item'><td><a class="enum" href="enum.TransportShutdown.html" title='sentry_contrib_native::TransportShutdown enum'>TransportShutdown</a></td><td class='docblock-short'><p>The return from <a href="../sentry_contrib_native/trait.Transport.html#method.shutdown" title="`Transport::shutdown`"><code>Transport::shutdown</code></a>, which determines if we tell
 the Sentry SDK if we were able to send all requests to the remote service
 or not in the allotted time.</p>
@@ -277,5 +277,5 @@ to a Sentry service.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.start_session.html" title='sentry_contrib_native::start_session fn'>start_session</a></td><td class='docblock-short'><p>Starts a new session.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.user_consent.html" title='sentry_contrib_native::user_consent fn'>user_consent</a></td><td class='docblock-short'><p>Checks the current state of user consent.</p>
 </td></tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
-<table><tr class='module-item'><td><a class="type" href="type.Request.html" title='sentry_contrib_native::Request type'>Request</a></td><td class='docblock-short'><span class="stab portability"><code>feature="custom-transport"</code></span><p>The <a href="https://docs.rs/http/0.2.1/http/request/struct.Request.html" title="`http::Request`"><code>http::Request</code></a> request your <a href="../sentry_contrib_native/trait.Transport.html" title="`Transport`"><code>Transport</code></a> is expected to send.</p>
+<table><tr class='module-item'><td><a class="type" href="type.Request.html" title='sentry_contrib_native::Request type'>Request</a></td><td class='docblock-short'><span class="stab portability"><code>feature="transport-custom"</code></span><p>The <a href="https://docs.rs/http/0.2.1/http/request/struct.Request.html" title="`http::Request`"><code>http::Request</code></a> request your <a href="../sentry_contrib_native/trait.Transport.html" title="`Transport`"><code>Transport</code></a> is expected to send.</p>
 </td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../";window.currentCrate = "sentry_contrib_native";</script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

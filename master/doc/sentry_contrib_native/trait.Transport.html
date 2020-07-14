@@ -6,7 +6,7 @@
 to a Sentry service.</p>
 <h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="attribute">#![<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;custom-transport&quot;</span>)]</span>
+<span class="attribute">#![<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-custom&quot;</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">reqwest</span>::<span class="ident">blocking</span>::<span class="ident">Client</span>;
 
@@ -46,7 +46,7 @@ to a Sentry service.</p>
 <span class="ident">options</span>.<span class="ident">set_dsn</span>(<span class="ident">dsn</span>);
 <span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="ident">CustomTransport</span>::<span class="ident">new</span>);</pre></div>
 <p>See the
-<a href="https://github.com/daxpedda/sentry-contrib-native/blob/master/examples/custom-transport.rs"><code>custom-transport</code></a>
+<a href="https://github.com/daxpedda/sentry-contrib-native/blob/master/examples/transport-custom.rs"><code>transport-custom</code></a>
 example for a more sophisticated implementation.</p>
 </div>
             <h2 id='required-methods' class='small-section-header'>Required methods<a href='#required-methods' class='anchor'></a></h2><div class='methods'><h3 id='tymethod.send' class='method'><code>fn <a href='#tymethod.send' class='fnname'>send</a>(&amp;self, envelope: <a class="struct" href="../sentry_contrib_native/struct.RawEnvelope.html" title="struct sentry_contrib_native::RawEnvelope">RawEnvelope</a>)</code></h3><div class='docblock'><p>Sends the specified Envelope to a Sentry service.</p>

@@ -142,8 +142,8 @@ which in turn builds
 [CMake](https://cmake.org) or alternatively a pre-installed version can be
 provided with the `SENTRY_NATIVE_INSTALL` environment variable.
 
-Additionally on any other platform than Windows, the development version of
-`curl` is required.
+Additionally on any other platform than Windows, the development version of Curl
+is required.
 
 See the [Sentry Native SDK](https://github.com/getsentry/sentry-native) for more
 details.
@@ -153,8 +153,8 @@ details.
 - **backend-default** - **Enabled by default**, will use Crashpad on MacOS and
   Windows, Breakpad on Linux and InProc for Android. See `SENTRY_BACKEND` at the
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
-- **transport-default** - **Enabled by default**, will use `winhttp` on Windows
-  and `curl` everywhere else as the default transport.
+- **transport-default** - **Enabled by default**, will use WinHttp on Windows
+  and Curl everywhere else as the default transport.
 - **backend-crashpad** - Will use Crashpad. See `SENTRY_BACKEND` at the
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
 - **backend-breakpad** - Will use Breakpad. See `SENTRY_BACKEND` at the

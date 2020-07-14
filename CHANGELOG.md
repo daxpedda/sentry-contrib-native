@@ -19,6 +19,7 @@ and this project adheres to
 - Renamed `user_consent_get` to `user_consent`.
 - Renamed feature `default-transport` to `transport-default` and
   `custom-transport` to `transport-custom`.
+- Improved naming of libraries in the documentation.
 
 ### Deprecated
 

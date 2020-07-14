@@ -33,8 +33,8 @@ For more details see
 - **backend-default** - **Enabled by default**, will use Crashpad on MacOS and
   Windows, Breakpad on Linux and InProc for Android. See `SENTRY_BACKEND` at the
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
-- **default-transport** - **Enabled by default**, will use `winhttp` on Windows
-  and `curl` everywhere else as the default transport.
+- **default-transport** - **Enabled by default**, will use WinHttp on Windows
+  and Curl everywhere else as the default transport.
 - **backend-crashpad** - Will use Crashpad. See `SENTRY_BACKEND` at the
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
 - **backend-breakpad** - Will use Breakpad. See `SENTRY_BACKEND` at the

@@ -72,11 +72,11 @@ jobs:
           - {
               name:
                 "--no-default-features --features
-                backend-default,custom-transport",
-              default-transport: false,
-              custom-transport: true,
+                backend-default,transport-custom",
+              transport-default: false,
+              transport-custom: true,
             }
-          - { name: "", default-transport: true, custom-transport: false }
+          - { name: "", transport-default: true, transport-custom: false }
         os:
           - ubuntu-latest
           - macos-latest
@@ -100,7 +100,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install curl
-        if: matrix.os == 'ubuntu-latest' && matrix.feature.default-transport
+        if: matrix.os == 'ubuntu-latest' && matrix.feature.transport-default
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev
@@ -115,7 +115,7 @@ jobs:
           path: ~/sentry-native
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
-            matrix.feature.default-transport }}
+            matrix.feature.transport-default }}
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
@@ -154,16 +154,16 @@ jobs:
       - name: Example
         if:
           always() && steps.build.outcome == 'success' &&
-          matrix.feature.default-transport
+          matrix.feature.transport-default
         run:
           cargo -v run --example example --features test ${{ matrix.feature.name
           }} ${{ matrix.rust.feature }}
       - name: Custom transport example
         if:
           always() && steps.build.outcome == 'success' &&
-          matrix.feature.custom-transport
+          matrix.feature.transport-custom
         run:
-          cargo -v run --example custom-transport --features test ${{
+          cargo -v run --example transport-custom --features test ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'
@@ -249,11 +249,11 @@ jobs:
           - {
               name:
                 "--no-default-features --features
-                backend-default,custom-transport",
-              default-transport: false,
-              custom-transport: true,
+                backend-default,transport-custom",
+              transport-default: false,
+              transport-custom: true,
             }
-          - { name: "", default-transport: true, custom-transport: false }
+          - { name: "", transport-default: true, transport-custom: false }
         os:
           - ubuntu-latest
           - macos-latest
@@ -281,7 +281,7 @@ jobs:
           ref: ${{ matrix.branch }}
           submodules: recursive
       - name: Install curl
-        if: matrix.os == 'ubuntu-latest' && matrix.feature.default-transport
+        if: matrix.os == 'ubuntu-latest' && matrix.feature.transport-default
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev
@@ -296,7 +296,7 @@ jobs:
           path: ~/sentry-native
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
-            matrix.feature.default-transport }}
+            matrix.feature.transport-default }}
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
@@ -335,16 +335,16 @@ jobs:
       - name: Example
         if:
           always() && steps.build.outcome == 'success' &&
-          matrix.feature.default-transport
+          matrix.feature.transport-default
         run:
           cargo -v run --example example --features test ${{ matrix.feature.name
           }} ${{ matrix.rust.feature }}
       - name: Custom transport example
         if:
           always() && steps.build.outcome == 'success' &&
-          matrix.feature.custom-transport
+          matrix.feature.transport-custom
         run:
-          cargo -v run --example custom-transport --features test ${{
+          cargo -v run --example transport-custom --features test ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Rust Formatting
         if: always() && steps.checkout.outcome == 'success'

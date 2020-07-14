@@ -53,14 +53,14 @@ backend-default = ["sys/backend-default"]
 backend-crashpad = ["sys/backend-crashpad"]
 backend-breakpad = ["sys/backend-breakpad"]
 backend-inproc = ["sys/backend-inproc"]
-transport-default = ["sys/default-transport"]
+transport-default = ["sys/transport-default"]
 transport-custom = ["http", "url"]
 nightly = ["sys/nightly"]
 test = []
 
 [[example]]
-name = "custom-transport"
-required-features = ["custom-transport"]
+name = "transport-custom"
+required-features = ["transport-custom"]
 
 [[example]]
 name = "crash"
@@ -75,6 +75,6 @@ name = "panic"
 path = "tests/res/panic.rs"
 
 [package.metadata.docs.rs]
-features = ["custom-transport", "nightly"]
+features = ["transport-custom", "nightly"]
 no-default-features = true
 targets = ["x86_64-unknown-linux-gnu"]

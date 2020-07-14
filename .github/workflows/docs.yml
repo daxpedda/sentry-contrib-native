@@ -41,7 +41,7 @@ jobs:
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page
         run:
-          cargo -v doc --features custom-transport,nightly --no-deps --workspace
+          cargo -v doc --features transport-custom,nightly --no-deps --workspace
           --exclude dylib
       - name: Deploy
         if: success()

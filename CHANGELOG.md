@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Added support for changing the backend.
+
 ### Changed
 
 - Replaced `user_consent_give`, `user_consent_revoke` and `user_consent_reset`
@@ -24,6 +26,8 @@ and this project adheres to
 
 - Fixed thread-safety in almost all functions, they could crash the application
   otherwise or cause undefined behaviour.
+- Fixed unnecessary include of the WinHttp library when the default transport is
+  disabled.
 
 ### Security
 

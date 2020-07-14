@@ -76,10 +76,10 @@ fn main() {
 }
 ```
 
-On MacOS and Windows the Crashpad handler executable has to be shipped with the
-application, for convenience the Crashpad handler executable will be copied to
-Cargo's default binary output folder, so using `cargo run` works without any
-additional setup or configuration.
+By default, on MacOS and Windows the Crashpad handler executable has to be
+shipped with the application, for convenience the Crashpad handler executable
+will be copied to Cargo's default binary output folder, so using `cargo run`
+works without any additional setup or configuration.
 
 If you need to export the Crashpad handler executable programmatically to a
 specific output path, a "convenient" environment variable is provided to help
@@ -131,6 +131,8 @@ for more detailed information. See the
 platform and feature support details there, this crate doesn't do anything
 fancy, so we mostly rely on `sentry-native` for support.
 
+Only the default backend is tested in the CI.
+
 ## Build
 
 This crate relies on
@@ -148,8 +150,17 @@ details.
 
 ## Crate features
 
+- **backend-default** - **Enabled by default**, will use Crashpad on MacOS and
+  Windows, Breakpad on Linux and InProc for Android. See `SENTRY_BACKEND` at the
+  [Sentry Native SDK](https://github.com/getsentry/sentry-native).
 - **default-transport** - **Enabled by default**, will use `winhttp` on Windows
   and `curl` everywhere else as the default transport.
+- **backend-crashpad** - Will use Crashpad. See `SENTRY_BACKEND` at the
+  [Sentry Native SDK](https://github.com/getsentry/sentry-native).
+- **backend-breakpad** - Will use Breakpad. See `SENTRY_BACKEND` at the
+  [Sentry Native SDK](https://github.com/getsentry/sentry-native).
+- **backend-inproc** - Will use InProc. See `SENTRY_BACKEND` at the
+  [Sentry Native SDK](https://github.com/getsentry/sentry-native).
 - **custom-transport** - Adds helper types and methods to custom transport.
 - **test** - Corrects testing for documentation tests and examples.
   - Automatically sets the DSN to the `SENTRY_DSN` environment variable, no
@@ -166,9 +177,10 @@ details.
 
 ## Deployment
 
-When deploying a binary for MacOS or Windows, it has to be shipped together with
-the `crashpad_handler(.exe)` executable. A way to programmatically export it
-using `build.rs` is provided through the `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
+By default, when deploying a binary for MacOS or Windows, it has to be shipped
+together with the `crashpad_handler(.exe)` executable. A way to programmatically
+export it using `build.rs` is provided through the
+`DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
 
 See the [Usage section](#usage) for an example.
 

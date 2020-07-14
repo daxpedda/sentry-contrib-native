@@ -69,10 +69,10 @@ development inluding PR's.</li>
     <span class="comment">// Sentry receives an event with an attached stacktrace and message</span>
     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;application should have crashed at this point&quot;</span>);
 }</pre></div>
-<p>On MacOS and Windows the Crashpad handler executable has to be shipped with the
-application, for convenience the Crashpad handler executable will be copied to
-Cargo's default binary output folder, so using <code>cargo run</code> works without any
-additional setup or configuration.</p>
+<p>By default, on MacOS and Windows the Crashpad handler executable has to be
+shipped with the application, for convenience the Crashpad handler executable
+will be copied to Cargo's default binary output folder, so using <code>cargo run</code>
+works without any additional setup or configuration.</p>
 <p>If you need to export the Crashpad handler executable programmatically to a
 specific output path, a &quot;convenient&quot; environment variable is provided to help
 with that: <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
@@ -116,6 +116,7 @@ for more detailed information. See the
 <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a> for more
 platform and feature support details there, this crate doesn't do anything
 fancy, so we mostly rely on <code>sentry-native</code> for support.</p>
+<p>Only the default backend is tested in the CI.</p>
 <h2 id="build" class="section-header"><a href="#build">Build</a></h2>
 <p>This crate relies on
 <a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
@@ -129,8 +130,17 @@ provided with the <code>SENTRY_NATIVE_INSTALL</code> environment variable.</p>
 details.</p>
 <h2 id="crate-features" class="section-header"><a href="#crate-features">Crate features</a></h2>
 <ul>
+<li><strong>backend-default</strong> - <strong>Enabled by default</strong>, will use Crashpad on MacOS and
+Windows, Breakpad on Linux and InProc for Android. See <code>SENTRY_BACKEND</code> at the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
 <li><strong>default-transport</strong> - <strong>Enabled by default</strong>, will use <code>winhttp</code> on Windows
 and <code>curl</code> everywhere else as the default transport.</li>
+<li><strong>backend-crashpad</strong> - Will use Crashpad. See <code>SENTRY_BACKEND</code> at the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
+<li><strong>backend-breakpad</strong> - Will use Breakpad. See <code>SENTRY_BACKEND</code> at the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
+<li><strong>backend-inproc</strong> - Will use InProc. See <code>SENTRY_BACKEND</code> at the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
 <li><strong>custom-transport</strong> - Adds helper types and methods to custom transport.</li>
 <li><strong>test</strong> - Corrects testing for documentation tests and examples.
 <ul>
@@ -149,9 +159,10 @@ and
 <a href="https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html"><code>feature(doc_cfg)</code></a>.</li>
 </ul>
 <h2 id="deployment" class="section-header"><a href="#deployment">Deployment</a></h2>
-<p>When deploying a binary for MacOS or Windows, it has to be shipped together with
-the <code>crashpad_handler(.exe)</code> executable. A way to programmatically export it
-using <code>build.rs</code> is provided through the <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
+<p>By default, when deploying a binary for MacOS or Windows, it has to be shipped
+together with the <code>crashpad_handler(.exe)</code> executable. A way to programmatically
+export it using <code>build.rs</code> is provided through the
+<code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
 <p>See the <a href="#usage">Usage section</a> for an example.</p>
 <h2 id="documentation" class="section-header"><a href="#documentation">Documentation</a></h2>
 <ul>

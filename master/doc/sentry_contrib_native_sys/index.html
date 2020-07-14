@@ -26,8 +26,17 @@ crate isn't intended to be used directly, use
 <a href="https://github.com/daxpedda/sentry-contrib-native/blob/master/README.md">sentry-contrib-native's README</a></p>
 <h2 id="crate-features" class="section-header"><a href="#crate-features">Crate features</a></h2>
 <ul>
+<li><strong>backend-default</strong> - <strong>Enabled by default</strong>, will use Crashpad on MacOS and
+Windows, Breakpad on Linux and InProc for Android. See <code>SENTRY_BACKEND</code> at the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
 <li><strong>default-transport</strong> - <strong>Enabled by default</strong>, will use <code>winhttp</code> on Windows
 and <code>curl</code> everywhere else as the default transport.</li>
+<li><strong>backend-crashpad</strong> - Will use Crashpad. See <code>SENTRY_BACKEND</code> at the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
+<li><strong>backend-breakpad</strong> - Will use Breakpad. See <code>SENTRY_BACKEND</code> at the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
+<li><strong>backend-inproc</strong> - Will use InProc. See <code>SENTRY_BACKEND</code> at the
+<a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
 <li><strong>nightly</strong> - Enables full documentation through
 <a href="https://doc.rust-lang.org/unstable-book/language-features/external-doc.html"><code>feature(external_doc)</code></a>.</li>
 </ul>

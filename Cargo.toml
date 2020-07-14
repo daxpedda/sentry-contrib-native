@@ -48,14 +48,13 @@ tokio = { version = "0.2", features = ["macros", "process", "rt-threaded"] }
 url = "2"
 
 [features]
-default = ["default-transport"]
+default = ["backend-default", "default-transport"]
 default-transport = ["sys/default-transport"]
 custom-transport = ["http", "url"]
-backend-none = ["sys/backend-none"]
+backend-default = ["sys/backend-default"]
 backend-crashpad = ["sys/backend-crashpad"]
 backend-breakpad = ["sys/backend-breakpad"]
 backend-inproc = ["sys/backend-inproc"]
-
 nightly = ["sys/nightly"]
 test = []
 

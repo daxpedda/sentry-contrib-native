@@ -16,10 +16,10 @@ anyhow = "1"
 cmake = "0.1"
 
 [features]
-default = ["default-transport"]
+default = ["backend-default", "default-transport"]
 default-transport = []
 nightly = []
-backend-none = []
+backend-default = []
 backend-crashpad = []
 backend-breakpad = []
 backend-inproc = []

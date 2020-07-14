@@ -23,51 +23,52 @@ use std::{
 
 #[derive(Copy, Clone)]
 enum Backend {
-    Inproc,
     Crashpad,
     Breakpad,
+    InProc,
     None,
 }
 
-fn get_target_default(target_os: &str) -> Backend {
-    match target_os {
-        "windows" | "macos" => Backend::Crashpad,
-        "linux" => Backend::Breakpad,
-        "android" => Backend::Inproc,
-        _ => Backend::None,
+impl AsRef<str> for Backend {
+    fn as_ref(&self) -> &str {
+        match self {
+            Backend::Crashpad => "crashpad",
+            Backend::Breakpad => "breakpad",
+            Backend::InProc => "inproc",
+            Backend::None => "none",
+        }
     }
 }
 
-/// Gets the backend we want to use, see https://github.com/getsentry/sentry-native#compile-time-options
-/// for details
-fn get_backend(target_os: &str) -> Backend {
-    if cfg!(feature = "backend-none") {
-        return Backend::None;
+impl Backend {
+    /// Gets the backend we want to use, see https://github.com/getsentry/sentry-native#compile-time-options
+    /// for details.
+    fn new(target_os: &str) -> Backend {
+        if cfg!(feature = "backend-crashpad") && (target_os == "macos" || target_os == "windows") {
+            Backend::Crashpad
+        } else if cfg!(feature = "backend-breakpad") && target_os == "linux" {
+            Backend::Breakpad
+        } else if cfg!(feature = "backend-inproc") {
+            Backend::InProc
+        } else if cfg!(feature = "backend-default") {
+            match target_os {
+                "windows" | "macos" => Backend::Crashpad,
+                "linux" => Backend::Breakpad,
+                "android" => Backend::InProc,
+                _ => Backend::None,
+            }
+        } else {
+            Backend::None
+        }
     }
-
-    if cfg!(feature = "backend-crashpad")
-        && (target_os == "macos" || target_os == "windows" || target_os == "linux")
-    {
-        return Backend::Crashpad;
-    }
-
-    if cfg!(feature = "backend-breakpad") && (target_os == "windows" || target_os == "linux") {
-        return Backend::Breakpad;
-    }
-
-    if cfg!(feature = "backend-inproc") {
-        return Backend::Inproc;
-    }
-
-    get_target_default(target_os)
 }
 
 fn main() -> Result<()> {
     let target_os = env::var("CARGO_CFG_TARGET_OS").expect("target OS not specified");
+    let backend = Backend::new(&target_os);
 
     // path to source.
     let source = PathBuf::from("sentry-native");
-    let backend = get_backend(&target_os);
 
     // path to installation or to install to
     let install = if let Some(install) = env::var_os("SENTRY_NATIVE_INSTALL").map(PathBuf::from) {
@@ -127,25 +128,25 @@ fn main() -> Result<()> {
         Backend::Breakpad => {
             println!("cargo:rustc-link-lib=breakpad_client");
         }
-        _ => {}
+        Backend::InProc | Backend::None => {}
     }
 
     match target_os.as_str() {
         "windows" => {
-            println!("cargo:rustc-link-lib=dbghelp");
-            println!("cargo:rustc-link-lib=shlwapi");
-
             if cfg!(feature = "default-transport") {
                 println!("cargo:rustc-link-lib=winhttp");
             }
+
+            println!("cargo:rustc-link-lib=dbghelp");
+            println!("cargo:rustc-link-lib=shlwapi");
         }
         "macos" => {
-            println!("cargo:rustc-link-lib=framework=Foundation");
-            println!("cargo:rustc-link-lib=dylib=c++");
-
             if cfg!(feature = "default-transport") {
                 println!("cargo:rustc-link-lib=curl");
             }
+
+            println!("cargo:rustc-link-lib=framework=Foundation");
+            println!("cargo:rustc-link-lib=dylib=c++");
         }
         "linux" => {
             if cfg!(feature = "default-transport") {
@@ -179,14 +180,7 @@ fn build(source: &Path, install: Option<&Path>, backend: Backend) -> Result<Path
         cmake_config.define("SENTRY_TRANSPORT", "none");
     }
 
-    let be = match backend {
-        Backend::Crashpad => "crashpad",
-        Backend::Breakpad => "breakpad",
-        Backend::Inproc => "inproc",
-        Backend::None => "none",
-    };
-
-    cmake_config.define("SENTRY_BACKEND", be);
+    cmake_config.define("SENTRY_BACKEND", backend.as_ref());
 
     if cfg!(target_feature = "crt-static") {
         cmake_config.define("SENTRY_BUILD_RUNTIMESTATIC", "ON");

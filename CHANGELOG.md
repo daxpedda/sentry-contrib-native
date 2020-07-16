@@ -20,6 +20,10 @@ and this project adheres to
 - Renamed feature `default-transport` to `transport-default` and
   `custom-transport` to `transport-custom`.
 - Improved naming of libraries in the documentation.
+- Exclude some folders from the included Sentry Native SDK that are only
+  relevant for testing from the Crates.io package. This not only reduces the
+  size of the overall package, but also helps to avoid issues with Windows's
+  maximum path length.
 
 ### Deprecated
 

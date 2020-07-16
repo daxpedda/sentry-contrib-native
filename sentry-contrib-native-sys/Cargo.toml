@@ -11,6 +11,13 @@ license = "MIT OR Apache-2.0"
 keywords = ["sentry", "crash", "crashpad", "breakpad", "minidump"]
 categories = ["external-ffi-bindings", "development-tools::debugging"]
 
+exclude = [
+    # Exclude test data for breakpad, as it's unnecessary and can break during
+    # unpacking on windows depending on the how long the user's .cargo path is
+    "sentry-native/external/breakpad/src/processor/testdata/**",
+    "sentry-native/external/breakpad/src/tools/windows/dump_syms/testdata/**",
+]
+
 [build-dependencies]
 anyhow = "1"
 cmake = "0.1"

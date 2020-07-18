@@ -11,7 +11,7 @@ handler itself call <a href="../sentry_contrib_native/fn.shutdown.html" title="`
 that can panic, it might lead to any <a href="https://doc.rust-lang.org/nightly/std/macro.panic.html" title="`panic!`"><code>panic!</code></a> being an <a href="https://doc.rust-lang.org/nightly/std/process/fn.abort.html" title="`abort`"><code>abort</code></a> instead.</p>
 <h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
 <div class='information'><div class='tooltip should_panic'>ⓘ<span class='tooltiptext'>This example panics</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered should_panic">
-<span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// pass original panic handler provided by rust to retain it&#39;s functionality</span>
     <span class="ident">set_hook</span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">std</span>::<span class="ident">panic</span>::<span class="ident">take_hook</span>()));
     <span class="comment">// it can also be removed</span>

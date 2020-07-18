@@ -830,7 +830,7 @@
 
 <span class="doccomment">/// Type of the callback for modifying events.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventFunction</span> <span class="op">=</span>
-    <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">event</span>: <span class="ident">Value</span>, <span class="ident">hint</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>, <span class="ident">closure</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">event</span>: <span class="ident">Value</span>, <span class="ident">hint</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>, <span class="ident">closure</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
 <span class="doccomment">/// Type of the callback for logging debug events.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">LoggerFunction</span> <span class="op">=</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">level</span>: <span class="ident">i32</span>, <span class="ident">message</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">args</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>);
@@ -842,7 +842,7 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">StartupFunction</span> <span class="op">=</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">options</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>, <span class="ident">state</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>);
 
 <span class="doccomment">/// Type of the callback for shutting down a custom transport</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ShutdownFunction</span> <span class="op">=</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">timeout</span>: <span class="ident">u64</span>, <span class="ident">state</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ShutdownFunction</span> <span class="op">=</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">timeout</span>: <span class="ident">u64</span>, <span class="ident">state</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) <span class="op">-&gt;</span> <span class="ident">bool</span>;
 
 <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
     <span class="doccomment">/// Releases memory allocated from the underlying allocator.</span>
@@ -859,52 +859,52 @@
 
     <span class="doccomment">/// Creates a null value.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_null&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_null</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_null</span>() <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Creates a new 32-bit signed integer value.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_int32&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_int32</span>(<span class="ident">value</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_int32</span>(<span class="ident">value</span>: <span class="ident">i32</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Creates a new double value.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_double&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_double</span>(<span class="ident">value</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_double</span>(<span class="ident">value</span>: <span class="ident">f64</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Creates a new boolen value.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_bool&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_bool</span>(<span class="ident">value</span>: <span class="ident">c_int</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_bool</span>(<span class="ident">value</span>: <span class="ident">c_int</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Creates a new null terminated string.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_string&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_string</span>(<span class="ident">value</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_string</span>(<span class="ident">value</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Creates a new list value.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_list&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_list</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_list</span>() <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Creates a new object.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_object&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_object</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_object</span>() <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Returns the type of the value passed.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_get_type&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_type</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ValueType</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_type</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">ValueType</span>;
 
     <span class="doccomment">/// Sets a key to a value in the map.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This moves the ownership of the value into the map.  The caller does not</span>
     <span class="doccomment">/// have to call `sentry_value_decref` on it.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_set_by_key&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_set_by_key</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">k</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">v</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_set_by_key</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">k</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">v</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// This removes a value from the map by key.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_remove_by_key&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_remove_by_key</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">k</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_remove_by_key</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">k</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// Appends a value to a list.</span>
     <span class="doccomment">/// This moves the ownership of the value into the list.  The caller does</span>
     <span class="doccomment">/// not have to call `sentry_value_decref` on it.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_append&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_append</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">v</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_append</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">v</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// Inserts a value into the list at a certain position.</span>
     <span class="doccomment">///</span>
@@ -914,16 +914,16 @@
     <span class="doccomment">/// If the list is shorter than the given index it&#39;s automatically extended</span>
     <span class="doccomment">/// and filled with `null` values.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_set_by_index&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_set_by_index</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">v</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_set_by_index</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">v</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// This removes a value from the list by index.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_remove_by_index&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_remove_by_index</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_remove_by_index</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// Looks up a value in a map by key.  If missing a null value is</span>
     <span class="doccomment">/// returned.&quot;] The returned value is borrowed.&quot;]</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_get_by_key&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_by_key</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">k</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_by_key</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">k</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Looks up a value in a map by key.  If missing a null value is returned.</span>
     <span class="doccomment">/// The returned value is owned.</span>
@@ -931,12 +931,12 @@
     <span class="doccomment">/// If the caller no longer needs the value it must be released with</span>
     <span class="doccomment">/// `sentry_value_decref`.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_get_by_key_owned&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_by_key_owned</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">k</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_by_key_owned</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">k</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Looks up a value in a list by index.  If missing a null value is</span>
     <span class="doccomment">/// returned. The returned value is borrowed.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_get_by_index&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_by_index</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_by_index</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Looks up a value in a list by index.  If missing a null value is</span>
     <span class="doccomment">/// returned. The returned value is owned.</span>
@@ -944,47 +944,47 @@
     <span class="doccomment">/// If the caller no longer needs the value it must be released with</span>
     <span class="doccomment">/// `sentry_value_decref`.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_get_by_index_owned&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_by_index_owned</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_by_index_owned</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Returns the length of the given map or list.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// If an item is not a list or map the return value is 0.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_get_length&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_length</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_get_length</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">usize</span>;
 
     <span class="doccomment">/// Converts a value into a 32bit signed integer.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_as_int32&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_as_int32</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_as_int32</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">i32</span>;
 
     <span class="doccomment">/// Converts a value into a double value.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_as_double&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_as_double</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_as_double</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">f64</span>;
 
     <span class="doccomment">/// Returns the value as c string.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_as_string&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_as_string</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_as_string</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
 
     <span class="doccomment">/// Returns `true` if the value is boolean true.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_is_true&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_is_true</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_is_true</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// Creates a new empty event value.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_event&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_event</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_event</span>() <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Creates a new message event value.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// `logger` can be NULL to omit the logger value.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_message_event&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_message_event</span>(<span class="ident">level</span>: <span class="ident">i32</span>, <span class="ident">logger</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">text</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>)
-        <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+        <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Creates a new breadcrumb with a specific type and message.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Either parameter can be NULL in which case no such attributes is</span>
     <span class="doccomment">/// created.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_breadcrumb&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_breadcrumb</span>(<span class="ident">type_</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">message</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_breadcrumb</span>(<span class="ident">type_</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">message</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Serialize a Sentry value to msgpack.</span>
     <span class="doccomment">///</span>
@@ -992,7 +992,7 @@
     <span class="doccomment">/// `sentry_string_free`.  Since msgpack is not zero terminated</span>
     <span class="doccomment">/// the size is written to the `size_out` parameter.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_to_msgpack&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_to_msgpack</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">size_out</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_to_msgpack</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">size_out</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_char</span>;
 
     <span class="doccomment">/// Adds a stacktrace to an event.</span>
     <span class="doccomment">///</span>
@@ -1003,7 +1003,7 @@
 
     <span class="doccomment">/// Creates the nil uuid.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_uuid_nil&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">uuid_nil</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Uuid</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">uuid_nil</span>() <span class="op">-&gt;</span> <span class="ident">Uuid</span>;
 
     <span class="doccomment">/// Formats the uuid into a string buffer.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_uuid_as_string&quot;</span>]</span>
@@ -1017,17 +1017,17 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This returns a borrowed value to the event in the envelope.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_envelope_get_event&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">envelope_get_event</span>(<span class="ident">envelope</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Envelope</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">envelope_get_event</span>(<span class="ident">envelope</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Envelope</span>) <span class="op">-&gt;</span> <span class="ident">Value</span>;
 
     <span class="doccomment">/// Serializes the envelope.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The return value needs to be freed with `sentry_string_free()`.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_envelope_serialize&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">envelope_serialize</span>(<span class="ident">envelope</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Envelope</span>, <span class="ident">size</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">envelope_serialize</span>(<span class="ident">envelope</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Envelope</span>, <span class="ident">size</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
 
     <span class="doccomment">/// Creates a new transport with an initial `send_func`.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_transport_new&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transport_new</span>(<span class="ident">send_func</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SendEnvelopeFunction</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Transport</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transport_new</span>(<span class="ident">send_func</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SendEnvelopeFunction</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Transport</span>;
 
     <span class="doccomment">/// Sets the transport `state`.</span>
     <span class="doccomment">///</span>
@@ -1068,7 +1068,7 @@
     <span class="doccomment">/// Creates a new options struct.</span>
     <span class="doccomment">/// Can be freed with `sentry_options_free`.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_new&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Options</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_new</span>() <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Options</span>;
 
     <span class="doccomment">/// Deallocates previously allocated Sentry options.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_free&quot;</span>]</span>
@@ -1092,7 +1092,7 @@
 
     <span class="doccomment">/// Gets the DSN.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_dsn&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_dsn</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_dsn</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
 
     <span class="doccomment">/// Sets the sample rate, which should be a double between `0.0` and `1.0`.</span>
     <span class="doccomment">/// Sentry will randomly discard any event that is captured using</span>
@@ -1102,7 +1102,7 @@
 
     <span class="doccomment">/// Gets the sample rate.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_sample_rate&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_sample_rate</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_sample_rate</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="ident">f64</span>;
 
     <span class="doccomment">/// Sets the release.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_set_release&quot;</span>]</span>
@@ -1110,7 +1110,7 @@
 
     <span class="doccomment">/// Gets the release.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_release&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_release</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_release</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
 
     <span class="doccomment">/// Sets the environment.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_set_environment&quot;</span>]</span>
@@ -1118,7 +1118,7 @@
 
     <span class="doccomment">/// Gets the environment.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_environment&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_environment</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_environment</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
 
     <span class="doccomment">/// Sets the dist.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_set_dist&quot;</span>]</span>
@@ -1126,7 +1126,7 @@
 
     <span class="doccomment">/// Gets the dist.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_dist&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_dist</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_dist</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
 
     <span class="doccomment">/// Configures the http proxy.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_set_http_proxy&quot;</span>]</span>
@@ -1134,7 +1134,7 @@
 
     <span class="doccomment">/// Returns the configured http proxy.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_http_proxy&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_http_proxy</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_http_proxy</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
 
     <span class="doccomment">/// Configures the path to a file containing ssl certificates for</span>
     <span class="doccomment">/// verification.</span>
@@ -1143,7 +1143,7 @@
 
     <span class="doccomment">/// Returns the configured path for ca certificates.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_ca_certs&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_ca_certs</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_ca_certs</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
 
     <span class="doccomment">/// Enables or disables debug printing mode.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_set_debug&quot;</span>]</span>
@@ -1151,7 +1151,7 @@
 
     <span class="doccomment">/// Returns the current value of the debug flag.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_debug&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_debug</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_debug</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// Sets the sentry-native logger function.</span>
     <span class="doccomment">/// Used for logging debug events when the `debug` option is set to true.</span>
@@ -1168,7 +1168,7 @@
 
     <span class="doccomment">/// Returns true if user consent is required.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_require_user_consent&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_require_user_consent</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_require_user_consent</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// Enables or disables on-device symbolication of stack traces.</span>
     <span class="doccomment">///</span>
@@ -1181,7 +1181,7 @@
 
     <span class="doccomment">/// Returns true if on-device symbolication of stack traces is enabled.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_get_symbolize_stacktraces&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_symbolize_stacktraces</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">options_get_symbolize_stacktraces</span>(<span class="ident">opts</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// Adds a new attachment to be sent along.</span>
     <span class="doccomment">///</span>
@@ -1251,7 +1251,7 @@
     <span class="doccomment">/// This takes ownership of the options.  After the options have been set</span>
     <span class="doccomment">/// they cannot be modified any more.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_init&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">options</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">options</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// Shuts down the Sentry client and forces transports to flush out.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_shutdown&quot;</span>]</span>
@@ -1272,7 +1272,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// This might return NULL if Sentry is not yet initialized.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_get_options&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_options</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_options</span>() <span class="op">-&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">Options</span>;
 
     <span class="doccomment">/// Gives user consent.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_user_consent_give&quot;</span>]</span>
@@ -1288,11 +1288,11 @@
 
     <span class="doccomment">/// Checks the current state of user consent.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_user_consent_get&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_consent_get</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UserConsent</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_consent_get</span>() <span class="op">-&gt;</span> <span class="ident">UserConsent</span>;
 
     <span class="doccomment">/// Sends a Sentry event.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_capture_event&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">capture_event</span>(<span class="ident">event</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Uuid</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">capture_event</span>(<span class="ident">event</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">Uuid</span>;
 
     <span class="doccomment">/// Adds the breadcrumb to be sent in case of an event.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_add_breadcrumb&quot;</span>]</span>

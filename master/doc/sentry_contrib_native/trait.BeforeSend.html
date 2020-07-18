@@ -8,7 +8,7 @@
 };
 
 <span class="kw">impl</span> <span class="ident">BeforeSend</span> <span class="kw">for</span> <span class="ident">Filter</span> {
-    <span class="kw">fn</span> <span class="ident">before_send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span> {
+    <span class="kw">fn</span> <span class="ident">before_send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">Value</span> {
         <span class="self">self</span>.<span class="ident">filtered</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
         <span class="comment">// do something with the value and then return it</span>
         <span class="ident">value</span>
@@ -32,7 +32,7 @@
 };
 
 <span class="kw">impl</span> <span class="ident">BeforeSend</span> <span class="kw">for</span> <span class="ident">Filter</span> {
-    <span class="kw">fn</span> <span class="ident">before_send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span> {
+    <span class="kw">fn</span> <span class="ident">before_send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">Value</span> {
         <span class="self">self</span>.<span class="ident">filtered</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
         <span class="comment">// do something with the value and then return it</span>
         <span class="ident">value</span>

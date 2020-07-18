@@ -16,7 +16,7 @@ to a Sentry service.</p>
 };
 
 <span class="kw">impl</span> <span class="ident">CustomTransport</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="ident">CustomTransport</span> {
             <span class="ident">dsn</span>: <span class="ident">Dsn</span>::<span class="ident">new</span>(<span class="ident">options</span>.<span class="ident">dsn</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>(),
             <span class="ident">client</span>: <span class="ident">Client</span>::<span class="ident">new</span>(),
@@ -29,7 +29,7 @@ to a Sentry service.</p>
         <span class="kw">let</span> <span class="ident">dsn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">dsn</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">clone</span>();
 
-        <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+        <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">||</span> {
             <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">envelope</span>
                 .<span class="ident">to_request</span>(<span class="ident">dsn</span>)
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">body</span><span class="op">|</span> <span class="ident">body</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>());

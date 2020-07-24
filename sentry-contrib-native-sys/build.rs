@@ -14,7 +14,7 @@
 //!   `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
 //! - Links appropriate libraries.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use cmake::Config;
 use std::{
     env, fs,
@@ -155,7 +155,7 @@ fn main() -> Result<()> {
 
             println!("cargo:rustc-link-lib=dylib=stdc++");
         }
-        "android" => {}
+        "android" | "androideabi" => {}
         other => unimplemented!("target platform {} not implemented", other),
     }
 
@@ -184,6 +184,43 @@ fn build(source: &Path, install: Option<&Path>, backend: Backend) -> Result<Path
 
     if cfg!(target_feature = "crt-static") {
         cmake_config.define("SENTRY_BUILD_RUNTIMESTATIC", "ON");
+    }
+
+    // If we're targetting android, we need to set the CMAKE_TOOLCHAIN_FILE
+    // which properly sets up the build environment, and we also need to set
+    // ANDROID_ABI based on our target-triple. It seems there is not really
+    // a good standard for the NDK, so we try several environment variables to
+    // find it
+    // See https://developer.android.com/ndk/guides/cmake for details
+    let target_os = env::var("CARGO_CFG_TARGET_OS").context("TARGET_OS not set")?;
+
+    if target_os == "android" || target_os == "androideabi" {
+        let ndk_root = env::var("ANDROID_NDK_ROOT")
+            .or_else(|_| env::var("ANDROID_NDK_HOME"))
+            .context("unable to find ANDROID_NDK_ROOT nor ANDROID_NDK_HOME")?;
+
+        let mut toolchain = PathBuf::from(ndk_root);
+        toolchain.push("build/cmake/android.toolchain.cmake");
+
+        if !toolchain.exists() {
+            anyhow::bail!(
+                "Unable to find cmake toolchain file {}",
+                toolchain.display()
+            );
+        }
+
+        let target_arch = env::var("CARGO_CFG_TARGET_ARCH").context("TARGET_ARCH not set")?;
+        let abi = match target_arch.as_ref() {
+            "aarch64" => "arm64-v8a",
+            "arm" | "armv7" => "armeabi-v7a",
+            "thumbv7neon" => "armeabi-v7a with NEON",
+            "x86_64" => "x86_64",
+            "i686" => "x86",
+            arch => anyhow::bail!("Unknown Android TARGET_ARCH: {}", arch),
+        };
+
+        cmake_config.define("CMAKE_TOOLCHAIN_FILE", toolchain);
+        cmake_config.define("ANDROID_ABI", abi);
     }
 
     Ok(cmake_config.build())

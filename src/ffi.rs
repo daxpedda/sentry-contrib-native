@@ -33,26 +33,16 @@ impl CPath for PathBuf {
         let path = self.into_os_string();
 
         #[cfg(windows)]
-        {
-            path.encode_wide()
-        }
+        let path = path.encode_wide();
         #[cfg(all(not(windows), not(any(target_arch = "arm", target_arch = "aarch64"))))]
-        {
-            let path = path
-                .into_vec()
-                .into_iter()
-                .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) });
-
-            path.take_while(|ch| *ch != 0).chain(Some(0)).collect()
-        }
+        let path = path
+            .into_vec()
+            .into_iter()
+            .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) });
         #[cfg(all(not(windows), any(target_arch = "arm", target_arch = "aarch64")))]
-        {
-            path.into_vec()
-                .into_iter()
-                .take_while(|ch| *ch != 0)
-                .chain(Some(0))
-                .collect()
-        }
+        let path = path.into_vec().into_iter();
+
+        path.take_while(|ch| *ch != 0).chain(Some(0)).collect()
     }
 }
 

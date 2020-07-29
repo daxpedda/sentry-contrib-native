@@ -199,6 +199,10 @@
 <span id="199">199</span>
 <span id="200">200</span>
 <span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! FFI helper functions, traits and types to communicate with `sentry-native`.</span>
 
@@ -237,10 +241,14 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">encode_wide</span>();
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">windows</span>))]</span>
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>
-            .<span class="ident">into_vec</span>()
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">ch</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">transmute</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">i8</span><span class="op">&gt;</span>(<span class="ident">ch</span>) });
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">into_vec</span>().<span class="ident">into_iter</span>();
+
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;arm&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>)))]</span>
+            <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">ch</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">transmute</span>::<span class="op">&lt;</span><span class="ident">u8</span>, <span class="ident">i8</span><span class="op">&gt;</span>(<span class="ident">ch</span>) });
+
+            <span class="ident">path</span>
+        };
 
         <span class="ident">path</span>.<span class="ident">take_while</span>(<span class="op">|</span><span class="ident">ch</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">ch</span> <span class="op">!=</span> <span class="number">0</span>).<span class="ident">chain</span>(<span class="prelude-val">Some</span>(<span class="number">0</span>)).<span class="ident">collect</span>()
     }

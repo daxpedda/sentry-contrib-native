@@ -64,7 +64,7 @@ impl Backend {
 }
 
 fn main() -> Result<()> {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").expect("target OS not specified");
+    let target_os = env::var("CARGO_CFG_TARGET_OS")?;
     let backend = Backend::new(&target_os);
 
     // path to source.
@@ -212,7 +212,7 @@ fn build(
             );
         }
 
-        let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("TARGET_ARCH not set");
+        let target_arch = env::var("CARGO_CFG_TARGET_ARCH")?;
         let abi = match target_arch.as_ref() {
             "aarch64" => "arm64-v8a",
             "arm" | "armv7" => "armeabi-v7a",

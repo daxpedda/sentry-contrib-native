@@ -154,11 +154,7 @@ impl Value {
     /// ```
     #[must_use]
     pub fn is_null(&self) -> bool {
-        if let Self::Null = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Null)
     }
 
     /// Returns [`Some`] if `self` is [`Value::Null`].
@@ -208,11 +204,7 @@ impl Value {
     /// ```
     #[must_use]
     pub fn is_bool(&self) -> bool {
-        if let Self::Bool(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Bool(_))
     }
 
     /// Returns [`Some`] with the inner value if `self` is [`Value::Bool`].
@@ -281,11 +273,7 @@ impl Value {
     /// ```
     #[must_use]
     pub fn is_int(&self) -> bool {
-        if let Self::Int(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Int(_))
     }
 
     /// Returns [`Some`] with the inner value if `self` is [`Value::Int`].
@@ -354,11 +342,7 @@ impl Value {
     /// ```
     #[must_use]
     pub fn is_double(&self) -> bool {
-        if let Self::Double(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Double(_))
     }
 
     /// Returns [`Some`] with the inner value if `self` is [`Value::Double`].
@@ -427,11 +411,7 @@ impl Value {
     /// ```
     #[must_use]
     pub fn is_string(&self) -> bool {
-        if let Self::String(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::String(_))
     }
 
     /// Returns [`Some`] with the inner value if `self` is [`Value::String`].
@@ -502,11 +482,7 @@ impl Value {
     /// ```
     #[must_use]
     pub fn is_list(&self) -> bool {
-        if let Self::List(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::List(_))
     }
 
     /// Returns [`Some`] with the inner value if `self` is [`Value::List`].
@@ -583,11 +559,7 @@ impl Value {
     /// ```
     #[must_use]
     pub fn is_map(&self) -> bool {
-        if let Self::Map(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Map(_))
     }
 
     /// Returns [`Some`] with the inner value if `self` is [`Value::Map`].

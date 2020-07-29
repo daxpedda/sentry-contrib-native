@@ -14,7 +14,7 @@
 //!   `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
 //! - Links appropriate libraries.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use cmake::Config;
 use std::{
     env, fs,
@@ -77,12 +77,12 @@ fn main() -> Result<()> {
             .and_then(|mut dir| dir.next())
             .is_none()
         {
-            build(&source, Some(&install), backend)?
+            build(&source, Some(&install), backend, &target_os)?
         } else {
             install
         }
     } else {
-        build(&source, None, backend)?
+        build(&source, None, backend, &target_os)?
     };
 
     println!("cargo:rerun-if-env-changed=SENTRY_NATIVE_INSTALL");
@@ -163,7 +163,12 @@ fn main() -> Result<()> {
 }
 
 /// Build `sentry_native` with `CMake`.
-fn build(source: &Path, install: Option<&Path>, backend: Backend) -> Result<PathBuf> {
+fn build(
+    source: &Path,
+    install: Option<&Path>,
+    backend: Backend,
+    target_os: &str,
+) -> Result<PathBuf> {
     let mut cmake_config = Config::new(source);
     cmake_config
         .define("BUILD_SHARED_LIBS", "OFF")
@@ -190,33 +195,31 @@ fn build(source: &Path, install: Option<&Path>, backend: Backend) -> Result<Path
     // which properly sets up the build environment, and we also need to set
     // ANDROID_ABI based on our target-triple. It seems there is not really
     // a good standard for the NDK, so we try several environment variables to
-    // find it
+    // find it.
     // See https://developer.android.com/ndk/guides/cmake for details
-    let target_os = env::var("CARGO_CFG_TARGET_OS").context("TARGET_OS not set")?;
-
     if target_os == "android" || target_os == "androideabi" {
         let ndk_root = env::var("ANDROID_NDK_ROOT")
             .or_else(|_| env::var("ANDROID_NDK_HOME"))
-            .context("unable to find ANDROID_NDK_ROOT nor ANDROID_NDK_HOME")?;
+            .expect("unable to find ANDROID_NDK_ROOT nor ANDROID_NDK_HOME");
 
         let mut toolchain = PathBuf::from(ndk_root);
         toolchain.push("build/cmake/android.toolchain.cmake");
 
         if !toolchain.exists() {
-            anyhow::bail!(
+            panic!(
                 "Unable to find cmake toolchain file {}",
                 toolchain.display()
             );
         }
 
-        let target_arch = env::var("CARGO_CFG_TARGET_ARCH").context("TARGET_ARCH not set")?;
+        let target_arch = env::var("CARGO_CFG_TARGET_ARCH").expect("TARGET_ARCH not set");
         let abi = match target_arch.as_ref() {
             "aarch64" => "arm64-v8a",
             "arm" | "armv7" => "armeabi-v7a",
             "thumbv7neon" => "armeabi-v7a with NEON",
             "x86_64" => "x86_64",
             "i686" => "x86",
-            arch => anyhow::bail!("Unknown Android TARGET_ARCH: {}", arch),
+            arch => panic!("Unknown Android TARGET_ARCH: {}", arch),
         };
 
         cmake_config.define("CMAKE_TOOLCHAIN_FILE", toolchain);

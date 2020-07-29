@@ -34,13 +34,15 @@ impl CPath for PathBuf {
 
         #[cfg(windows)]
         let path = path.encode_wide();
-        #[cfg(all(not(windows), not(any(target_arch = "arm", target_arch = "aarch64"))))]
-        let path = path
-            .into_vec()
-            .into_iter()
-            .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) });
-        #[cfg(all(not(windows), any(target_arch = "arm", target_arch = "aarch64")))]
-        let path = path.into_vec().into_iter();
+        #[cfg(not(windows))]
+        let path = {
+            let path = path.into_vec().into_iter();
+
+            #[cfg(not(any(target_arch = "arm", target_arch = "aarch64")))]
+            let path = path.map(|ch| unsafe { mem::transmute::<u8, i8>(ch) });
+
+            path
+        };
 
         path.take_while(|ch| *ch != 0).chain(Some(0)).collect()
     }

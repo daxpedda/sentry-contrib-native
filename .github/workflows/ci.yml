@@ -147,21 +147,23 @@ jobs:
           cargo -v doc --no-deps --document-private-items --workspace --features
           test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Test
-        if: always() && steps.build.outcome == 'success'
+        if:
+          always() && steps.build.outcome == 'success' && github.event_name ==
+          'push'
         run:
           cargo -v test --features test ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
       - name: Example
         if:
           always() && steps.build.outcome == 'success' &&
-          matrix.feature.transport-default
+          matrix.feature.transport-default && github.event_name == 'push'
         run:
           cargo -v run --example example --features test ${{ matrix.feature.name
           }} ${{ matrix.rust.feature }}
       - name: Custom transport example
         if:
           always() && steps.build.outcome == 'success' &&
-          matrix.feature.transport-custom
+          matrix.feature.transport-custom && github.event_name == 'push'
         run:
           cargo -v run --example custom-transport --features test ${{
           matrix.feature.name }} ${{ matrix.rust.feature }}

@@ -42,7 +42,12 @@ impl Display for Message {
 /// user defined one.
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
-pub extern "C" fn logger(level: i32, message: *const c_char, args: *mut c_void) {
+pub extern "C" fn logger(
+    level: i32,
+    message: *const c_char,
+    args: *mut c_void,
+    _userdata: *mut c_void,
+) {
     let lock = LOGGER.read();
     let logger = lock
         .as_ref()

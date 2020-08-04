@@ -113,20 +113,26 @@ pub enum UserConsent {
 /// This represents an interface for user-defined transports.
 ///
 /// Transports are responsible for sending envelopes to sentry and are the last
-/// step in the event pipeline. A transport has the following hooks, all of
-/// which take the user provided `state` as last parameter. The transport state
-/// needs to be set with `sentry_transport_set_state` and typically holds
-/// handles and other information that can be reused across requests.
+/// step in the event pipeline.
+///
+/// Envelopes will be submitted to the transport in a _fire and forget_ fashion,
+/// and the transport must send those envelopes _in order_.
+///
+/// A transport has the following hooks, all of which
+/// take the user provided `state` as last parameter. The transport state needs
+/// to be set with `sentry_transport_set_state` and typically holds handles and
+/// other information that can be reused across requests.
 ///
 /// * `send_func`: This function will take ownership of an envelope, and is
 ///   responsible for freeing it via `sentry_envelope_free`.
-/// * `startup_func`: This hook will be called by sentry and instructs the
-///   transport to initialize itself.
+/// * `startup_func`: This hook will be called by sentry inside of `sentry_init`
+///   and instructs the transport to initialize itself. Failures will bubble up
+///   to `sentry_init`.
 /// * `shutdown_func`: Instructs the transport to flush its queue and shut down.
 ///   This hook receives a millisecond-resolution `timeout` parameter and should
 ///   return `true` when the transport was flushed and shut down successfully.
-///   In case of `false`, sentry will log an error, but continue with freeing
-///   the transport.
+///   In case of `false`, sentry will log an error, but continue with freeing the
+///   transport.
 /// * `free_func`: Frees the transports `state`. This hook might be called even
 ///   though `shudown_func` returned `false` previously.
 ///
@@ -151,16 +157,17 @@ pub type EventFunction =
     extern "C" fn(event: Value, hint: *mut c_void, closure: *mut c_void) -> Value;
 
 /// Type of the callback for logging debug events.
-pub type LoggerFunction = extern "C" fn(level: i32, message: *const c_char, args: *mut c_void);
+pub type LoggerFunction =
+    extern "C" fn(level: i32, message: *const c_char, args: *mut c_void, userdata: *mut c_void);
 
 /// Type of callback for sending envelopes to a Sentry service
 pub type SendEnvelopeFunction = extern "C" fn(envelope: *mut Envelope, state: *mut c_void);
 
 /// Type of the callback for starting up a custom transport
-pub type StartupFunction = extern "C" fn(options: *const Options, state: *mut c_void);
+pub type StartupFunction = extern "C" fn(options: *const Options, state: *mut c_void) -> c_int;
 
 /// Type of the callback for shutting down a custom transport
-pub type ShutdownFunction = extern "C" fn(timeout: u64, state: *mut c_void) -> bool;
+pub type ShutdownFunction = extern "C" fn(timeout: u64, state: *mut c_void) -> c_int;
 
 extern "C" {
     /// Releases memory allocated from the underlying allocator.
@@ -362,6 +369,10 @@ extern "C" {
     );
 
     /// Sets the transport startup hook.
+    ///
+    /// This hook is called from within `sentry_init` and will get a reference to the
+    /// options which can be used to initialize a transports internal state.
+    /// It should return `0` on success. A failure will bubble up to `sentry_init`.
     #[link_name = "sentry_transport_set_startup_func"]
     pub fn transport_set_startup_func(
         transport: *mut Transport,
@@ -370,9 +381,9 @@ extern "C" {
 
     /// Sets the transport shutdown hook.
     ///
-    /// This hook will receive a millisecond-resolution timeout; it should
-    /// return `true` in case all the pending envelopes have been sent
-    /// within the timeout, or `false` if the timeout was hit.
+    /// This hook will receive a millisecond-resolution timeout.
+    /// It should return `0` on success in case all the pending envelopes have been
+    /// sent within the timeout, or `1` if the timeout was hit.
     #[link_name = "sentry_transport_set_shutdown_func"]
     pub fn transport_set_shutdown_func(
         transport: *mut Transport,
@@ -474,7 +485,11 @@ extern "C" {
     /// Sets the sentry-native logger function.
     /// Used for logging debug events when the `debug` option is set to true.
     #[link_name = "sentry_options_set_logger"]
-    pub fn options_set_logger(opts: *mut Options, logger_func: Option<LoggerFunction>);
+    pub fn options_set_logger(
+        opts: *mut Options,
+        logger_func: Option<LoggerFunction>,
+        userdata: *mut c_void,
+    );
 
     /// Enables or disabled user consent requirements for uploads.
     ///
@@ -507,7 +522,7 @@ extern "C" {
     /// API Users on windows are encouraged to use
     /// `sentry_options_add_attachmentw` instead.
     #[link_name = "sentry_options_add_attachment"]
-    pub fn options_add_attachment(opts: *mut Options, name: *const c_char, path: *const c_char);
+    pub fn options_add_attachment(opts: *mut Options, path: *const c_char);
 
     /// Sets the path to the crashpad handler if the crashpad backend is used.
     ///
@@ -545,7 +560,7 @@ extern "C" {
 
     /// Wide char version of `sentry_options_add_attachment`.
     #[link_name = "sentry_options_add_attachmentw"]
-    pub fn options_add_attachmentw(opts: *mut Options, name: *const c_char, path: *const c_wchar);
+    pub fn options_add_attachmentw(opts: *mut Options, path: *const c_wchar);
 
     /// Wide char version of `sentry_options_set_handler_path`.
     #[link_name = "sentry_options_set_handler_pathw"]
@@ -573,7 +588,7 @@ extern "C" {
 
     /// Shuts down the Sentry client and forces transports to flush out.
     #[link_name = "sentry_shutdown"]
-    pub fn shutdown();
+    pub fn shutdown() -> c_int;
 
     /// Clears the internal module cache.
     ///
@@ -585,12 +600,6 @@ extern "C" {
     /// list.
     #[link_name = "sentry_clear_modulecache"]
     pub fn clear_modulecache();
-
-    /// Returns the client options.
-    ///
-    /// This might return NULL if Sentry is not yet initialized.
-    #[link_name = "sentry_get_options"]
-    pub fn get_options() -> *const Options;
 
     /// Gives user consent.
     #[link_name = "sentry_user_consent_give"]

@@ -507,7 +507,9 @@ impl Options {
         logger: L,
     ) {
         *LOGGER.write().expect("failed to set `LOGGER`") = Some(logger.into());
-        unsafe { sys::options_set_logger(self.as_mut(), Some(logger::logger)) }
+        unsafe {
+            sys::options_set_logger(self.as_mut(), Some(logger::logger), std::ptr::null_mut())
+        }
     }
 
     /// Enables or disabled user consent requirements for uploads.
@@ -589,19 +591,18 @@ impl Options {
     /// ```
     /// # use sentry_contrib_native::Options;
     /// let mut options = Options::new();
-    /// options.add_attachment("test attachment", "server.log");
+    /// options.add_attachment("server.log");
     /// ```
-    pub fn add_attachment<S: Into<String>, P: Into<PathBuf>>(&mut self, name: S, path: P) {
-        let name = name.into().into_cstring();
+    pub fn add_attachment<P: Into<PathBuf>>(&mut self, path: P) {
         let path = path.into().into_os_vec();
 
         #[cfg(windows)]
         unsafe {
-            sys::options_add_attachmentw(self.as_mut(), name.as_ptr(), path.as_ptr())
+            sys::options_add_attachmentw(self.as_mut(), path.as_ptr())
         };
         #[cfg(not(windows))]
         unsafe {
-            sys::options_add_attachment(self.as_mut(), name.as_ptr(), path.as_ptr())
+            sys::options_add_attachment(self.as_mut(), path.as_ptr())
         }
     }
 
@@ -905,7 +906,7 @@ fn options() -> anyhow::Result<()> {
     options.set_symbolize_stacktraces(true);
     assert!(options.symbolize_stacktraces());
 
-    options.add_attachment("test attachment", "server.log");
+    options.add_attachment("server.log");
 
     options.set_handler_path("crashpad_handler");
 
@@ -1018,12 +1019,7 @@ fn threaded_stress() -> anyhow::Result<()> {
                 })
         },
         |options, _| println!("{:?}", options.read().unwrap().symbolize_stacktraces()),
-        |options, index| {
-            options
-                .write()
-                .unwrap()
-                .add_attachment(index.to_string(), index.to_string())
-        },
+        |options, index| options.write().unwrap().add_attachment(index.to_string()),
         |options, index| options.write().unwrap().set_handler_path(index.to_string()),
         |options, index| {
             options

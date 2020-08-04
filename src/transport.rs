@@ -8,7 +8,7 @@ use crate::Event;
 use crate::{ffi, Options, Ownership, Value};
 use std::{
     mem::ManuallyDrop,
-    os::raw::{c_char, c_void},
+    os::raw::{c_char, c_int, c_void},
     process, slice, thread,
     time::Duration,
 };
@@ -78,11 +78,11 @@ pub enum Shutdown {
 }
 
 impl Shutdown {
-    /// Converts [`Shutdown`] into [`bool`].
-    fn into_raw(self) -> bool {
+    /// Converts [`Shutdown`] into [`c_int`].
+    fn into_raw(self) -> c_int {
         match self {
-            Self::Success => true,
-            Self::TimedOut => false,
+            Self::Success => 0,
+            Self::TimedOut => 1,
         }
     }
 }
@@ -196,7 +196,7 @@ pub enum State {
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
 #[allow(clippy::shadow_unrelated)]
-pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
+pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) -> c_int {
     let options = Options::from_sys(Ownership::Borrowed(options));
 
     let state = unsafe { Box::from_raw(state.cast::<Option<State>>()) };
@@ -207,6 +207,7 @@ pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) {
     } else {
         process::abort();
     }
+    0
 }
 
 /// Function to pass to [`sys::transport_new`], which in turn calls the user
@@ -235,7 +236,7 @@ pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
 /// functions that interfere.
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
-pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> bool {
+pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> c_int {
     let timeout = Duration::from_millis(timeout);
     let mut state = unsafe { Box::from_raw(state.cast::<Option<State>>()) };
 

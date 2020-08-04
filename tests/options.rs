@@ -22,7 +22,7 @@ async fn options() -> Result<()> {
             options.set_environment("production");
             options.set_distribution("release-pgo");
             options.set_ca_certs("tests/res/getsentry.pem");
-            options.add_attachment("test attachment", "tests/res/attachment.txt");
+            options.add_attachment("tests/res/attachment.txt");
         }),
         vec![(
             || Event::new().capture(),

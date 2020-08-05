@@ -178,10 +178,14 @@ impl<T: Fn(RawEnvelope) + 'static + Send + Sync> Transport for T {
     }
 }
 
+/// Type used to store the startup function.
+type Startup =
+    Box<dyn (FnOnce(&Options) -> Result<Box<dyn Transport>, ()>) + 'static + Send + Sync>;
+
 /// Internal state of the [`Transport`].
 pub enum State {
     /// [`Transport`] is in the startup phase.
-    Startup(Box<dyn (FnOnce(&Options) -> Result<Box<dyn Transport>, ()>) + 'static + Send + Sync>),
+    Startup(Startup),
     /// [`Transport`] is in the sending phase.
     Send(Box<dyn Transport>),
 }

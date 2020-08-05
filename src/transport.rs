@@ -110,11 +110,11 @@ impl Shutdown {
 /// };
 ///
 /// impl CustomTransport {
-///     fn new(options: &Options) -> Self {
-///         CustomTransport {
-///             dsn: Dsn::new(options.dsn().unwrap()).unwrap(),
+///     fn new(options: &Options) -> Result<Self, ()> {
+///         Ok(CustomTransport {
+///             dsn: options.dsn().and_then(|dsn| Dsn::new(dsn).ok()).ok_or(())?,
 ///             client: Client::new(),
-///         }
+///         })
 ///     }
 /// }
 ///
@@ -181,7 +181,7 @@ impl<T: Fn(RawEnvelope) + 'static + Send + Sync> Transport for T {
 /// Internal state of the [`Transport`].
 pub enum State {
     /// [`Transport`] is in the startup phase.
-    Startup(Box<dyn (FnOnce(&Options) -> Box<dyn Transport>) + 'static + Send + Sync>),
+    Startup(Box<dyn (FnOnce(&Options) -> Result<Box<dyn Transport>, ()>) + 'static + Send + Sync>),
     /// [`Transport`] is in the sending phase.
     Send(Box<dyn Transport>),
 }
@@ -203,11 +203,16 @@ pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) -> c
     let mut state = ManuallyDrop::new(state);
 
     if let Some(State::Startup(startup)) = state.take() {
-        state.replace(State::Send(ffi::catch(|| startup(&options))));
+        if let Ok(transport) = ffi::catch(|| startup(&options)) {
+            state.replace(State::Send(transport));
+
+            0
+        } else {
+            1
+        }
     } else {
         process::abort();
     }
-    0
 }
 
 /// Function to pass to [`sys::transport_new`], which in turn calls the user
@@ -419,11 +424,11 @@ impl Envelope {
 /// };
 ///
 /// impl CustomTransport {
-///     fn new(options: &Options) -> Self {
-///         CustomTransport {
+///     fn new(options: &Options) -> Result<Self, ()> {
+///         Ok(CustomTransport {
 ///             // we can also get the DSN here
-///             dsn: Dsn::new(options.dsn().unwrap()).unwrap(),
-///         }
+///             dsn: options.dsn().and_then(|dsn| Dsn::new(dsn).ok()).ok_or(())?,
+///         })
 ///     }
 /// }
 ///
@@ -444,11 +449,11 @@ impl Envelope {
 /// let custom_transport = CustomTransport {
 ///     dsn: Dsn::new(dsn)?,
 /// };
-/// options.set_transport(move |_| custom_transport);
+/// options.set_transport(move |_| Ok(custom_transport));
 /// // this is also possible
-/// options.set_transport(|options| CustomTransport {
-///     dsn: Dsn::new(options.dsn().unwrap()).unwrap(),
-/// });
+/// options.set_transport(|options| Ok(CustomTransport {
+///     dsn: options.dsn().and_then(|dsn| Dsn::new(dsn).ok()).ok_or(())?,
+/// }));
 /// // or use a method more directly
 /// options.set_transport(CustomTransport::new);
 /// # } Ok(()) }
@@ -642,7 +647,7 @@ fn transport() -> anyhow::Result<()> {
     let mut options = Options::new();
     let dsn = Dsn::new(options.dsn().unwrap())?;
     let _ = dsn.to_headers();
-    options.set_transport(|options| CustomTransport::new(dsn, options));
+    options.set_transport(|options| Ok(CustomTransport::new(dsn, options)));
     let shutdown = options.init()?;
 
     Event::new().capture();
@@ -695,7 +700,7 @@ fn dsn() -> anyhow::Result<()> {
     }
 
     let mut options = Options::new();
-    options.set_transport(|_| send);
+    options.set_transport(|_| Ok(send));
     let _shutdown = options.init();
 
     Event::new().capture();

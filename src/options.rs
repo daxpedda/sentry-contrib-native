@@ -1,8 +1,8 @@
 //! Sentry options implementation.
 
 use crate::{
-    before_send, logger, transport, BeforeSend, BeforeSendData, CPath, CToR, Error, Level, Message,
-    RToC, Transport, TransportState, BEFORE_SEND, LOGGER,
+    before_send, logger, transport, BeforeSend, BeforeSendData, CPath, CToR, Error, Logger,
+    LoggerData, RToC, Transport, TransportState, BEFORE_SEND, LOGGER,
 };
 #[cfg(doc)]
 use crate::{set_user_consent, shutdown, Consent, Event};
@@ -15,7 +15,7 @@ use std::{
     fmt::{Debug, Formatter, Result as FmtResult},
     mem,
     path::PathBuf,
-    sync::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard},
+    sync::Mutex,
 };
 
 /// Global lock for the following purposes:
@@ -24,17 +24,7 @@ use std::{
 ///   shutdown is called while other functions are still accessing options.
 ///   Hopefully this will be fixed upstream in the future, see
 ///   <https://github.com/getsentry/sentry-native/issues/280>.
-static GLOBAL_LOCK: Lazy<RwLock<bool>> = Lazy::new(|| RwLock::new(false));
-
-/// Convenience function to get a read lock on `GLOBAL_LOCK`.
-pub fn global_read() -> RwLockReadGuard<'static, bool> {
-    GLOBAL_LOCK.read().expect("global lock poisoned")
-}
-
-/// Convenience function to get a write lock on `GLOBAL_LOCK`.
-pub fn global_write() -> RwLockWriteGuard<'static, bool> {
-    GLOBAL_LOCK.write().expect("global lock poisoned")
-}
+pub static LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
 /// The Sentry client options.
 ///
@@ -54,6 +44,9 @@ pub struct Options {
     /// Storing [`Options::set_before_send`] data to save it globally on
     /// [`Options::init`] and properly deallocate it on [`shutdown`].
     before_send: Option<BeforeSendData>,
+    /// Storing [`Options::set_logger`] data to save it globally on
+    /// [`Options::init`] and properly deallocate it on [`shutdown`].
+    logger: Option<LoggerData>,
 }
 
 /// Represents the ownership status of [`Options`].
@@ -80,10 +73,18 @@ impl Debug for Options {
         debug.field("raw", &self.raw);
         #[cfg(feature = "test")]
         debug.field("dsn", &self.dsn);
+        debug.field(
+            "before_send",
+            if self.before_send.is_some() {
+                &"Some"
+            } else {
+                &"None"
+            },
+        );
         debug
             .field(
-                "before_send",
-                if self.before_send.is_some() {
+                "logger",
+                if self.logger.is_some() {
                     &"Some"
                 } else {
                     &"None"
@@ -131,6 +132,7 @@ impl Options {
             #[cfg(feature = "test")]
             dsn: None,
             before_send: None,
+            logger: None,
         };
 
         #[cfg(feature = "test")]
@@ -171,7 +173,8 @@ impl Options {
     ///
     /// The `startup` parameter is a function that serves as a one-time
     /// initialization event for your [`Transport`], it takes a
-    /// [`&Options`](Options) and has to return a [`Transport`].
+    /// [`&Options`](Options) and has to return an [`Result<Transport,
+    /// ()>`](Transport), an [`Err`] will cause [`Options::init`] to fail.
     ///
     /// # Notes
     /// Unwinding panics of functions in `transport` will be cought and
@@ -182,18 +185,20 @@ impl Options {
     /// # use sentry_contrib_native::{Options, RawEnvelope};
     /// let mut options = Options::new();
     /// options.set_transport(|_| {
-    ///     |envelope: RawEnvelope| println!("Event to be sent: {:?}", envelope.event())
+    ///     Ok(|envelope: RawEnvelope| println!("Event to be sent: {:?}", envelope.event()))
     /// });
     /// ```
     /// See [`Transport`] for a more detailed documentation.
     pub fn set_transport<
-        S: (FnOnce(&Self) -> T) + 'static + Send + Sync,
+        S: (FnOnce(&Self) -> Result<T, ()>) + 'static + Send + Sync,
         T: Into<Box<T>> + Transport,
     >(
         &mut self,
         startup: S,
     ) {
-        let startup = TransportState::Startup(Box::new(|options: &Self| startup(options).into()));
+        let startup = TransportState::Startup(Box::new(|options: &Self| {
+            startup(options).map(|startup| startup.into() as _)
+        }));
         let startup = Box::into_raw(Box::new(Some(startup)));
 
         unsafe {
@@ -502,14 +507,11 @@ impl Options {
     ///     println!("[{}]: {}", level, message);
     /// });
     /// ```
-    pub fn set_logger<L: Into<Box<L>> + Fn(Level, Message) + 'static + Send + Sync>(
-        &mut self,
-        logger: L,
-    ) {
-        *LOGGER.write().expect("failed to set `LOGGER`") = Some(logger.into());
-        unsafe {
-            sys::options_set_logger(self.as_mut(), Some(logger::logger), std::ptr::null_mut())
-        }
+    pub fn set_logger<L: Into<Box<L>> + Logger>(&mut self, logger: L) {
+        let fun = Box::into_raw(Box::<Box<dyn Logger>>::new(logger.into()));
+        self.logger = Some(unsafe { Box::from_raw(fun) });
+
+        unsafe { sys::options_set_logger(self.as_mut(), Some(logger::logger), fun.cast()) }
     }
 
     /// Enables or disabled user consent requirements for uploads.
@@ -621,18 +623,15 @@ impl Options {
     /// let mut options = Options::new();
     /// options.set_handler_path("crashpad_handler");
     /// ```
-    #[cfg_attr(
-        all(feature = "test", any(windows, target_os = "macos")),
-        allow(clippy::needless_pass_by_value)
-    )]
+    #[cfg_attr(all(feature = "test", crashpad), allow(clippy::needless_pass_by_value))]
     pub fn set_handler_path<P: Into<PathBuf>>(
         &mut self,
-        #[cfg(not(all(feature = "test", any(windows, target_os = "macos"))))] path: P,
-        #[cfg(all(feature = "test", any(windows, target_os = "macos")))] _path: P,
+        #[cfg(not(all(feature = "test", crashpad)))] path: P,
+        #[cfg(all(feature = "test", crashpad))] _path: P,
     ) {
-        #[cfg(all(feature = "test", any(windows, target_os = "macos")))]
+        #[cfg(all(feature = "test", crashpad))]
         let path = PathBuf::from(env!("CRASHPAD_HANDLER")).into_os_vec();
-        #[cfg(not(all(feature = "test", any(windows, target_os = "macos"))))]
+        #[cfg(not(all(feature = "test", crashpad)))]
         let path = path.into().into_os_vec();
 
         #[cfg(windows)]
@@ -721,13 +720,6 @@ impl Options {
     /// # Ok(()) }
     /// ```
     pub fn init(mut self) -> Result<Shutdown, Error> {
-        let mut lock = global_write();
-
-        // make sure we aren't initializing Sentry twice
-        if *lock {
-            panic!("already initialized Sentry once")
-        }
-
         // disolve `Options`, `sys::init` is going to take ownership now
         let options = if let Ownership::Owned(options) = self.raw.take().expect("use after free") {
             options
@@ -735,23 +727,20 @@ impl Options {
             unreachable!("can't mutably borrow `Options`")
         };
 
+        let _lock = LOCK.lock().expect("lock poisoned");
+
+        *BEFORE_SEND.lock().expect("lock poisoned") = self.before_send.take();
+        *LOGGER.lock().expect("lock poisoned") = self.logger.take();
+
         match unsafe { sys::init(options) } {
-            0 => {
-                *lock = true;
+            0 => Ok(Shutdown),
+            _ => {
+                // deallocate unused globals
+                BEFORE_SEND.lock().expect("lock poisoned").take();
+                LOGGER.lock().expect("lock poisoned").take();
 
-                // store `before_send` data so we can deallocate it later
-                if let Some(before_send) = self.before_send.take() {
-                    BEFORE_SEND
-                        .set(Mutex::new(Some(before_send)))
-                        .map_err(|_| ())
-                        .expect("`BEFORE_SEND` was set once before");
-                }
-
-                drop(lock);
-
-                Ok(Shutdown)
+                Err(Error::Init)
             }
-            _ => Err(Error::Init),
         }
     }
 }
@@ -840,13 +829,13 @@ impl Shutdown {
 
 #[test]
 fn options() -> anyhow::Result<()> {
-    use crate::{RawEnvelope, Value};
+    use crate::{Level, Message, RawEnvelope, Value};
 
     struct CustomTransport;
 
     impl CustomTransport {
-        const fn new(_: &Options) -> Self {
-            Self
+        const fn new(_: &Options) -> Result<Self, ()> {
+            Ok(Self)
         }
     }
 
@@ -862,9 +851,15 @@ fn options() -> anyhow::Result<()> {
         }
     }
 
+    struct Log;
+
+    impl Logger for Log {
+        fn log(&self, _level: Level, _message: Message) {}
+    }
+
     let mut options = Options::new();
 
-    options.set_transport(|_| |_| {});
+    options.set_transport(|_| Ok(|_| {}));
     options.set_transport(CustomTransport::new);
 
     options.set_before_send(|value| value);
@@ -899,6 +894,7 @@ fn options() -> anyhow::Result<()> {
     assert!(options.debug());
 
     options.set_logger(|_, _| ());
+    options.set_logger(Log);
 
     options.set_require_user_consent(true);
     assert!(options.require_user_consent());
@@ -919,19 +915,13 @@ fn options() -> anyhow::Result<()> {
 
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
-#[should_panic]
-fn options_fail() -> anyhow::Result<()> {
-    Options::new().init()?;
-    Options::new().init()?;
-
-    Ok(())
-}
-
-#[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 60000)]
 fn threaded_stress() -> anyhow::Result<()> {
     use crate::test;
-    use std::{convert::TryFrom, sync::Arc, thread};
+    use std::{
+        convert::TryFrom,
+        sync::{Arc, RwLock},
+        thread,
+    };
 
     #[allow(clippy::type_complexity)]
     fn spawns(tests: Vec<fn(Arc<RwLock<Options>>, usize)>) -> Options {

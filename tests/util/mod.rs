@@ -5,13 +5,14 @@ pub mod event;
 use anyhow::{anyhow, bail, Error, Result};
 #[cfg(feature = "transport-custom")]
 use custom_transport::Transport;
-use event::{Event, MinEvent};
+use event::{Attachment, Event, MinEvent};
 use futures_util::{future, FutureExt};
 use reqwest::{header::HeaderMap, Client, StatusCode};
 use sentry::{Options, Uuid};
 use sentry_contrib_native as sentry;
 use serde_json::Value;
 use std::{
+    collections::HashMap,
     convert::TryInto,
     env,
     iter::FromIterator,
@@ -353,7 +354,13 @@ async fn event(
         if let Some(attachments) =
             query(client, api_url.attachments(uuid)?, 1, Duration::default()).await?
         {
-            event.attachments = serde_json::from_value(attachments)?;
+            let mut map = HashMap::new();
+
+            for attachment in serde_json::from_value::<Vec<Attachment>>(attachments)? {
+                map.insert(attachment.name.clone(), attachment);
+            }
+
+            event.attachments = map;
             return Ok(Some(event));
         }
     }

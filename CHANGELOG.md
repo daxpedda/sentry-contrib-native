@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Added support for changing the backend.
+- Added support for Android.
 
 ### Changed
 
@@ -24,6 +25,12 @@ and this project adheres to
   relevant for testing from the Crates.io package. This not only reduces the
   size of the overall package, but also helps to avoid issues with Windows's
   maximum path length.
+- Updated `sentry-native` to 0.4.0.
+- Improved README.
+- Changed the default backend for Linux to Crashpad.
+- Changed the default transport for Android to Curl.
+- Changed `set_transport` `startup` argument to return `Result` and fail
+  `Options::init` if `Err` is returned.
 
 ### Deprecated
 
@@ -31,8 +38,9 @@ and this project adheres to
 
 ### Fixed
 
-- Fixed thread-safety in almost all functions, they could crash the application
-  otherwise or cause undefined behaviour.
+- Removed unnecessary thread-safety in almost all functions, this is now handled
+  upstream which also fixed some missing thread-safety that could crash the
+  application or cause undefined behaviour otherwise.
 - Fixed unnecessary include of the WinHttp library when the default transport is
   disabled.
 
@@ -50,7 +58,7 @@ and this project adheres to
   position if any are found.
 - Improved links to the documentation for the `master` branch.
 - Improved general documentation.
-- Update `vsprintf` to the new official version.
+- Updated `vsprintf` to the new official version.
 - Improved `custom-transport` example.
 
 ### Fixed

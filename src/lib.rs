@@ -36,12 +36,12 @@ pub use event::{Event, Interface, Uuid};
 use ffi::{CPath, CToR, RToC};
 #[cfg(feature = "transport-custom")]
 pub use http;
-pub use logger::Message;
-use logger::LOGGER;
+use logger::{Data as LoggerData, LOGGER};
+pub use logger::{Logger, Message};
 pub use object::Map;
 use object::Object;
-use options::{global_read, global_write, Ownership};
 pub use options::{Options, Shutdown};
+use options::{Ownership, LOCK};
 pub use panic::set_hook;
 use std::{
     convert::Infallible,
@@ -195,24 +195,18 @@ impl Consent {
 /// }
 /// ```
 pub fn shutdown() {
-    {
-        let _lock = global_write();
-        unsafe { sys::shutdown() };
-    }
+    let _lock = LOCK.lock().expect("lock poisoned");
+
+    unsafe { sys::shutdown() };
 
     // de-allocate `BEFORE_SEND`
-    if let Some(before_send) = BEFORE_SEND.get() {
-        before_send
-            .lock()
-            .expect("failed to deallocate `BEFORE_SEND`")
-            .take();
-    }
+    BEFORE_SEND
+        .lock()
+        .expect("failed to deallocate `BEFORE_SEND`")
+        .take();
 
     // de-allocate `LOGGER`
-    LOGGER
-        .write()
-        .expect("failed to deallocate `LOGGER`")
-        .take();
+    LOGGER.lock().expect("failed to deallocate `LOGGER`").take();
 }
 
 /// Clears the internal module cache.
@@ -258,8 +252,6 @@ pub fn clear_modulecache() {
 /// # Ok(()) }
 /// ```
 pub fn set_user_consent(consent: Consent) {
-    let _lock = global_read();
-
     match consent {
         Consent::Unknown => unsafe { sys::user_consent_reset() },
         Consent::Revoked => unsafe { sys::user_consent_revoke() },
@@ -298,7 +290,6 @@ pub fn user_consent() -> Consent {
 /// remove_user();
 /// ```
 pub fn remove_user() {
-    let _lock = global_write();
     unsafe { sys::remove_user() }
 }
 
@@ -313,10 +304,7 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
     let key = key.into().into_cstring();
     let value = value.into().into_cstring();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
-    }
+    unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
 }
 
 /// Removes the tag with the specified `key`.
@@ -330,10 +318,7 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
 pub fn remove_tag<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::remove_tag(key.as_ptr()) }
-    }
+    unsafe { sys::remove_tag(key.as_ptr()) }
 }
 
 /// Sets extra information.
@@ -347,10 +332,7 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::set_extra(key.as_ptr(), value) }
-    }
+    unsafe { sys::set_extra(key.as_ptr(), value) }
 }
 
 /// Removes the extra with the specified `key`.
@@ -364,10 +346,7 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
 pub fn remove_extra<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::remove_extra(key.as_ptr()) }
-    }
+    unsafe { sys::remove_extra(key.as_ptr()) }
 }
 
 /// Sets a context object.
@@ -381,10 +360,7 @@ pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::set_context(key.as_ptr(), value) }
-    }
+    unsafe { sys::set_context(key.as_ptr(), value) }
 }
 
 /// Removes the context object with the specified key.
@@ -398,10 +374,7 @@ pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
 pub fn remove_context<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
-    {
-        let _lock = global_write();
-        unsafe { sys::remove_context(key.as_ptr()) }
-    }
+    unsafe { sys::remove_context(key.as_ptr()) }
 }
 
 /// Sets the event fingerprint.
@@ -434,46 +407,43 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(
             *raw_fingerprint = fingerprint.as_ptr();
         }
 
-        {
-            let _lock = global_write();
-            unsafe {
-                sys::set_fingerprint(
-                    raw_fingerprints[0],
-                    raw_fingerprints[1],
-                    raw_fingerprints[2],
-                    raw_fingerprints[3],
-                    raw_fingerprints[4],
-                    raw_fingerprints[5],
-                    raw_fingerprints[6],
-                    raw_fingerprints[7],
-                    raw_fingerprints[8],
-                    raw_fingerprints[9],
-                    raw_fingerprints[10],
-                    raw_fingerprints[11],
-                    raw_fingerprints[12],
-                    raw_fingerprints[13],
-                    raw_fingerprints[14],
-                    raw_fingerprints[15],
-                    raw_fingerprints[16],
-                    raw_fingerprints[17],
-                    raw_fingerprints[18],
-                    raw_fingerprints[19],
-                    raw_fingerprints[20],
-                    raw_fingerprints[21],
-                    raw_fingerprints[22],
-                    raw_fingerprints[23],
-                    raw_fingerprints[24],
-                    raw_fingerprints[25],
-                    raw_fingerprints[26],
-                    raw_fingerprints[27],
-                    raw_fingerprints[28],
-                    raw_fingerprints[29],
-                    raw_fingerprints[30],
-                    raw_fingerprints[31],
-                    ptr::null::<c_char>(),
-                )
-            };
-        }
+        unsafe {
+            sys::set_fingerprint(
+                raw_fingerprints[0],
+                raw_fingerprints[1],
+                raw_fingerprints[2],
+                raw_fingerprints[3],
+                raw_fingerprints[4],
+                raw_fingerprints[5],
+                raw_fingerprints[6],
+                raw_fingerprints[7],
+                raw_fingerprints[8],
+                raw_fingerprints[9],
+                raw_fingerprints[10],
+                raw_fingerprints[11],
+                raw_fingerprints[12],
+                raw_fingerprints[13],
+                raw_fingerprints[14],
+                raw_fingerprints[15],
+                raw_fingerprints[16],
+                raw_fingerprints[17],
+                raw_fingerprints[18],
+                raw_fingerprints[19],
+                raw_fingerprints[20],
+                raw_fingerprints[21],
+                raw_fingerprints[22],
+                raw_fingerprints[23],
+                raw_fingerprints[24],
+                raw_fingerprints[25],
+                raw_fingerprints[26],
+                raw_fingerprints[27],
+                raw_fingerprints[28],
+                raw_fingerprints[29],
+                raw_fingerprints[30],
+                raw_fingerprints[31],
+                ptr::null::<c_char>(),
+            )
+        };
 
         Ok(())
     }
@@ -488,7 +458,6 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(
 /// remove_fingerprint();
 /// ```
 pub fn remove_fingerprint() {
-    let _lock = global_write();
     unsafe { sys::remove_fingerprint() }
 }
 
@@ -501,11 +470,7 @@ pub fn remove_fingerprint() {
 /// ```
 pub fn set_transaction<S: Into<String>>(transaction: S) {
     let transaction = transaction.into().into_cstring();
-
-    {
-        let _lock = global_write();
-        unsafe { sys::set_transaction(transaction.as_ptr()) }
-    }
+    unsafe { sys::set_transaction(transaction.as_ptr()) }
 }
 
 /// Removes the transaction.
@@ -517,7 +482,6 @@ pub fn set_transaction<S: Into<String>>(transaction: S) {
 /// remove_transaction();
 /// ```
 pub fn remove_transaction() {
-    let _lock = global_write();
     unsafe { sys::remove_transaction() }
 }
 
@@ -529,7 +493,6 @@ pub fn remove_transaction() {
 /// set_level(Level::Debug);
 /// ```
 pub fn set_level(level: Level) {
-    let _lock = global_write();
     unsafe { sys::set_level(level.into_raw()) }
 }
 
@@ -538,7 +501,6 @@ pub fn set_level(level: Level) {
 /// # Examples
 /// TODO
 pub fn start_session() {
-    let _lock = global_write();
     unsafe { sys::start_session() }
 }
 
@@ -547,7 +509,6 @@ pub fn start_session() {
 /// # Examples
 /// TODO
 pub fn end_session() {
-    let _lock = global_write();
     unsafe { sys::end_session() }
 }
 
@@ -627,7 +588,7 @@ fn fingerprint_invalid() {
     crate::set_fingerprint(fingerprints).unwrap()
 }
 
-#[cfg(test)]
+/*#[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
 fn threaded_stress() -> anyhow::Result<()> {
     use std::thread;
@@ -708,4 +669,4 @@ fn threaded_stress() -> anyhow::Result<()> {
     test::verify_panics();
 
     Ok(())
-}
+}*/

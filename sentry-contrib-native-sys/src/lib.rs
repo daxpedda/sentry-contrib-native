@@ -131,8 +131,8 @@ pub enum UserConsent {
 /// * `shutdown_func`: Instructs the transport to flush its queue and shut down.
 ///   This hook receives a millisecond-resolution `timeout` parameter and should
 ///   return `true` when the transport was flushed and shut down successfully.
-///   In case of `false`, sentry will log an error, but continue with freeing the
-///   transport.
+///   In case of `false`, sentry will log an error, but continue with freeing
+///   the transport.
 /// * `free_func`: Frees the transports `state`. This hook might be called even
 ///   though `shudown_func` returned `false` previously.
 ///
@@ -152,11 +152,19 @@ pub struct Transport([u8; 0]);
 #[derive(Debug, Copy, Clone)]
 pub struct Envelope([u8; 0]);
 
-/// Type of the callback for modifying events.
+/// Type of the `before_send` callback.
+///
+/// The callback takes ownership of the `event`, and should usually return that
+/// same event. In case the event should be discarded, the callback needs to
+/// call `sentry_value_decref` on the provided event, and return a
+/// `sentry_value_new_null()` instead.
+/// This function may be invoked inside of a signal handler and must be safe for
+/// that purpose, see https://man7.org/linux/man-pages/man7/signal-safety.7.html.
+#[allow(clippy::doc_markdown)]
 pub type EventFunction =
     extern "C" fn(event: Value, hint: *mut c_void, closure: *mut c_void) -> Value;
 
-/// Type of the callback for logging debug events.
+/// Type of the callback for logger function.
 pub type LoggerFunction =
     extern "C" fn(level: i32, message: *const c_char, args: *mut c_void, userdata: *mut c_void);
 
@@ -370,9 +378,10 @@ extern "C" {
 
     /// Sets the transport startup hook.
     ///
-    /// This hook is called from within `sentry_init` and will get a reference to the
-    /// options which can be used to initialize a transports internal state.
-    /// It should return `0` on success. A failure will bubble up to `sentry_init`.
+    /// This hook is called from within `sentry_init` and will get a reference
+    /// to the options which can be used to initialize a transports internal
+    /// state. It should return `0` on success. A failure will bubble up to
+    /// `sentry_init`.
     #[link_name = "sentry_transport_set_startup_func"]
     pub fn transport_set_startup_func(
         transport: *mut Transport,
@@ -382,8 +391,8 @@ extern "C" {
     /// Sets the transport shutdown hook.
     ///
     /// This hook will receive a millisecond-resolution timeout.
-    /// It should return `0` on success in case all the pending envelopes have been
-    /// sent within the timeout, or `1` if the timeout was hit.
+    /// It should return `0` on success in case all the pending envelopes have
+    /// been sent within the timeout, or `1` if the timeout was hit.
     #[link_name = "sentry_transport_set_shutdown_func"]
     pub fn transport_set_shutdown_func(
         transport: *mut Transport,
@@ -407,7 +416,9 @@ extern "C" {
     #[link_name = "sentry_options_set_transport"]
     pub fn options_set_transport(opts: *mut Options, transport: *mut Transport);
 
-    /// Sets the before send callback.
+    /// Sets the `before_send` callback.
+    ///
+    /// See the `sentry_event_function_t` typedef above for more information.
     #[link_name = "sentry_options_set_before_send"]
     pub fn options_set_before_send(
         opts: *mut Options,
@@ -483,6 +494,7 @@ extern "C" {
     pub fn options_get_debug(opts: *const Options) -> c_int;
 
     /// Sets the sentry-native logger function.
+    ///
     /// Used for logging debug events when the `debug` option is set to true.
     #[link_name = "sentry_options_set_logger"]
     pub fn options_set_logger(
@@ -490,6 +502,21 @@ extern "C" {
         logger_func: Option<LoggerFunction>,
         userdata: *mut c_void,
     );
+
+    /// Enables or disables automatic session tracking.
+    ///
+    /// Automatic session tracking is enabled by default and is equivalent to
+    /// calling `sentry_start_session` after startup.
+    /// There can only be one running session, and the current session will
+    /// always be closed implicitly by `sentry_shutdown`, when starting a
+    /// new session with `sentry_start_session`, or manually by calling
+    /// `sentry_end_session`.
+    #[link_name = "sentry_options_set_auto_session_tracking"]
+    pub fn options_set_auto_session_tracking(opts: *mut Options, val: c_int);
+
+    /// Returns true if automatic session tracking is enabled.
+    #[link_name = "sentry_options_get_auto_session_tracking"]
+    pub fn options_get_auto_session_tracking(opts: *const Options) -> c_int;
 
     /// Enables or disabled user consent requirements for uploads.
     ///
@@ -583,10 +610,15 @@ extern "C" {
     ///
     /// This takes ownership of the options.  After the options have been set
     /// they cannot be modified any more.
+    /// Depending on the configured transport and backend, this function might
+    /// not be fully thread-safe.
+    /// Returns 0 on success.
     #[link_name = "sentry_init"]
     pub fn init(options: *mut Options) -> c_int;
 
     /// Shuts down the Sentry client and forces transports to flush out.
+    ///
+    /// Returns 0 on success.
     #[link_name = "sentry_shutdown"]
     pub fn shutdown() -> c_int;
 

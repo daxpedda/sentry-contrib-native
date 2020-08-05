@@ -5,15 +5,17 @@
     clippy::pedantic,
     missing_docs
 )]
-#![cfg(any(target_os = "macos", target_os = "windows"))]
+#![cfg(crashpad)]
 
 mod util;
 
 use anyhow::Result;
 use serde_json::Value;
-// use sha1::{Digest, Sha1};
-// use std::fs;
-use std::path::{Path, PathBuf};
+use sha1::{Digest, Sha1};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 fn lib_path() -> PathBuf {
     let mut path = PathBuf::from(env!("OUT_DIR"))
@@ -60,12 +62,12 @@ async fn crash() -> Result<()> {
             assert_eq!("release-pgo", event.dist.unwrap());
             assert_eq!("release-pgo", event.tags.get("dist").unwrap());
 
-            /*let attachment = event.attachments.get(0).unwrap();
+            let attachment = event.attachments.get("attachment.txt").unwrap();
             let content = fs::read_to_string("tests/res/attachment.txt").unwrap();
             let hash = hex::encode(Sha1::digest(content.as_bytes()));
             assert_eq!("attachment.txt", attachment.name);
             assert_eq!(hash, attachment.sha1);
-            assert_eq!(content.len(), attachment.size);*/
+            assert_eq!(content.len(), attachment.size);
         }
 
         // breadcrumb

@@ -50,7 +50,7 @@ struct Transport {
 
 impl Transport {
     /// Create a new [`Transport`].
-    fn new(client: Client, options: &Options) -> Self {
+    fn new(client: Client, options: &Options) -> Result<Self, ()> {
         let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
         let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
         let transport = Self {
@@ -81,7 +81,7 @@ impl Transport {
             cvar.notify_one();
         });
 
-        transport
+        Ok(transport)
     }
 }
 

@@ -8,16 +8,73 @@ use once_cell::sync::Lazy;
 use std::process::abort;
 use std::{
     fmt::{Display, Formatter, Result as FmtResult},
+    mem::ManuallyDrop,
     os::raw::{c_char, c_void},
     process,
-    sync::RwLock,
+    sync::Mutex,
 };
 
-/// Closure type for [`Options::set_logger`].
-type Logger = dyn Fn(Level, Message) + 'static + Send + Sync;
+/// How global [`Logger`] data is stored.
+pub type Data = Box<Box<dyn Logger>>;
 
 /// Store [`Options::set_logger`] data to properly deallocate later.
-pub static LOGGER: Lazy<RwLock<Option<Box<Logger>>>> = Lazy::new(|| RwLock::new(None));
+pub static LOGGER: Lazy<Mutex<Option<Data>>> = Lazy::new(|| Mutex::new(None));
+
+/// Trait to help pass data to [`Options::set_logger`].
+///
+/// # Examples
+/// ```
+/// # use sentry_contrib_native::{Level, Logger, Message, Options};
+/// # use std::sync::atomic::{AtomicUsize, Ordering};
+/// # fn main() -> anyhow::Result<()> {
+/// struct Log {
+///     logged: AtomicUsize,
+/// };
+///
+/// impl Logger for Log {
+///     fn log(&self, level: Level, message: Message) {
+///         self.logged.fetch_add(1, Ordering::SeqCst);
+///         println!("[{}]: {}", level, message);
+///     }
+/// }
+///
+/// let mut options = Options::new();
+/// options.set_logger(Log {
+///     logged: AtomicUsize::new(0),
+/// });
+/// let _shutdown = options.init()?;
+/// # Ok(()) }
+/// ```
+pub trait Logger: 'static + Send + Sync {
+    /// Logger callback.
+    ///
+    /// # Notes
+    /// The caller of this function will catch any unwinding panics and
+    /// [`abort`] if any occured.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Level, Logger, Message};
+    /// # use std::sync::atomic::{AtomicUsize, Ordering};
+    /// struct Log {
+    ///     logged: AtomicUsize,
+    /// };
+    ///
+    /// impl Logger for Log {
+    ///     fn log(&self, level: Level, message: Message) {
+    ///         self.logged.fetch_add(1, Ordering::SeqCst);
+    ///         println!("[{}]: {}", level, message);
+    ///     }
+    /// }
+    /// ```
+    fn log(&self, level: Level, message: Message);
+}
+
+impl<T: Fn(Level, Message) + 'static + Send + Sync> Logger for T {
+    fn log(&self, level: Level, message: Message) {
+        self(level, message)
+    }
+}
 
 /// Message received for custom logger.
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
@@ -46,14 +103,10 @@ pub extern "C" fn logger(
     level: i32,
     message: *const c_char,
     args: *mut c_void,
-    _userdata: *mut c_void,
+    userdata: *mut c_void,
 ) {
-    let lock = LOGGER.read();
-    let logger = lock
-        .as_ref()
-        .ok()
-        .and_then(|logger| logger.as_deref())
-        .unwrap_or_else(|| process::abort());
+    let logger = userdata.cast::<Box<dyn Logger>>();
+    let logger = ManuallyDrop::new(unsafe { Box::from_raw(logger) });
 
     let level = ffi::catch(|| Level::from_raw(level));
 
@@ -65,17 +118,37 @@ pub extern "C" fn logger(
         )
     };
 
-    ffi::catch(|| logger(level, message))
+    ffi::catch(|| logger.log(level, message))
 }
 
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
 fn logger_test() -> anyhow::Result<()> {
-    use crate::Options;
-    use std::cell::RefCell;
+    use crate::{Level, Logger, Message, Options};
+    use std::{
+        cell::RefCell,
+        sync::atomic::{AtomicBool, Ordering},
+    };
 
     thread_local! {
         static LOGGED: RefCell<bool> = RefCell::new(false);
+    }
+
+    struct Log {
+        logged: AtomicBool,
+    }
+
+    impl Logger for Log {
+        fn log(&self, level: Level, message: Message) {
+            self.logged.store(true, Ordering::SeqCst);
+            println!("[{}]: {}", level, message);
+        }
+    }
+
+    impl Drop for Log {
+        fn drop(&mut self) {
+            LOGGED.with(|logged| *logged.borrow_mut() = *self.logged.get_mut())
+        }
     }
 
     let mut options = Options::new();

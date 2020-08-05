@@ -30,8 +30,8 @@ For more details see
 
 ## Crate features
 
-- **backend-default** - **Enabled by default**, will use Crashpad on MacOS and
-  Windows, Breakpad on Linux and InProc for Android. See `SENTRY_BACKEND` at the
+- **backend-default** - **Enabled by default**, will use Crashpad on Linux,
+  MacOS and Windows and InProc for Android. See `SENTRY_BACKEND` at the
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
 - **transport-default** - **Enabled by default**, will use WinHttp on Windows
   and Curl everywhere else as the default transport.

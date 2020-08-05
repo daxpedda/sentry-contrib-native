@@ -44,7 +44,7 @@ async fn options() -> Result<()> {
                 assert_eq!("release-pgo", event.dist.unwrap());
                 assert_eq!("release-pgo", event.tags.get("dist").unwrap());
 
-                let attachment = event.attachments.get(0).unwrap();
+                let attachment = event.attachments.get("attachment.txt").unwrap();
                 let content = fs::read_to_string("tests/res/attachment.txt").unwrap();
                 let hash = hex::encode(Sha1::digest(content.as_bytes()));
                 assert_eq!("attachment.txt", attachment.name);

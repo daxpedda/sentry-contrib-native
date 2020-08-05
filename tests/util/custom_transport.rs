@@ -4,7 +4,7 @@ use futures_util::{future::Map, FutureExt};
 use reqwest::Client;
 use sentry::{Dsn, Options, RawEnvelope, Transport as SentryTransport, TransportShutdown};
 use sentry_contrib_native as sentry;
-use std::{convert::TryInto, process, str::FromStr, time::Duration};
+use std::{convert::TryInto, process, time::Duration};
 use tokio::{
     sync::mpsc::{self, Receiver, Sender},
     task::{JoinError, JoinHandle},
@@ -20,17 +20,17 @@ pub struct Transport {
 }
 
 impl Transport {
-    pub fn new(options: &Options) -> Self {
-        let dsn = Dsn::from_str(options.dsn().expect("no DSN found")).expect("invalid DSN");
+    pub fn new(options: &Options) -> Result<Self, ()> {
+        let dsn = options.dsn().and_then(|dsn| Dsn::new(dsn).ok()).ok_or(())?;
         let (sender, receiver) = mpsc::channel(1024);
         let client = Client::new();
 
-        Self {
+        Ok(Self {
             dsn,
             receiver,
             sender,
             client,
-        }
+        })
     }
 }
 

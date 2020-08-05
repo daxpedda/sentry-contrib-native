@@ -5,7 +5,7 @@
     clippy::pedantic,
     missing_docs
 )]
-#![cfg(any(target_os = "macos", target_os = "windows"))]
+#![cfg(crashpad)]
 
 mod util;
 

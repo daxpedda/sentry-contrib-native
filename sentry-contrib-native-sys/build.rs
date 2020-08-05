@@ -50,16 +50,19 @@ impl Backend {
     /// for details.
     #[allow(clippy::ifs_same_cond, clippy::same_functions_in_if_condition)]
     fn new(target_os: &str) -> Self {
-        if cfg!(feature = "backend-crashpad") && (target_os == "macos" || target_os == "windows") {
+        if cfg!(feature = "backend-crashpad")
+            && (target_os == "linux" || target_os == "macos" || target_os == "windows")
+        {
             Self::Crashpad
-        } else if cfg!(feature = "backend-breakpad") && target_os == "linux" {
+        } else if cfg!(feature = "backend-breakpad")
+            && (target_os == "linux" || target_os == "windows")
+        {
             Self::Breakpad
         } else if cfg!(feature = "backend-inproc") {
             Self::InProc
         } else if cfg!(feature = "backend-default") {
             match target_os {
-                "windows" | "macos" => Self::Crashpad,
-                "linux" => Self::Breakpad,
+                "windows" | "macos" | "linux" => Self::Crashpad,
                 "android" => Self::InProc,
                 _ => Self::None,
             }
@@ -187,7 +190,11 @@ fn build(
         cmake_config.out_dir(install);
     }
 
-    if cfg!(not(feature = "transport-default")) {
+    if cfg!(feature = "transport-default") {
+        if target_os == "android" || target_os == "androideabi" {
+            cmake_config.define("SENTRY_TRANSPORT", "curl");
+        }
+    } else {
         cmake_config.define("SENTRY_TRANSPORT", "none");
     }
 
@@ -202,7 +209,7 @@ fn build(
     // ANDROID_ABI based on our target-triple. It seems there is not really
     // a good standard for the NDK, so we try several environment variables to
     // find it.
-    // See https://developer.android.com/ndk/guides/cmake for details
+    // See https://developer.android.com/ndk/guides/cmake for details.
     if target_os == "android" || target_os == "androideabi" {
         let ndk_root = env::var("ANDROID_NDK_ROOT")
             .or_else(|_| env::var("ANDROID_NDK_HOME"))

@@ -18,6 +18,7 @@ use std::{
 
 fn main() {
     if let Ok(handler) = env::var("DEP_SENTRY_NATIVE_CRASHPAD_HANDLER") {
+        println!("cargo:rustc-cfg=crashpad");
         println!("cargo:rustc-env=CRASHPAD_HANDLER={}", handler);
 
         let out_dir: PathBuf = env::var_os("OUT_DIR").expect("out dir not set").into();

@@ -76,8 +76,8 @@ fn main() {
 }
 ```
 
-By default, on MacOS and Windows the Crashpad handler executable has to be
-shipped with the application, for convenience the Crashpad handler executable
+By default, on Linux, MacOS and Windows the Crashpad handler executable has to
+be shipped with the application, for convenience the Crashpad handler executable
 will be copied to Cargo's default binary output folder, so using `cargo run`
 works without any additional setup or configuration.
 
@@ -95,18 +95,14 @@ static OUTPUT_PATH: &str = "your/output/path";
 fn main() {
     let target_os = env::var_os("CARGO_CFG_TARGET_OS").unwrap();
 
-    if target_os == "macos" || target_os == "windows" {
-        let handler = env::var_os("DEP_SENTRY_NATIVE_CRASHPAD_HANDLER").unwrap();
-        let executable = if target_os == "macos" {
-            "crashpad_handler"
-        } else if target_os == "windows" {
-            "crashpad_handler.exe"
-        } else {
-            unreachable!()
-        };
+    let handler = env::var_os("DEP_SENTRY_NATIVE_CRASHPAD_HANDLER").unwrap();
+    let executable = if target_os == "windows" {
+        "crashpad_handler.exe"
+    } else {
+        "crashpad_handler"
+    };
 
-        fs::copy(handler, Path::new(OUTPUT_PATH).join(executable)).unwrap();
-    }
+    fs::copy(handler, Path::new(OUTPUT_PATH).join(executable)).unwrap();
 }
 ```
 
@@ -114,7 +110,11 @@ If you are using `panic = abort` make sure to let the panic handler call
 `shutdown` to flush remaining transport before aborting the application.
 
 ```rust
-std::panic::set_hook(Box::new(|_| sentry_contrib_native::shutdown()));
+use sentry_contrib_native as sentry;
+
+std::panic::set_hook(Box::new(|_| sentry::shutdown()));
+// or with the provided hook
+sentry::set_hook(None, Some(Box::new(|_| sentry::shutdown())));
 ```
 
 ## Platform support
@@ -131,6 +131,10 @@ for more detailed information. See the
 platform and feature support details there, this crate doesn't do anything
 fancy, so we mostly rely on `sentry-native` for support.
 
+The default backend for Linux is changed from Breakpad to Crashpad.
+
+The default transport for Android is changed from none to Curl.
+
 Only the default backend is tested in the CI.
 
 ## Build
@@ -142,16 +146,16 @@ which in turn builds
 [CMake](https://cmake.org) or alternatively a pre-installed version can be
 provided with the `SENTRY_NATIVE_INSTALL` environment variable.
 
-Additionally on any other platform than Windows, the development version of Curl
-is required.
+Additionally, if the `transport-default` feature on Android, Linux and MacOS is
+used, the development version of Curl is required.
 
 See the [Sentry Native SDK](https://github.com/getsentry/sentry-native) for more
 details.
 
 ## Crate features
 
-- **backend-default** - **Enabled by default**, will use Crashpad on MacOS and
-  Windows, Breakpad on Linux and InProc for Android. See `SENTRY_BACKEND` at the
+- **backend-default** - **Enabled by default**, will use Crashpad on Linux,
+  MacOS and Windows and InProc for Android. See `SENTRY_BACKEND` at the
   [Sentry Native SDK](https://github.com/getsentry/sentry-native).
 - **transport-default** - **Enabled by default**, will use WinHttp on Windows
   and Curl everywhere else as the default transport.
@@ -171,16 +175,16 @@ details.
     matter what is set through `Options::set_dsn`.
   - Automatically sets the database path to the `OUT_DIR` environment variable,
     no matter what is set through `Options::set_database_path`.
-  - Automatically puts the crashhandler path to the correct path, taking into
-    account `SENTRY_NATIVE_INSTALL`, no matter what is set through
+  - Automatically puts the crashpad handler path to the correct path, taking
+    into account `SENTRY_NATIVE_INSTALL`, no matter what is set through
     `Options::set_handler_path`.
 
 ## Deployment
 
-By default, when deploying a binary for MacOS or Windows, it has to be shipped
-together with the `crashpad_handler(.exe)` executable. A way to programmatically
-export it using `build.rs` is provided through the
-`DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
+If the Crashpad backend is used, which is the default on Linux, MacOS or
+Windows, the application has to be shipped together with the
+`crashpad_handler(.exe)` executable. A way to programmatically export it using
+`build.rs` is provided through the `DEP_SENTRY_NATIVE_CRASHPAD_HANDLER`.
 
 See the [Usage section](#usage) for an example.
 

@@ -3,7 +3,7 @@
 use crate::{ffi, Value};
 #[cfg(doc)]
 use crate::{Event, Options};
-use once_cell::sync::OnceCell;
+use once_cell::sync::Lazy;
 #[cfg(doc)]
 use std::process::abort;
 use std::{mem::ManuallyDrop, os::raw::c_void, sync::Mutex};
@@ -12,7 +12,7 @@ use std::{mem::ManuallyDrop, os::raw::c_void, sync::Mutex};
 pub type Data = Box<Box<dyn BeforeSend>>;
 
 /// Store [`Options::set_before_send`] data to properly deallocate later.
-pub static BEFORE_SEND: OnceCell<Mutex<Option<Data>>> = OnceCell::new();
+pub static BEFORE_SEND: Lazy<Mutex<Option<Data>>> = Lazy::new(|| Mutex::new(None));
 
 /// Trait to help pass data to [`Options::set_before_send`].
 ///

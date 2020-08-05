@@ -48,10 +48,7 @@ async fn main() -> Result<()> {
     options.set_release("1.0");
     options.set_environment("production");
     options.set_distribution("release-pgo");
-    /*options.add_attachment(
-        "test attachment",
-        "C:/rust/sentry-contrib-native/tests/res/attachment.txt",
-    );*/
+    options.add_attachment("tests/res/attachment.txt");
     #[cfg(feature = "transport-custom")]
     options.set_transport(Transport::new);
     let _shutdown = options.init()?;

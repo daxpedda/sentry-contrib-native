@@ -17,7 +17,7 @@ pub struct Event {
     pub release: Option<Release>,
     pub dist: Option<String>,
     #[serde(default)]
-    pub attachments: Vec<Attachment>,
+    pub attachments: HashMap<String, Attachment>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]

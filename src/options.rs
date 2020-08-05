@@ -732,15 +732,14 @@ impl Options {
         *BEFORE_SEND.lock().expect("lock poisoned") = self.before_send.take();
         *LOGGER.lock().expect("lock poisoned") = self.logger.take();
 
-        match unsafe { sys::init(options) } {
-            0 => Ok(Shutdown),
-            _ => {
-                // deallocate unused globals
-                BEFORE_SEND.lock().expect("lock poisoned").take();
-                LOGGER.lock().expect("lock poisoned").take();
+        if unsafe { sys::init(options) } == 0 {
+            Ok(Shutdown)
+        } else {
+            // deallocate unused globals
+            BEFORE_SEND.lock().expect("lock poisoned").take();
+            LOGGER.lock().expect("lock poisoned").take();
 
-                Err(Error::Init)
-            }
+            Err(Error::Init)
         }
     }
 }

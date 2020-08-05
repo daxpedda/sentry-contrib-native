@@ -115,7 +115,8 @@ jobs:
           path: ~/sentry-native
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
-            matrix.feature.transport-default }}
+            matrix.feature.transport-default }}-${{
+            hashFiles('sentry-contrib-native-sys/build.rs') }}
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build
@@ -298,7 +299,8 @@ jobs:
           path: ~/sentry-native
           key:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
-            matrix.feature.transport-default }}
+            matrix.feature.transport-default }}-${{
+            hashFiles('sentry-contrib-native-sys/build.rs') }}
       - name: Set SENTRY_NATIVE_INSTALL
         run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
       - name: Build

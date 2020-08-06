@@ -12,6 +12,8 @@ and this project adheres to
 
 - Added support for changing the backend.
 - Added support for Android.
+- Added support for userdata for `Options::set_logger` through the `Logger`
+  trait.
 
 ### Changed
 

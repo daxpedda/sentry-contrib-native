@@ -701,7 +701,6 @@
 <span id="701">701</span>
 <span id="702">702</span>
 <span id="703">703</span>
-<span id="704">704</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry custom transport implementation.</span>
 <span class="doccomment">//!</span>
@@ -1243,7 +1242,6 @@
 
     <span class="doccomment">/// Consume [`Dsn`] and return it&#39;s parts.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_const_for_fn</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Parts</span> {
         <span class="ident">Parts</span> {
             <span class="ident">auth</span>: <span class="self">self</span>.<span class="ident">auth</span>,

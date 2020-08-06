@@ -95,7 +95,6 @@ impl Event {
     /// let mut event = Event::new();
     /// ```
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
     pub fn new() -> Self {
         Self {
             interface: Interface::Event,
@@ -304,7 +303,6 @@ impl Uuid {
     /// let uuid = Uuid::from_bytes([0; 16]);
     /// ```
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
     pub fn from_bytes(bytes: [u8; 16]) -> Self {
         Self(sys::Uuid {
             bytes: unsafe { mem::transmute(bytes) },
@@ -319,7 +317,6 @@ impl Uuid {
     /// assert_eq!([0; 16], Event::new().capture().into_bytes());
     /// ```
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
     pub fn into_bytes(self) -> [u8; 16] {
         unsafe { mem::transmute(self.0.bytes) }
     }

@@ -6,8 +6,6 @@
     missing_docs
 )]
 #![cfg(any(target_os = "macos", target_os = "windows"))]
-// stable clippy seems to have an issue with await
-#![allow(clippy::used_underscore_binding)]
 
 mod util;
 

@@ -21,44 +21,50 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Represents used backend for `sentry-native`.
 #[derive(Copy, Clone)]
 enum Backend {
+    /// Crashpad backend.
     Crashpad,
+    /// Breakpad backend.
     Breakpad,
+    /// In-process backend.
     InProc,
+    /// No backend.
     None,
 }
 
 impl AsRef<str> for Backend {
     fn as_ref(&self) -> &str {
         match self {
-            Backend::Crashpad => "crashpad",
-            Backend::Breakpad => "breakpad",
-            Backend::InProc => "inproc",
-            Backend::None => "none",
+            Self::Crashpad => "crashpad",
+            Self::Breakpad => "breakpad",
+            Self::InProc => "inproc",
+            Self::None => "none",
         }
     }
 }
 
 impl Backend {
-    /// Gets the backend we want to use, see https://github.com/getsentry/sentry-native#compile-time-options
+    /// Gets the backend we want to use, see <https://github.com/getsentry/sentry-native#compile-time-options>
     /// for details.
-    fn new(target_os: &str) -> Backend {
+    #[allow(clippy::ifs_same_cond, clippy::same_functions_in_if_condition)]
+    fn new(target_os: &str) -> Self {
         if cfg!(feature = "backend-crashpad") && (target_os == "macos" || target_os == "windows") {
-            Backend::Crashpad
+            Self::Crashpad
         } else if cfg!(feature = "backend-breakpad") && target_os == "linux" {
-            Backend::Breakpad
+            Self::Breakpad
         } else if cfg!(feature = "backend-inproc") {
-            Backend::InProc
+            Self::InProc
         } else if cfg!(feature = "backend-default") {
             match target_os {
-                "windows" | "macos" => Backend::Crashpad,
-                "linux" => Backend::Breakpad,
-                "android" => Backend::InProc,
-                _ => Backend::None,
+                "windows" | "macos" => Self::Crashpad,
+                "linux" => Self::Breakpad,
+                "android" => Self::InProc,
+                _ => Self::None,
             }
         } else {
-            Backend::None
+            Self::None
         }
     }
 }

@@ -538,7 +538,6 @@ impl Dsn {
 
     /// Consume [`Dsn`] and return it's parts.
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
     pub fn into_parts(self) -> Parts {
         Parts {
             auth: self.auth,

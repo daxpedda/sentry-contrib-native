@@ -311,7 +311,6 @@ jobs:
         if: always() && steps.build.outcome == 'success'
         run:
           cargo clippy -v ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
-          -- -F warnings
       - name: Documentation
         if: always() && steps.build.outcome == 'success'
         env:
@@ -323,7 +322,7 @@ jobs:
         if: always() && steps.build.outcome == 'success'
         run:
           cargo clippy -v --all-targets --features test ${{ matrix.feature.name
-          }} ${{ matrix.rust.feature }} -- -F warnings
+          }} ${{ matrix.rust.feature }}
       - name: Documentation tests
         if: always() && steps.build.outcome == 'success'
         env:

@@ -16,6 +16,7 @@ and this project adheres to
   trait.
 - Added `Options::set_auto_session_tracking` and
   `Options::auto_session_tracking`.
+- Added missing documentation for `session_start` and `session_end`.
 
 ### Changed
 
@@ -41,13 +42,16 @@ and this project adheres to
   relevant for testing from the Crates.io package. This not only reduces the
   size of the overall package, but also helps to avoid issues with Windows's
   maximum path length.
+- Improved README.
 - Removed unnecessary thread-safety in almost all functions, this is now handled
   upstream which also fixed some missing thread-safety that could crash the
   application or cause undefined behaviour otherwise.
 - Fixed unnecessary include of the WinHttp library when the default transport is
   disabled.
-- Updated `set_http_proxy` documentation to state that the full scheme is
+- Fixed `set_http_proxy` documentation to state that the full scheme is
   required.
+- Fixed `Transport::send` documentation to state that envelopes have to be sent
+  in order for sessions to work.
 
 ### Security
 

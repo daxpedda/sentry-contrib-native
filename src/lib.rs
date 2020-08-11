@@ -496,18 +496,35 @@ pub fn set_level(level: Level) {
     unsafe { sys::set_level(level.into_raw()) }
 }
 
-/// Starts a new session.
+/// Starts a new session. By default sessions are started automatically on
+/// [`Options::init`].
 ///
 /// # Examples
-/// TODO
+/// ```
+/// # use sentry_contrib_native::{Options, start_session};
+/// # fn main() -> anyhow::Result<()> {
+/// let mut options = Options::new();
+/// options.set_auto_session_tracking(false);
+/// let _shutdown = options.init()?;
+///
+/// start_session();
+/// # Ok(()) }
+/// ```
 pub fn start_session() {
     unsafe { sys::start_session() }
 }
 
-/// Ends a session.
+/// Prematurely end a session before it is done automatically by [`shutdown`].
 ///
 /// # Examples
-/// TODO
+/// ```
+/// # use sentry_contrib_native::end_session;
+/// // end session prematurely
+/// end_session();
+///
+/// // run some code that isn't part of the session
+/// println!("If this fails, it will not be recorded as part of the session!");
+/// ```
 pub fn end_session() {
     unsafe { sys::end_session() }
 }

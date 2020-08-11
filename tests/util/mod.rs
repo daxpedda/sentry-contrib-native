@@ -427,7 +427,7 @@ async fn external_events_internal(
                     .stdout(Stdio::inherit())
                     .stderr(Stdio::inherit())
                     .spawn()
-                    .expect("make sure to build the panic example first!");
+                    .expect("make sure to build the example first!");
                 child.stdin.as_mut().unwrap().write_all(&id).await?;
 
                 assert!(!child.await?.success());

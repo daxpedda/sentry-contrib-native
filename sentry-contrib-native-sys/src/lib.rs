@@ -469,6 +469,8 @@ extern "C" {
     pub fn options_get_dist(opts: *const Options) -> *const c_char;
 
     /// Configures the http proxy.
+    ///
+    /// The given proxy has to include the full scheme, eg. `http://some.proxy/`.
     #[link_name = "sentry_options_set_http_proxy"]
     pub fn options_set_http_proxy(opts: *mut Options, proxy: *const c_char);
 

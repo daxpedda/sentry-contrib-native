@@ -5,7 +5,7 @@ use crate::{
     LoggerData, RToC, Transport, TransportState, BEFORE_SEND, LOGGER,
 };
 #[cfg(doc)]
-use crate::{set_user_consent, shutdown, Consent, Event};
+use crate::{end_session, set_user_consent, shutdown, start_session, Consent, Event};
 use once_cell::sync::Lazy;
 #[cfg(feature = "test")]
 use std::env;
@@ -403,11 +403,13 @@ impl Options {
 
     /// Configures the http proxy.
     ///
+    /// The given proxy has to include the full scheme, eg. `http://some.proxy/`.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
     /// let mut options = Options::new();
-    /// options.set_http_proxy("1.1.1.1");
+    /// options.set_http_proxy("http://some.proxy/");
     /// ```
     pub fn set_http_proxy<S: Into<String>>(&mut self, proxy: S) {
         let proxy = proxy.into().into_cstring();
@@ -420,9 +422,9 @@ impl Options {
     /// ```
     /// # use sentry_contrib_native::Options;
     /// let mut options = Options::new();
-    /// options.set_http_proxy("1.1.1.1");
+    /// options.set_http_proxy("http://some.proxy/");
     ///
-    /// assert_eq!(Some("1.1.1.1"), options.http_proxy());
+    /// assert_eq!(Some("http://some.proxy/"), options.http_proxy());
     /// ```
     #[must_use]
     pub fn http_proxy(&self) -> Option<&str> {
@@ -512,6 +514,51 @@ impl Options {
         self.logger = Some(unsafe { Box::from_raw(fun) });
 
         unsafe { sys::options_set_logger(self.as_mut(), Some(logger::logger), fun.cast()) }
+    }
+
+    /// Enables or disables automatic session tracking.
+    ///
+    /// Automatic session tracking is enabled by default and is equivalent to
+    /// calling [`start_session`] after startup.
+    /// There can only be one running session, and the current session will
+    /// always be closed implicitly by [`shutdown`], when starting a new session
+    /// with [`start_session`], or manually by calling [`end_session`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::{Options, start_session};
+    /// # fn main() -> anyhow::Result<()> {
+    /// let mut options = Options::new();
+    /// options.set_auto_session_tracking(false);
+    /// let _shutdown = options.init()?;
+    ///
+    /// // code to run before starting the session
+    ///
+    /// start_session();
+    /// # Ok(()) }
+    /// ```
+    pub fn set_auto_session_tracking(&mut self, val: bool) {
+        let val = val.into();
+        unsafe { sys::options_set_auto_session_tracking(self.as_mut(), val) }
+    }
+
+    /// Returns `true` if automatic session tracking is enabled.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Options;
+    /// let mut options = Options::new();
+    /// options.set_auto_session_tracking(false);
+    ///
+    /// assert!(!options.auto_session_tracking());
+    /// ```
+    #[must_use]
+    pub fn auto_session_tracking(&self) -> bool {
+        match unsafe { sys::options_get_auto_session_tracking(self.as_ref()) } {
+            0 => false,
+            1 => true,
+            error => unreachable!("{} couldn't be converted to a bool", error),
+        }
     }
 
     /// Enables or disabled user consent requirements for uploads.
@@ -626,8 +673,7 @@ impl Options {
     #[cfg_attr(all(feature = "test", crashpad), allow(clippy::needless_pass_by_value))]
     pub fn set_handler_path<P: Into<PathBuf>>(
         &mut self,
-        #[cfg(not(all(feature = "test", crashpad)))] path: P,
-        #[cfg(all(feature = "test", crashpad))] _path: P,
+        #[cfg_attr(all(feature = "test", crashpad), allow(unused_variables))] path: P,
     ) {
         #[cfg(all(feature = "test", crashpad))]
         let path = PathBuf::from(env!("CRASHPAD_HANDLER")).into_os_vec();
@@ -732,14 +778,16 @@ impl Options {
         *BEFORE_SEND.lock().expect("lock poisoned") = self.before_send.take();
         *LOGGER.lock().expect("lock poisoned") = self.logger.take();
 
-        if unsafe { sys::init(options) } == 0 {
-            Ok(Shutdown)
-        } else {
-            // deallocate unused globals
-            BEFORE_SEND.lock().expect("lock poisoned").take();
-            LOGGER.lock().expect("lock poisoned").take();
+        match unsafe { sys::init(options) } {
+            0 => Ok(Shutdown),
+            1 => {
+                // deallocate unused globals
+                BEFORE_SEND.lock().expect("lock poisoned").take();
+                LOGGER.lock().expect("lock poisoned").take();
 
-            Err(Error::Init)
+                Err(Error::Init)
+            }
+            _ => unreachable!("invalid return value"),
         }
     }
 }
@@ -883,8 +931,8 @@ fn options() -> anyhow::Result<()> {
     options.set_distribution("release-pgo");
     assert_eq!(Some("release-pgo"), options.distribution());
 
-    options.set_http_proxy("1.1.1.1");
-    assert_eq!(Some("1.1.1.1"), options.http_proxy());
+    options.set_http_proxy("http://some.proxy/");
+    assert_eq!(Some("http://some.proxy/"), options.http_proxy());
 
     options.set_ca_certs("certs.pem");
     assert_eq!(Some("certs.pem"), options.ca_certs());
@@ -894,6 +942,9 @@ fn options() -> anyhow::Result<()> {
 
     options.set_logger(|_, _| ());
     options.set_logger(Log);
+
+    options.set_auto_session_tracking(false);
+    assert!(!options.auto_session_tracking());
 
     options.set_require_user_consent(true);
     assert!(options.require_user_consent());
@@ -956,6 +1007,12 @@ fn threaded_stress() -> anyhow::Result<()> {
     test::set_hook();
 
     let options = spawns(vec![
+        |options, index| {
+            options
+                .write()
+                .unwrap()
+                .set_transport(move |_| Ok(move |_| println!("{}", index)))
+        },
         |options, _| options.write().unwrap().set_before_send(|value| value),
         |options, index| options.write().unwrap().set_dsn(index.to_string()),
         |options, _| println!("{:?}", options.read().unwrap().dsn()),
@@ -986,6 +1043,23 @@ fn threaded_stress() -> anyhow::Result<()> {
             })
         },
         |options, _| println!("{:?}", options.read().unwrap().debug()),
+        |options, index| {
+            options
+                .write()
+                .unwrap()
+                .set_logger(move |_, _| println!("{}", index))
+        },
+        |options, index| {
+            options
+                .write()
+                .unwrap()
+                .set_auto_session_tracking(match index % 2 {
+                    0 => false,
+                    1 => true,
+                    _ => unreachable!(),
+                })
+        },
+        |options, _| println!("{:?}", options.read().unwrap().auto_session_tracking()),
         |options, index| {
             options
                 .write()

@@ -588,18 +588,20 @@ fn fingerprint_invalid() {
     crate::set_fingerprint(fingerprints).unwrap()
 }
 
-/*#[cfg(test)]
+#[cfg(test)]
+#[test]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
 fn threaded_stress() -> anyhow::Result<()> {
     use std::thread;
 
     fn spawns(tests: Vec<fn(i32)>) {
         let mut spawns = Vec::with_capacity(tests.len());
+
         for test in tests {
             let handle = thread::spawn(move || {
                 let mut handles = Vec::with_capacity(100);
 
-                for index in 0..100 {
+                for index in 0..10 {
                     handles.push(thread::spawn(move || test(index)))
                 }
 
@@ -644,7 +646,11 @@ fn threaded_stress() -> anyhow::Result<()> {
         |index| crate::remove_tag(index.to_string()),
         |index| crate::set_extra(index.to_string(), index),
         |index| crate::remove_extra(index.to_string()),
-        |index| crate::set_context(index.to_string(), vec![(index.to_string(), index)]),
+        //|index| crate::set_context(index.to_string(), vec![(index.to_string(), index)]),
+        |index| {
+            let key = std::ffi::CString::new(index.to_string()).unwrap();
+            unsafe { sys::set_context(key.as_ptr(), sys::value_new_int32(index)) }
+        },
         |index| crate::remove_context(index.to_string()),
         |index| crate::set_fingerprint(vec![index.to_string()]).unwrap(),
         |_| crate::remove_fingerprint(),
@@ -669,4 +675,4 @@ fn threaded_stress() -> anyhow::Result<()> {
     test::verify_panics();
 
     Ok(())
-}*/
+}

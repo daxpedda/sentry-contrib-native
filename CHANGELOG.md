@@ -14,6 +14,8 @@ and this project adheres to
 - Added support for Android.
 - Added support for userdata for `Options::set_logger` through the `Logger`
   trait.
+- Added `Options::set_auto_session_tracking` and
+  `Options::auto_session_tracking`.
 
 ### Changed
 
@@ -22,16 +24,10 @@ and this project adheres to
 - Renamed `user_consent_get` to `user_consent`.
 - Renamed feature `default-transport` to `transport-default` and
   `custom-transport` to `transport-custom`.
-- Improved naming of libraries in the documentation.
-- Exclude some folders from the included Sentry Native SDK that are only
-  relevant for testing from the Crates.io package. This not only reduces the
-  size of the overall package, but also helps to avoid issues with Windows's
-  maximum path length.
 - Updated `sentry-native` to 0.4.0.
-- Improved README.
 - Changed the default backend for Linux to Crashpad.
 - Changed the default transport for Android to Curl.
-- Changed `set_transport` `startup` argument to return `Result` and fail
+- Changed `set_transport`'s `startup` argument to return `Result` and fail
   `Options::init` if `Err` is returned.
 
 ### Deprecated
@@ -40,11 +36,18 @@ and this project adheres to
 
 ### Fixed
 
+- Improved naming of libraries in the documentation.
+- Exclude some folders from the included Sentry Native SDK that are only
+  relevant for testing from the Crates.io package. This not only reduces the
+  size of the overall package, but also helps to avoid issues with Windows's
+  maximum path length.
 - Removed unnecessary thread-safety in almost all functions, this is now handled
   upstream which also fixed some missing thread-safety that could crash the
   application or cause undefined behaviour otherwise.
 - Fixed unnecessary include of the WinHttp library when the default transport is
   disabled.
+- Updated `set_http_proxy` documentation to state that the full scheme is
+  required.
 
 ### Security
 

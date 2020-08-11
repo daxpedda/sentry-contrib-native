@@ -123,6 +123,7 @@ impl Shutdown {
 ///         let dsn = self.dsn.clone();
 ///         let client = self.client.clone();
 ///
+///         // in a correct implementation envelopes have to be send in order for sessions for work
 ///         std::thread::spawn(move || {
 ///             let request = envelope
 ///                 .to_request(dsn)
@@ -146,10 +147,13 @@ impl Shutdown {
 /// # } Ok(()) }
 /// ```
 /// See the
-/// [`transport-custom`](https://github.com/daxpedda/sentry-contrib-native/blob/master/examples/transport-custom.rs)
+/// [`transport-custom`](https://github.com/daxpedda/sentry-contrib-native/blob/master/examples/custom-transport.rs)
 /// example for a more sophisticated implementation.
 pub trait Transport: 'static + Send + Sync {
-    /// Sends the specified Envelope to a Sentry service.
+    /// Sends the specified envelope to a Sentry service.
+    ///
+    /// It is **required** to send envelopes in order for sessions to work
+    /// correctly.
     ///
     /// It is **highly** recommended to not block in this method, but rather
     /// to enqueue the worker to another thread.
@@ -256,7 +260,7 @@ pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> c_int {
     }
 }
 
-/// Wrapper for the raw Envelope that we should send to Sentry.
+/// Wrapper for the raw envelope that we should send to Sentry.
 ///
 /// # Examples
 /// ```

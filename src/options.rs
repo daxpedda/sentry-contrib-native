@@ -6,7 +6,6 @@ use crate::{
 };
 #[cfg(doc)]
 use crate::{end_session, set_user_consent, shutdown, start_session, Consent, Event};
-use once_cell::sync::Lazy;
 #[cfg(feature = "test")]
 use std::env;
 #[cfg(doc)]
@@ -15,16 +14,7 @@ use std::{
     fmt::{Debug, Formatter, Result as FmtResult},
     mem,
     path::PathBuf,
-    sync::Mutex,
 };
-
-/// Global lock for the following purposes:
-/// - Prevent [`Options::init`] from being called twice.
-/// - Fix some null-dereferncing bugs in `sentry-native` that can happen when
-///   shutdown is called while other functions are still accessing options.
-///   Hopefully this will be fixed upstream in the future, see
-///   <https://github.com/getsentry/sentry-native/issues/280>.
-pub static LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
 /// The Sentry client options.
 ///
@@ -773,17 +763,29 @@ impl Options {
             unreachable!("can't mutably borrow `Options`")
         };
 
-        let _lock = LOCK.lock().expect("lock poisoned");
+        // only lock if we need it
+        let mut before_send = if let Some(before_send) = self.before_send.take() {
+            let mut lock = BEFORE_SEND.lock().expect("lock poisoned");
+            *lock = Some(before_send);
+            Some(lock)
+        } else {
+            None
+        };
 
-        *BEFORE_SEND.lock().expect("lock poisoned") = self.before_send.take();
-        *LOGGER.lock().expect("lock poisoned") = self.logger.take();
+        let mut logger = if let Some(logger) = self.logger.take() {
+            let mut lock = LOGGER.lock().expect("lock poisoned");
+            *lock = Some(logger);
+            Some(lock)
+        } else {
+            None
+        };
 
         match unsafe { sys::init(options) } {
             0 => Ok(Shutdown),
             1 => {
-                // deallocate unused globals
-                BEFORE_SEND.lock().expect("lock poisoned").take();
-                LOGGER.lock().expect("lock poisoned").take();
+                // deallocate globals on failure, which are otherwise unused
+                before_send.take().take();
+                logger.take().take();
 
                 Err(Error::Init)
             }

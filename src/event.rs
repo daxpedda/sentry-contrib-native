@@ -1,6 +1,6 @@
 //! Sentry event implementation.
 
-use crate::{CToR, Level, Map, Object, RToC, Value};
+use crate::{global_lock, CToR, Level, Map, Object, RToC, Value};
 use std::{
     cmp::Ordering,
     collections::BTreeMap,
@@ -210,7 +210,11 @@ impl Event {
     #[allow(clippy::must_use_candidate)]
     pub fn capture(self) -> Uuid {
         let event = self.into_raw();
-        Uuid(unsafe { sys::capture_event(event) })
+
+        {
+            let _lock = global_lock();
+            Uuid(unsafe { sys::capture_event(event) })
+        }
     }
 }
 

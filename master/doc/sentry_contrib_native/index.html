@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `sentry_contrib_native` crate."><meta name="keywords" content="rust, rustlang, rust-lang, sentry_contrib_native"><title>sentry_contrib_native - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../ayu.css" disabled ><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../sentry_contrib_native/index.html'><div class='logo-container rust-logo'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate sentry_contrib_native</p><div class='block version'><p>Version 0.1.0-rc.2</p></div><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all sentry_contrib_native's items</p></a><div class="block items"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#constants">Constants</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'sentry_contrib_native', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
-                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/sentry_contrib_native/lib.rs.html#1-711' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>sentry_contrib_native</a></span></h1><div class='docblock'><h1 id="sentry-contrib-native" class="section-header"><a href="#sentry-contrib-native">sentry-contrib-native</a></h1>
+                <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/sentry_contrib_native/lib.rs.html#1-718' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>sentry_contrib_native</a></span></h1><div class='docblock'><h1 id="sentry-contrib-native" class="section-header"><a href="#sentry-contrib-native">sentry-contrib-native</a></h1>
 <p><a href="https://crates.io/crates/sentry-contrib-native"><img src="https://img.shields.io/crates/v/sentry-contrib-native.svg" alt="Crates.io" /></a>
 <a href="https://libraries.io/cargo/sentry-contrib-native"><img src="https://img.shields.io/librariesio/release/cargo/sentry-contrib-native.svg" alt="Libraries.io" /></a>
 <a href="https://github.com/daxpedda/sentry-contrib-native/releases/latest"><img src="https://img.shields.io/github/commits-since/daxpedda/sentry-contrib-native/latest" alt="Commits since" /></a>
@@ -70,8 +70,8 @@ development inluding PR's.</li>
     <span class="comment">// Sentry receives an event with an attached stacktrace and message</span>
     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;application should have crashed at this point&quot;</span>);
 }</pre></div>
-<p>By default, on MacOS and Windows the Crashpad handler executable has to be
-shipped with the application, for convenience the Crashpad handler executable
+<p>By default, on Linux, MacOS and Windows the Crashpad handler executable has to
+be shipped with the application, for convenience the Crashpad handler executable
 will be copied to Cargo's default binary output folder, so using <code>cargo run</code>
 works without any additional setup or configuration.</p>
 <p>If you need to export the Crashpad handler executable programmatically to a
@@ -87,24 +87,24 @@ with that: <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
 <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="kw">let</span> <span class="ident">target_os</span> <span class="op">=</span> <span class="ident">env</span>::<span class="ident">var_os</span>(<span class="string">&quot;CARGO_CFG_TARGET_OS&quot;</span>).<span class="ident">unwrap</span>();
 
-    <span class="kw">if</span> <span class="ident">target_os</span> <span class="op">==</span> <span class="string">&quot;macos&quot;</span> <span class="op">||</span> <span class="ident">target_os</span> <span class="op">==</span> <span class="string">&quot;windows&quot;</span> {
-        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">env</span>::<span class="ident">var_os</span>(<span class="string">&quot;DEP_SENTRY_NATIVE_CRASHPAD_HANDLER&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">executable</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">target_os</span> <span class="op">==</span> <span class="string">&quot;macos&quot;</span> {
-            <span class="string">&quot;crashpad_handler&quot;</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">target_os</span> <span class="op">==</span> <span class="string">&quot;windows&quot;</span> {
-            <span class="string">&quot;crashpad_handler.exe&quot;</span>
-        } <span class="kw">else</span> {
-            <span class="macro">unreachable</span><span class="macro">!</span>()
-        };
+    <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">env</span>::<span class="ident">var_os</span>(<span class="string">&quot;DEP_SENTRY_NATIVE_CRASHPAD_HANDLER&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">executable</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">target_os</span> <span class="op">==</span> <span class="string">&quot;windows&quot;</span> {
+        <span class="string">&quot;crashpad_handler.exe&quot;</span>
+    } <span class="kw">else</span> {
+        <span class="string">&quot;crashpad_handler&quot;</span>
+    };
 
-        <span class="ident">fs</span>::<span class="ident">copy</span>(<span class="ident">handler</span>, <span class="ident">Path</span>::<span class="ident">new</span>(<span class="ident">OUTPUT_PATH</span>).<span class="ident">join</span>(<span class="ident">executable</span>)).<span class="ident">unwrap</span>();
-    }
+    <span class="ident">fs</span>::<span class="ident">copy</span>(<span class="ident">handler</span>, <span class="ident">Path</span>::<span class="ident">new</span>(<span class="ident">OUTPUT_PATH</span>).<span class="ident">join</span>(<span class="ident">executable</span>)).<span class="ident">unwrap</span>();
 }</pre></div>
 <p>If you are using <code>panic = abort</code> make sure to let the panic handler call
 <code>shutdown</code> to flush remaining transport before aborting the application.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="ident">std</span>::<span class="ident">panic</span>::<span class="ident">set_hook</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">sentry_contrib_native</span>::<span class="ident">shutdown</span>()));</pre></div>
+<span class="kw">use</span> <span class="ident">sentry_contrib_native</span> <span class="kw">as</span> <span class="ident">sentry</span>;
+
+<span class="ident">std</span>::<span class="ident">panic</span>::<span class="ident">set_hook</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">sentry</span>::<span class="ident">shutdown</span>()));
+<span class="comment">// or with the provided hook</span>
+<span class="ident">sentry</span>::<span class="ident">set_hook</span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">sentry</span>::<span class="ident">shutdown</span>())));</pre></div>
 <h2 id="platform-support" class="section-header"><a href="#platform-support">Platform support</a></h2>
 <p>Currently the following systems are tested with CI:</p>
 <ul>
@@ -117,6 +117,8 @@ for more detailed information. See the
 <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a> for more
 platform and feature support details there, this crate doesn't do anything
 fancy, so we mostly rely on <code>sentry-native</code> for support.</p>
+<p>The default backend for Linux is changed from Breakpad to Crashpad.</p>
+<p>The default transport for Android is changed from none to Curl.</p>
 <p>Only the default backend is tested in the CI.</p>
 <h2 id="build" class="section-header"><a href="#build">Build</a></h2>
 <p>This crate relies on
@@ -125,14 +127,14 @@ which in turn builds
 <a href="https://github.com/getsentry/sentry-native">Sentry's Native SDK</a>. This requires
 <a href="https://cmake.org">CMake</a> or alternatively a pre-installed version can be
 provided with the <code>SENTRY_NATIVE_INSTALL</code> environment variable.</p>
-<p>Additionally on any other platform than Windows, the development version of Curl
-is required.</p>
+<p>Additionally, if the <code>transport-default</code> feature on Android, Linux and MacOS is
+used, the development version of Curl is required.</p>
 <p>See the <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a> for more
 details.</p>
 <h2 id="crate-features" class="section-header"><a href="#crate-features">Crate features</a></h2>
 <ul>
-<li><strong>backend-default</strong> - <strong>Enabled by default</strong>, will use Crashpad on MacOS and
-Windows, Breakpad on Linux and InProc for Android. See <code>SENTRY_BACKEND</code> at the
+<li><strong>backend-default</strong> - <strong>Enabled by default</strong>, will use Crashpad on Linux,
+MacOS and Windows and InProc for Android. See <code>SENTRY_BACKEND</code> at the
 <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a>.</li>
 <li><strong>transport-default</strong> - <strong>Enabled by default</strong>, will use WinHttp on Windows
 and Curl everywhere else as the default transport.</li>
@@ -153,17 +155,17 @@ and
 matter what is set through <code>Options::set_dsn</code>.</li>
 <li>Automatically sets the database path to the <code>OUT_DIR</code> environment variable,
 no matter what is set through <code>Options::set_database_path</code>.</li>
-<li>Automatically puts the crashhandler path to the correct path, taking into
-account <code>SENTRY_NATIVE_INSTALL</code>, no matter what is set through
+<li>Automatically puts the crashpad handler path to the correct path, taking
+into account <code>SENTRY_NATIVE_INSTALL</code>, no matter what is set through
 <code>Options::set_handler_path</code>.</li>
 </ul>
 </li>
 </ul>
 <h2 id="deployment" class="section-header"><a href="#deployment">Deployment</a></h2>
-<p>By default, when deploying a binary for MacOS or Windows, it has to be shipped
-together with the <code>crashpad_handler(.exe)</code> executable. A way to programmatically
-export it using <code>build.rs</code> is provided through the
-<code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
+<p>If the Crashpad backend is used, which is the default on Linux, MacOS or
+Windows, the application has to be shipped together with the
+<code>crashpad_handler(.exe)</code> executable. A way to programmatically export it using
+<code>build.rs</code> is provided through the <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
 <p>See the <a href="#usage">Usage section</a> for an example.</p>
 <h2 id="documentation" class="section-header"><a href="#documentation">Documentation</a></h2>
 <ul>
@@ -232,7 +234,7 @@ based on the given DSN.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Event.html" title='sentry_contrib_native::Event struct'>Event</a></td><td class='docblock-short'><p>A Sentry event.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Options.html" title='sentry_contrib_native::Options struct'>Options</a></td><td class='docblock-short'><p>The Sentry client options.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Parts.html" title='sentry_contrib_native::Parts struct'>Parts</a></td><td class='docblock-short'><span class="stab portability"><code>feature="transport-custom"</code></span><p><a href="../sentry_contrib_native/struct.Parts.html" title="`Parts`"><code>Parts</code></a> aquired from <a href="../sentry_contrib_native/struct.Dsn.html#method.into_parts" title="`Dsn::into_parts`"><code>Dsn::into_parts</code></a>.</p>
-</td></tr><tr class='module-item'><td><a class="struct" href="struct.RawEnvelope.html" title='sentry_contrib_native::RawEnvelope struct'>RawEnvelope</a></td><td class='docblock-short'><p>Wrapper for the raw Envelope that we should send to Sentry.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.RawEnvelope.html" title='sentry_contrib_native::RawEnvelope struct'>RawEnvelope</a></td><td class='docblock-short'><p>Wrapper for the raw envelope that we should send to Sentry.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Shutdown.html" title='sentry_contrib_native::Shutdown struct'>Shutdown</a></td><td class='docblock-short'><p>Automatically shuts down the Sentry client on drop.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.User.html" title='sentry_contrib_native::User struct'>User</a></td><td class='docblock-short'><p>A Sentry user.</p>
 </td></tr><tr class='module-item'><td><a class="struct" href="struct.Uuid.html" title='sentry_contrib_native::Uuid struct'>Uuid</a></td><td class='docblock-short'><p>A Sentry UUID.</p>
@@ -254,12 +256,13 @@ hardcoded into sentry-native, so...two can play at that game!</p>
 </td></tr><tr class='module-item'><td><a class="constant" href="constant.SDK_USER_AGENT.html" title='sentry_contrib_native::SDK_USER_AGENT constant'>SDK_USER_AGENT</a></td><td class='docblock-short'><p>SDK Version</p>
 </td></tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
 <table><tr class='module-item'><td><a class="trait" href="trait.BeforeSend.html" title='sentry_contrib_native::BeforeSend trait'>BeforeSend</a></td><td class='docblock-short'><p>Trait to help pass data to <a href="../sentry_contrib_native/struct.Options.html#method.set_before_send" title="`Options::set_before_send`"><code>Options::set_before_send</code></a>.</p>
+</td></tr><tr class='module-item'><td><a class="trait" href="trait.Logger.html" title='sentry_contrib_native::Logger trait'>Logger</a></td><td class='docblock-short'><p>Trait to help pass data to <a href="../sentry_contrib_native/struct.Options.html#method.set_logger" title="`Options::set_logger`"><code>Options::set_logger</code></a>.</p>
 </td></tr><tr class='module-item'><td><a class="trait" href="trait.Map.html" title='sentry_contrib_native::Map trait'>Map</a></td><td class='docblock-short'><p>Convenience trait to simplify passing a <a href="../sentry_contrib_native/enum.Value.html#variant.Map" title="`Value::Map`"><code>Value::Map</code></a>.</p>
 </td></tr><tr class='module-item'><td><a class="trait" href="trait.Transport.html" title='sentry_contrib_native::Transport trait'>Transport</a></td><td class='docblock-short'><p>Trait used to define a custom transport that Sentry can use to send events
 to a Sentry service.</p>
 </td></tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
 <table><tr class='module-item'><td><a class="fn" href="fn.clear_modulecache.html" title='sentry_contrib_native::clear_modulecache fn'>clear_modulecache</a></td><td class='docblock-short'><p>Clears the internal module cache.</p>
-</td></tr><tr class='module-item'><td><a class="fn" href="fn.end_session.html" title='sentry_contrib_native::end_session fn'>end_session</a></td><td class='docblock-short'><p>Ends a session.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.end_session.html" title='sentry_contrib_native::end_session fn'>end_session</a></td><td class='docblock-short'><p>Prematurely end a session before it is done automatically by <a href="../sentry_contrib_native/fn.shutdown.html" title="`shutdown`"><code>shutdown</code></a>.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.remove_context.html" title='sentry_contrib_native::remove_context fn'>remove_context</a></td><td class='docblock-short'><p>Removes the context object with the specified key.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.remove_extra.html" title='sentry_contrib_native::remove_extra fn'>remove_extra</a></td><td class='docblock-short'><p>Removes the extra with the specified <code>key</code>.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.remove_fingerprint.html" title='sentry_contrib_native::remove_fingerprint fn'>remove_fingerprint</a></td><td class='docblock-short'><p>Removes the fingerprint.</p>
@@ -275,7 +278,8 @@ to a Sentry service.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.set_transaction.html" title='sentry_contrib_native::set_transaction fn'>set_transaction</a></td><td class='docblock-short'><p>Sets the transaction.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.set_user_consent.html" title='sentry_contrib_native::set_user_consent fn'>set_user_consent</a></td><td class='docblock-short'><p>Resets the user consent (back to unknown).</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.shutdown.html" title='sentry_contrib_native::shutdown fn'>shutdown</a></td><td class='docblock-short'><p>Shuts down the Sentry client and forces transports to flush out.</p>
-</td></tr><tr class='module-item'><td><a class="fn" href="fn.start_session.html" title='sentry_contrib_native::start_session fn'>start_session</a></td><td class='docblock-short'><p>Starts a new session.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.start_session.html" title='sentry_contrib_native::start_session fn'>start_session</a></td><td class='docblock-short'><p>Starts a new session. By default sessions are started automatically on
+<a href="../sentry_contrib_native/struct.Options.html#method.init" title="`Options::init`"><code>Options::init</code></a>.</p>
 </td></tr><tr class='module-item'><td><a class="fn" href="fn.user_consent.html" title='sentry_contrib_native::user_consent fn'>user_consent</a></td><td class='docblock-short'><p>Checks the current state of user consent.</p>
 </td></tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
 <table><tr class='module-item'><td><a class="type" href="type.Request.html" title='sentry_contrib_native::Request type'>Request</a></td><td class='docblock-short'><span class="stab portability"><code>feature="transport-custom"</code></span><p>The <a href="https://docs.rs/http/0.2.1/http/request/struct.Request.html" title="`http::Request`"><code>http::Request</code></a> request your <a href="../sentry_contrib_native/trait.Transport.html" title="`Transport`"><code>Transport</code></a> is expected to send.</p>

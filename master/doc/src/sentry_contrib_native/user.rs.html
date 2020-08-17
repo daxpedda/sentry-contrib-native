@@ -100,7 +100,7 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry user implementation.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">global_write</span>, <span class="ident">Object</span>, <span class="ident">Value</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">global_lock</span>, <span class="ident">Object</span>, <span class="ident">Value</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections</span>::<span class="ident">BTreeMap</span>,
     <span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>},
@@ -182,7 +182,7 @@
         <span class="kw">let</span> <span class="ident">user</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">into_raw</span>();
 
         {
-            <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
+            <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_lock</span>();
             <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">set_user</span>(<span class="ident">user</span>) };
         }
     }

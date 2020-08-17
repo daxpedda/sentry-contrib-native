@@ -125,7 +125,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">Event</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">global_write</span>, <span class="ident">Object</span>, <span class="ident">RToC</span>, <span class="ident">Value</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">global_lock</span>, <span class="ident">Object</span>, <span class="ident">RToC</span>, <span class="ident">Value</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections</span>::<span class="ident">BTreeMap</span>,
     <span class="ident">ffi</span>::<span class="ident">CStr</span>,
@@ -224,7 +224,7 @@
         <span class="kw">let</span> <span class="ident">breadcrumb</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">into_raw</span>();
 
         {
-            <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_write</span>();
+            <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">global_lock</span>();
             <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">add_breadcrumb</span>(<span class="ident">breadcrumb</span>) }
         }
     }

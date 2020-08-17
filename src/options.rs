@@ -764,21 +764,17 @@ impl Options {
         };
 
         // only lock if we need it
-        let mut before_send = if let Some(before_send) = self.before_send.take() {
+        let mut before_send = self.before_send.take().map(|before_send| {
             let mut lock = BEFORE_SEND.lock().expect("lock poisoned");
             *lock = Some(before_send);
-            Some(lock)
-        } else {
-            None
-        };
+            lock
+        });
 
-        let mut logger = if let Some(logger) = self.logger.take() {
+        let mut logger = self.logger.take().map(|logger| {
             let mut lock = LOGGER.lock().expect("lock poisoned");
             *lock = Some(logger);
-            Some(lock)
-        } else {
-            None
-        };
+            lock
+        });
 
         match unsafe { sys::init(options) } {
             0 => Ok(Shutdown),
@@ -1125,6 +1121,7 @@ fn sync() -> anyhow::Result<()> {
     let options = Arc::new(options);
     let mut handles = vec![];
 
+    #[cfg_attr(feature = "nightly", allow(clippy::same_item_push))]
     for _ in 0..100 {
         let options = Arc::clone(&options);
         let handle = thread::spawn(move || {

@@ -207,8 +207,12 @@ fn build(
     if let Backend::Crashpad = backend {
         cmake_config.define("CRASHPAD_ZLIB_SYSTEM", "OFF");
 
-        if target_os == "macos" {
+        if target_os == "linux" || target_os == "macos" {
             cmake_config.cflag("-mpclmul");
+        }
+
+        if target_os == "linux" {
+            cmake_config.cflag("-msse4.1");
         }
     }
 

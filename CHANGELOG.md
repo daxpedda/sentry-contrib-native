@@ -37,15 +37,14 @@ and this project adheres to
 
 ### Fixed
 
+- Fixed thread-safety in almost all functions that could otherwise crash the
+  application or cause undefined behaviour.
 - Improved naming of libraries in the documentation.
 - Exclude some folders from the included Sentry Native SDK that are only
   relevant for testing from the Crates.io package. This not only reduces the
   size of the overall package, but also helps to avoid issues with Windows's
   maximum path length.
 - Improved README.
-- Removed unnecessary thread-safety in almost all functions, this is now handled
-  upstream which also fixed some missing thread-safety that could crash the
-  application or cause undefined behaviour otherwise.
 - Fixed unnecessary include of the WinHttp library when the default transport is
   disabled.
 - Fixed `set_http_proxy` documentation to state that the full scheme is

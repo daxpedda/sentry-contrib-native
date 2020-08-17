@@ -40,14 +40,16 @@ use logger::{Data as LoggerData, LOGGER};
 pub use logger::{Logger, Message};
 pub use object::Map;
 use object::Object;
+use once_cell::sync::Lazy;
+use options::Ownership;
 pub use options::{Options, Shutdown};
-use options::{Ownership, LOCK};
 pub use panic::set_hook;
 use std::{
     convert::Infallible,
     fmt::{Display, Formatter, Result as FmtResult},
     os::raw::c_char,
     ptr,
+    sync::{Mutex, MutexGuard},
 };
 use thiserror::Error;
 use transport::State as TransportState;
@@ -169,6 +171,15 @@ impl Consent {
     }
 }
 
+/// Global lock to prevent thread-safety issues with certain functions. This
+/// will hopefully be fixed upstream.
+static GLOBAL_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+/// Convenience function to get a write lock on `GLOBAL_LOCK`.
+fn global_lock() -> MutexGuard<'static, ()> {
+    GLOBAL_LOCK.lock().expect("global lock poisoned")
+}
+
 /// Shuts down the Sentry client and forces transports to flush out.
 ///
 /// # Examples
@@ -195,8 +206,6 @@ impl Consent {
 /// }
 /// ```
 pub fn shutdown() {
-    let _lock = LOCK.lock().expect("lock poisoned");
-
     unsafe { sys::shutdown() };
 
     // de-allocate `BEFORE_SEND`
@@ -290,6 +299,7 @@ pub fn user_consent() -> Consent {
 /// remove_user();
 /// ```
 pub fn remove_user() {
+    let _lock = global_lock();
     unsafe { sys::remove_user() }
 }
 
@@ -304,7 +314,10 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
     let key = key.into().into_cstring();
     let value = value.into().into_cstring();
 
-    unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
+    {
+        let _lock = global_lock();
+        unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
+    }
 }
 
 /// Removes the tag with the specified `key`.
@@ -318,7 +331,10 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
 pub fn remove_tag<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
-    unsafe { sys::remove_tag(key.as_ptr()) }
+    {
+        let _lock = global_lock();
+        unsafe { sys::remove_tag(key.as_ptr()) }
+    }
 }
 
 /// Sets extra information.
@@ -332,7 +348,10 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    unsafe { sys::set_extra(key.as_ptr(), value) }
+    {
+        let _lock = global_lock();
+        unsafe { sys::set_extra(key.as_ptr(), value) }
+    }
 }
 
 /// Removes the extra with the specified `key`.
@@ -346,7 +365,10 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
 pub fn remove_extra<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
-    unsafe { sys::remove_extra(key.as_ptr()) }
+    {
+        let _lock = global_lock();
+        unsafe { sys::remove_extra(key.as_ptr()) }
+    }
 }
 
 /// Sets a context object.
@@ -360,7 +382,10 @@ pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    unsafe { sys::set_context(key.as_ptr(), value) }
+    {
+        let _lock = global_lock();
+        unsafe { sys::set_context(key.as_ptr(), value) }
+    }
 }
 
 /// Removes the context object with the specified key.
@@ -374,7 +399,10 @@ pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
 pub fn remove_context<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
 
-    unsafe { sys::remove_context(key.as_ptr()) }
+    {
+        let _lock = global_lock();
+        unsafe { sys::remove_context(key.as_ptr()) }
+    }
 }
 
 /// Sets the event fingerprint.
@@ -606,7 +634,6 @@ fn fingerprint_invalid() {
 }
 
 #[cfg(test)]
-#[test]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
 fn threaded_stress() -> anyhow::Result<()> {
     use std::thread;
@@ -618,7 +645,7 @@ fn threaded_stress() -> anyhow::Result<()> {
             let handle = thread::spawn(move || {
                 let mut handles = Vec::with_capacity(100);
 
-                for index in 0..10 {
+                for index in 0..100 {
                     handles.push(thread::spawn(move || test(index)))
                 }
 
@@ -663,11 +690,7 @@ fn threaded_stress() -> anyhow::Result<()> {
         |index| crate::remove_tag(index.to_string()),
         |index| crate::set_extra(index.to_string(), index),
         |index| crate::remove_extra(index.to_string()),
-        //|index| crate::set_context(index.to_string(), vec![(index.to_string(), index)]),
-        |index| {
-            let key = std::ffi::CString::new(index.to_string()).unwrap();
-            unsafe { sys::set_context(key.as_ptr(), sys::value_new_int32(index)) }
-        },
+        |index| crate::set_context(index.to_string(), vec![(index.to_string(), index)]),
         |index| crate::remove_context(index.to_string()),
         |index| crate::set_fingerprint(vec![index.to_string()]).unwrap(),
         |_| crate::remove_fingerprint(),

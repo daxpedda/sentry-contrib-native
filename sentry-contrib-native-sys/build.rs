@@ -22,7 +22,7 @@ use std::{
 };
 
 /// Represents used backend for `sentry-native`.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone)]
 enum Backend {
     /// Crashpad backend.
     Crashpad,
@@ -200,12 +200,16 @@ fn build(
 
     cmake_config.define("SENTRY_BACKEND", backend.as_ref());
 
-    // By default, crashpad will attempt to link to the system's shared zlib
+    // By default, Crashpad will attempt to link to the system's shared zlib
     // instead of compiling from source, when targetting non-msvc targets,
     // but this is not a very nice thing to do when the source is already
-    // available
-    if backend == Backend::Crashpad {
+    // available.
+    if let Backend::Crashpad = backend {
         cmake_config.define("CRASHPAD_ZLIB_SYSTEM", "OFF");
+
+        if target_os == "macos" {
+            cmake_config.cflag("-mpclmul");
+        }
     }
 
     if env::var("CARGO_CFG_TARGET_FEATURE")

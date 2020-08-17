@@ -46,6 +46,7 @@ and this project adheres to
 - Changed the default transport for Android to Curl.
 - Changed `set_transport`'s `startup` argument to return `Result` and fail
   `Options::init` if `Err` is returned.
+- Changed zlib for Crashpad to build from source.
 
 ### Fixed
 
@@ -63,6 +64,7 @@ and this project adheres to
   required.
 - Fixed `Transport::send` documentation to state that envelopes have to be sent
   in order for sessions to work.
+- Fixed cross-compiling for MSVC with `crt-static`.
 
 ## [0.1.0-rc] - 2020-07-06
 

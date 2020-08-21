@@ -18,6 +18,8 @@ and this project adheres to
 
 ### Fixed
 
+- Fixed typos and improved general documentation.
+
 ### Security
 
 ## [0.1.0] - 2020-08-18
@@ -96,11 +98,11 @@ and this project adheres to
 - Initial release.
 
 [unreleased]:
-  https://github.com/daxpedda/sentry-contrib-native/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/v0.1.0
+  https://github.com/daxpedda/sentry-contrib-native/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.1.0
 [0.1.0-rc]:
-  https://github.com/daxpedda/sentry-contrib-native/releases/tag/v0.1.0-rc
+  https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.1.0-rc
 [0.1.0-alpha-2]:
-  https://github.com/daxpedda/sentry-contrib-native/releases/tag/v0.1.0-alpha-2
+  https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.1.0-alpha-2
 [0.1.0-alpha]:
-  https://github.com/daxpedda/sentry-contrib-native/releases/tag/v0.1.0-alpha
+  https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.1.0-alpha

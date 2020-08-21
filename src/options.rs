@@ -167,7 +167,7 @@ impl Options {
     /// ()>`](Transport), an [`Err`] will cause [`Options::init`] to fail.
     ///
     /// # Notes
-    /// Unwinding panics of functions in `transport` will be cought and
+    /// Unwinding panics of functions in `startup` will be cought and
     /// [`abort`] will be called if any occured.
     ///
     /// # Examples
@@ -744,9 +744,6 @@ impl Options {
     /// occur in these situations:
     /// - Fails to create database directory.
     /// - Fails to lock database directory.
-    ///
-    /// # Panics
-    /// Panics if `init` was already called once before.
     ///
     /// # Examples
     /// ```

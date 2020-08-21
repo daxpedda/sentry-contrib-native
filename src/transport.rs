@@ -123,7 +123,7 @@ impl Shutdown {
 ///         let dsn = self.dsn.clone();
 ///         let client = self.client.clone();
 ///
-///         // in a correct implementation envelopes have to be send in order for sessions for work
+///         // in a correct implementation envelopes have to be sent in order for sessions for work
 ///         std::thread::spawn(move || {
 ///             let request = envelope
 ///                 .to_request(dsn)

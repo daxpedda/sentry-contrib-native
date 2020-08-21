@@ -262,4 +262,4 @@ Used documentation from
 
 See the
 [ATTRIBUTION](https://github.com/daxpedda/sentry-contrib-native/blob/master/ATTRIBUTION)
-for more details.
+file for more details.

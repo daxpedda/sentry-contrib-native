@@ -58,6 +58,7 @@ async fn main() -> Result<()> {
 
     // dylib
     let lib = Library::new(lib_path()).unwrap();
+    sentry::clear_modulecache();
     let func: Symbol<extern "C" fn() -> bool> = unsafe { lib.get(b"test\0") }.unwrap();
     assert_eq!(true, func());
 

@@ -1146,9 +1146,6 @@
 <span id="1145">1145</span>
 <span id="1146">1146</span>
 <span id="1147">1147</span>
-<span id="1148">1148</span>
-<span id="1149">1149</span>
-<span id="1150">1150</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry options implementation.</span>
 
@@ -1319,7 +1316,7 @@
     <span class="doccomment">/// ()&gt;`](Transport), an [`Err`] will cause [`Options::init`] to fail.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Notes</span>
-    <span class="doccomment">/// Unwinding panics of functions in `transport` will be cought and</span>
+    <span class="doccomment">/// Unwinding panics of functions in `startup` will be cought and</span>
     <span class="doccomment">/// [`abort`] will be called if any occured.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
@@ -1896,9 +1893,6 @@
     <span class="doccomment">/// occur in these situations:</span>
     <span class="doccomment">/// - Fails to create database directory.</span>
     <span class="doccomment">/// - Fails to lock database directory.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">/// Panics if `init` was already called once before.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Examples</span>
     <span class="doccomment">/// ```</span>

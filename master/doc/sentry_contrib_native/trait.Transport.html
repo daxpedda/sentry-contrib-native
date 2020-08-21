@@ -30,7 +30,7 @@ to a Sentry service.</p>
         <span class="kw">let</span> <span class="ident">dsn</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">dsn</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">clone</span>();
 
-        <span class="comment">// in a correct implementation envelopes have to be send in order for sessions for work</span>
+        <span class="comment">// in a correct implementation envelopes have to be sent in order for sessions for work</span>
         <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">||</span> {
             <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">envelope</span>
                 .<span class="ident">to_request</span>(<span class="ident">dsn</span>)

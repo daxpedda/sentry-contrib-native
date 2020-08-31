@@ -64,7 +64,6 @@ and this project adheres to
   required.
 - Fixed `Transport::send` documentation to state that envelopes have to be sent
   in order for sessions to work.
-- Fixed cross-compiling for MSVC with `crt-static`.
 
 ## [0.1.0-rc] - 2020-07-06
 

@@ -216,10 +216,7 @@ fn build(
         }
     }
 
-    if env::var("CARGO_CFG_TARGET_FEATURE")
-        .unwrap_or_default()
-        .contains("crt-static")
-    {
+    if cfg!(target_feature = "crt-static") {
         cmake_config.define("SENTRY_BUILD_RUNTIMESTATIC", "ON");
     }
 

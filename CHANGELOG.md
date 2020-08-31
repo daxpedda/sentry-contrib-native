@@ -46,7 +46,6 @@ and this project adheres to
 - Changed the default transport for Android to Curl.
 - Changed `set_transport`'s `startup` argument to return `Result` and fail
   `Options::init` if `Err` is returned.
-- Changed zlib for Crashpad to build from source.
 
 ### Fixed
 

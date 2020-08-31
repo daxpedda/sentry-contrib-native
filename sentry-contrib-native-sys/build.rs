@@ -200,22 +200,6 @@ fn build(
 
     cmake_config.define("SENTRY_BACKEND", backend.as_ref());
 
-    // By default, Crashpad will attempt to link to the system's shared zlib
-    // instead of compiling from source, when targetting non-msvc targets,
-    // but this is not a very nice thing to do when the source is already
-    // available.
-    if let Backend::Crashpad = backend {
-        cmake_config.define("CRASHPAD_ZLIB_SYSTEM", "OFF");
-
-        if target_os == "linux" || target_os == "macos" {
-            cmake_config.cflag("-mpclmul");
-        }
-
-        if target_os == "linux" {
-            cmake_config.cflag("-msse4.1");
-        }
-    }
-
     if env::var("CARGO_CFG_TARGET_FEATURE")
         .unwrap_or_default()
         .contains("crt-static")

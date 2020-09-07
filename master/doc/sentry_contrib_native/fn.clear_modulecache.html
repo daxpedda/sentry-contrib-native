@@ -3,8 +3,8 @@
 <p>For performance reasons, Sentry will cache the list of loaded libraries when
 capturing events. This cache can get out-of-date when loading or unloading
 libraries at runtime. It is therefore recommended to call
-<a href="../sentry_contrib_native/fn.clear_modulecache.html" title="`clear_modulecache`"><code>clear_modulecache</code></a> when doing so, to make sure that the next call to
-<a href="../sentry_contrib_native/struct.Event.html#method.capture" title="`Event::capture`"><code>Event::capture</code></a> will have an up-to-date module list.</p>
+<a href="../sentry_contrib_native/fn.clear_modulecache.html" title="clear_modulecache"><code>clear_modulecache</code></a> when doing so, to make sure that the next call to
+<a href="../sentry_contrib_native/struct.Event.html#method.capture" title="Event::capture"><code>Event::capture</code></a> will have an up-to-date module list.</p>
 <h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="ident">libloading</span>::<span class="ident">Library</span>::<span class="ident">new</span>(<span class="string">&quot;/path/to/liblibrary.so&quot;</span>)<span class="question-mark">?</span>;

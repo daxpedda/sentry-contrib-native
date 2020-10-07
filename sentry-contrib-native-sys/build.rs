@@ -164,7 +164,9 @@ fn main() -> Result<()> {
 
             println!("cargo:rustc-link-lib=dylib=stdc++");
         }
-        "android" | "androideabi" => {}
+        "android" | "androideabi" => {
+            println!("cargo:rustc-link-lib=unwindstack");
+        }
         other => unimplemented!("target platform {} not implemented", other),
     }
 

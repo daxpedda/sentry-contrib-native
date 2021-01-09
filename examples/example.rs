@@ -56,5 +56,5 @@ const fn ask_user_for_consent() -> bool {
 /// Let's say you have a function that can return an [`Err`].
 fn function_that_can_go_wrong() -> Result<()> {
     // let's pretend something can go wrong here
-    bail!("Oh no! Something (something)  went wrong!")
+    bail!("Oh no! Something (something) went wrong!")
 }

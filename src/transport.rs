@@ -63,7 +63,7 @@ pub type Request = HttpRequest<Envelope>;
 /// The MIME type for Sentry envelopes.
 pub const ENVELOPE_MIME: &str = "application/x-sentry-envelope";
 /// Version of the Sentry API we can communicate with, AFAICT this is just
-/// hardcoded into sentry-native, so...two can play at that game!
+/// hardcoded into sentry-native, so ... two can play at that game!
 pub const API_VERSION: i8 = 7;
 
 /// The return from [`Transport::shutdown`], which determines if we tell
@@ -123,7 +123,7 @@ impl Shutdown {
 ///         let dsn = self.dsn.clone();
 ///         let client = self.client.clone();
 ///
-///         // in a correct implementation envelopes have to be sent in order for sessions for work
+///         // in a correct implementation envelopes have to be sent in order for sessions to work
 ///         std::thread::spawn(move || {
 ///             let request = envelope
 ///                 .to_request(dsn)

@@ -58,6 +58,7 @@ pub trait CToR {
     /// # Safety
     /// The same safety issues apply as in [`CStr::from_ptr`], except the null
     /// pointer check, but the main concern is the lifetime of the pointer.
+    #[allow(clippy::wrong_self_convention)]
     unsafe fn as_str<'a>(self) -> Option<&'a str>;
 }
 

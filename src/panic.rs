@@ -98,7 +98,7 @@ pub fn set_hook(
 
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
-fn hook() -> anyhow::Result<()> {
+fn hook() {
     use std::{
         sync::atomic::{AtomicBool, Ordering},
         thread,
@@ -122,5 +122,4 @@ fn hook() -> anyhow::Result<()> {
 
     assert!(BEFORE_SEND.load(Ordering::SeqCst));
     assert!(HOOK.load(Ordering::SeqCst));
-    Ok(())
 }

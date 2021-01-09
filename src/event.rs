@@ -370,7 +370,7 @@ impl From<Uuid> for [u8; 16] {
 }
 
 #[test]
-fn event() -> anyhow::Result<()> {
+fn event() {
     let event = Event::new();
 
     if let Interface::Message { .. } = event.interface {
@@ -421,8 +421,6 @@ fn event() -> anyhow::Result<()> {
     assert_ne!(None, frames.get(0).unwrap().as_map());
 
     event.capture();
-
-    Ok(())
 }
 
 #[test]

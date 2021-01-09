@@ -281,7 +281,7 @@ impl Options {
     /// options.set_sample_rate(0.5);
     /// ```
     pub fn set_sample_rate(&mut self, sample_rate: f64) -> Result<(), Error> {
-        if sample_rate >= 0. && sample_rate <= 1. {
+        if (0. ..=1.).contains(&sample_rate) {
             unsafe { sys::options_set_sample_rate(self.as_mut(), sample_rate) };
 
             Ok(())
@@ -913,6 +913,7 @@ fn options() -> anyhow::Result<()> {
     struct CustomTransport;
 
     impl CustomTransport {
+        #[allow(clippy::unnecessary_wraps)]
         const fn new(_: &Options) -> Result<Self, ()> {
             Ok(Self)
         }

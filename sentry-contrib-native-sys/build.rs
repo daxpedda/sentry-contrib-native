@@ -48,7 +48,7 @@ impl AsRef<str> for Backend {
 impl Backend {
     /// Gets the backend we want to use, see <https://github.com/getsentry/sentry-native#compile-time-options>
     /// for details.
-    #[allow(clippy::ifs_same_cond, clippy::same_functions_in_if_condition)]
+    #[allow(clippy::ifs_same_cond)]
     fn new(target_os: &str) -> Self {
         if cfg!(feature = "backend-crashpad")
             && (target_os == "linux" || target_os == "macos" || target_os == "windows")

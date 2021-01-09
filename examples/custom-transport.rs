@@ -50,6 +50,7 @@ struct Transport {
 
 impl Transport {
     /// Create a new [`Transport`].
+    #[allow(clippy::unnecessary_wraps)]
     fn new(client: Client, options: &Options) -> Result<Self, ()> {
         let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
         let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
@@ -142,7 +143,7 @@ async fn main() -> Result<()> {
     Event::new().capture();
 
     // it's possible to use the same `Client` for something else
-    client.post("example.com");
+    let _builder = client.post("example.com");
 
     Ok(())
 }

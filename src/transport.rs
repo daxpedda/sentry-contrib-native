@@ -203,7 +203,6 @@ pub enum State {
 /// functions that interfere.
 ///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
-#[allow(clippy::shadow_unrelated)]
 pub extern "C" fn startup(options: *const sys::Options, state: *mut c_void) -> c_int {
     let options = Options::from_sys(Ownership::Borrowed(options));
 
@@ -673,7 +672,7 @@ fn transport() -> anyhow::Result<()> {
 
 #[cfg(all(test, feature = "transport-custom"))]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
-fn dsn() -> anyhow::Result<()> {
+fn dsn() {
     use crate::Event;
 
     #[allow(clippy::needless_pass_by_value)]
@@ -712,6 +711,4 @@ fn dsn() -> anyhow::Result<()> {
     let _shutdown = options.init();
 
     Event::new().capture();
-
-    Ok(())
 }

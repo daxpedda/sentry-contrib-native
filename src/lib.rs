@@ -697,7 +697,9 @@ fn threaded_stress() -> anyhow::Result<()> {
     let shutdown = options.init()?;
 
     spawns(vec![
-        |_| { let _ = crate::modules_list(); },
+        |_| {
+            let _modules = crate::modules_list();
+        },
         |_| crate::clear_modulecache(),
         |index| {
             crate::set_user_consent(match index % 3 {

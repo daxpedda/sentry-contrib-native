@@ -207,9 +207,9 @@ async fn query(
                         StatusCode::NOT_FOUND | StatusCode::TOO_MANY_REQUESTS => continue,
                         _ => bail!(error),
                     }
-                } else {
-                    bail!(error)
                 }
+
+                bail!(error)
             }
         };
     }
@@ -483,16 +483,15 @@ async fn event_by_user(
     // timeout check is here because we also need to check if the response array
     // contains anything
     for _ in 0..num_of_tries {
-        if let Some(value) = query(client, api_url.issues(&user_id)?, 1, time_between_tries).await?
+        if let Some(Value::Array(value)) =
+            query(client, api_url.issues(&user_id)?, 1, time_between_tries).await?
         {
-            if let Value::Array(value) = value {
-                if value.is_empty() {
-                    continue;
-                } else {
-                    issues = Some(value);
-                    break;
-                }
+            if value.is_empty() {
+                continue;
             }
+
+            issues = Some(value);
+            break;
         }
     }
 

@@ -9,8 +9,10 @@ and this project adheres to
 ## [Unreleased]
 
 ### Added
+- Added `modules_list`, `Options::set_transport_thread_name` and `Options::transport_thread_name`.
 
 ### Changed
+- Updated `sentry-native` to 0.4.4.
 
 ### Deprecated
 

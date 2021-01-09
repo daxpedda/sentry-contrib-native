@@ -218,6 +218,40 @@ pub fn shutdown() {
     LOGGER.lock().expect("failed to deallocate `LOGGER`").take();
 }
 
+/// This will lazily load and cache a list of all the loaded libraries.
+///
+/// # Examples
+/// ```
+/// # use sentry_contrib_native::{clear_modulecache, modules_list};
+/// # fn main() -> anyhow::Result<()> {
+/// # /*
+/// let lib = libloading::Library::new("/path/to/liblibrary.so")?;
+/// # */
+/// # let lib = libloading::Library::new(dylib::location())?;
+/// clear_modulecache();
+/// # /*
+/// assert!(modules_list().contains(&"/path/to/liblibrary.so".to_string()));
+/// # */
+/// # assert!(modules_list().contains(&dylib::location().to_str().unwrap().to_string()));
+/// # Ok(()) }
+/// ```
+#[must_use]
+pub fn modules_list() -> Vec<String> {
+    unsafe { Value::from_raw(sys::get_modules_list()) }
+        .into_list()
+        .map(Vec::into_iter)
+        .map(|list| {
+            list.map(|value| {
+                value
+                    .into_map()
+                    .map(|mut map| map.remove("code_file").expect("module has no name"))
+                    .and_then(Value::into_string)
+            })
+        })
+        .and_then(Iterator::collect)
+        .expect("module list has an unexpected layout")
+}
+
 /// Clears the internal module cache.
 ///
 /// For performance reasons, Sentry will cache the list of loaded libraries when
@@ -229,16 +263,11 @@ pub fn shutdown() {
 /// # Examples
 /// ```
 /// # use sentry_contrib_native::clear_modulecache;
-/// # mod libloading {
-/// #     pub struct Library;
-/// #     impl Library {
-/// #         pub fn new(_: &str) -> anyhow::Result<()> {
-/// #             Ok(())
-/// #         }
-/// #     }
-/// # }
 /// # fn main() -> anyhow::Result<()> {
-/// libloading::Library::new("/path/to/liblibrary.so")?;
+/// # /*
+/// let lib = libloading::Library::new("/path/to/liblibrary.so")?;
+/// # */
+/// # let lib = libloading::Library::new(dylib::location())?;
 /// clear_modulecache();
 /// # Ok(()) }
 /// ```
@@ -668,6 +697,7 @@ fn threaded_stress() -> anyhow::Result<()> {
     let shutdown = options.init()?;
 
     spawns(vec![
+        |_| { let _ = crate::modules_list(); },
         |_| crate::clear_modulecache(),
         |index| {
             crate::set_user_consent(match index % 3 {

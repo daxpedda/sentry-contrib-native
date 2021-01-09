@@ -22,6 +22,8 @@ async fn options() -> Result<()> {
             options.set_environment("production");
             options.set_distribution("release-pgo");
             options.set_ca_certs("tests/res/getsentry.pem");
+            #[cfg(feature = "transport-default")]
+            options.set_transport_thread_name("sentry transport");
             options.add_attachment("tests/res/attachment.txt");
         }),
         vec![(

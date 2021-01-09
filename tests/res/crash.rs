@@ -11,33 +11,8 @@ use sentry::{Breadcrumb, Options, User};
 use sentry_contrib_native as sentry;
 use std::{
     io::{self, Read},
-    path::{Path, PathBuf},
     ptr,
 };
-
-fn lib_path() -> PathBuf {
-    let mut path = PathBuf::from(env!("OUT_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .and_then(Path::parent)
-        .unwrap()
-        .join("deps");
-
-    #[cfg(target_os = "linux")]
-    {
-        path = path.join("libdylib.so");
-    }
-    #[cfg(target_os = "macos")]
-    {
-        path = path.join("libdylib.dylib");
-    }
-    #[cfg(target_os = "windows")]
-    {
-        path = path.join("dylib.dll");
-    }
-
-    path
-}
 
 #[tokio::main(threaded_scheduler)]
 async fn main() -> Result<()> {
@@ -57,8 +32,9 @@ async fn main() -> Result<()> {
     Breadcrumb::new(Some("test type".into()), Some("test message".into())).add();
 
     // dylib
-    let lib = Library::new(lib_path()).unwrap();
+    let lib = Library::new(dylib::location()).unwrap();
     sentry::clear_modulecache();
+    assert!(sentry::modules_list().contains(&dylib::location().to_str().unwrap().to_string()));
     let func: Symbol<extern "C" fn() -> bool> = unsafe { lib.get(b"test\0") }.unwrap();
     assert_eq!(true, func());
 

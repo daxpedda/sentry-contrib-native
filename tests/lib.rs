@@ -13,31 +13,6 @@ use libloading::{Library, Symbol};
 use sentry::{Consent, Event, Level, User};
 use sentry_contrib_native as sentry;
 use serde_json::Value;
-use std::path::{Path, PathBuf};
-
-fn lib_path() -> PathBuf {
-    let mut path = PathBuf::from(env!("OUT_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .and_then(Path::parent)
-        .unwrap()
-        .join("deps");
-
-    #[cfg(target_os = "linux")]
-    {
-        path = path.join("libdylib.so");
-    }
-    #[cfg(target_os = "macos")]
-    {
-        path = path.join("libdylib.dylib");
-    }
-    #[cfg(target_os = "windows")]
-    {
-        path = path.join("dylib.dll");
-    }
-
-    path
-}
 
 #[tokio::test(threaded_scheduler)]
 async fn lib() -> Result<()> {
@@ -60,8 +35,10 @@ async fn lib() -> Result<()> {
                     event.add_stacktrace(0);
                     event.capture();
 
-                    let lib = Library::new(lib_path()).unwrap();
+                    let lib = Library::new(dylib::location()).unwrap();
                     sentry::clear_modulecache();
+                    assert!(sentry::modules_list()
+                        .contains(&dylib::location().to_str().unwrap().to_string()));
                     let func: Symbol<extern "C" fn() -> bool> =
                         unsafe { lib.get(b"test\0") }.unwrap();
                     assert_eq!(true, func());
@@ -82,7 +59,7 @@ async fn lib() -> Result<()> {
                         .get("code_file")
                         .and_then(Value::as_str)
                         .unwrap()
-                        == lib_path().to_str().unwrap()));
+                        == dylib::location().to_str().unwrap()));
                 },
             ),
             (

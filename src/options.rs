@@ -450,6 +450,39 @@ impl Options {
         unsafe { sys::options_get_ca_certs(self.as_ref()).as_str() }
     }
 
+    /// Configures the name of the default transport thread. Has no effect when
+    /// using a custom transport.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Options;
+    /// let mut options = Options::new();
+    /// options.set_transport_thread_name("sentry transport");
+    /// ```
+    #[cfg(feature = "transport-default")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-default")))]
+    pub fn set_transport_thread_name<S: Into<String>>(&mut self, name: S) {
+        let name = name.into().into_cstring();
+        unsafe { sys::options_set_transport_thread_name(self.as_mut(), name.as_ptr()) }
+    }
+
+    /// Returns the configured default transport thread name.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Options;
+    /// let mut options = Options::new();
+    /// options.set_transport_thread_name("sentry transport");
+    ///
+    /// assert_eq!(Some("sentry transport"), options.transport_thread_name());
+    /// ```
+    #[cfg(feature = "transport-default")]
+    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-default")))]
+    #[must_use]
+    pub fn transport_thread_name(&self) -> Option<&str> {
+        unsafe { sys::options_get_transport_thread_name(self.as_ref()).as_str() }
+    }
+
     /// Enables or disables debug printing mode.
     ///
     /// # Examples
@@ -693,6 +726,10 @@ impl Options {
     /// It is recommended that library users set an explicit absolute path,
     /// depending on their apps runtime directory.
     ///
+    /// The directory should not be shared with other application
+    /// data/configuration, as Sentry will enumerate and possibly delete files
+    /// in that directory.
+    ///
     /// # Examples
     /// ```
     /// # use sentry_contrib_native::Options;
@@ -932,6 +969,9 @@ fn options() -> anyhow::Result<()> {
     options.set_ca_certs("certs.pem");
     assert_eq!(Some("certs.pem"), options.ca_certs());
 
+    options.set_transport_thread_name("sentry transport");
+    assert_eq!(Some("sentry transport"), options.transport_thread_name());
+
     options.set_debug(true);
     assert!(options.debug());
 
@@ -1030,6 +1070,13 @@ fn threaded_stress() -> anyhow::Result<()> {
         |options, _| println!("{:?}", options.read().unwrap().http_proxy()),
         |options, index| options.write().unwrap().set_ca_certs(index.to_string()),
         |options, _| println!("{:?}", options.read().unwrap().ca_certs()),
+        |options, index| {
+            options
+                .write()
+                .unwrap()
+                .set_transport_thread_name(index.to_string())
+        },
+        |options, _| println!("{:?}", options.read().unwrap().transport_thread_name()),
         |options, index| {
             options.write().unwrap().set_debug(match index % 2 {
                 0 => false,

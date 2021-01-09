@@ -22,7 +22,7 @@ use std::{
 pub type c_wchar = u16;
 
 /// SDK Version
-pub const SDK_USER_AGENT: &str = "sentry.native/0.3.4";
+pub const SDK_USER_AGENT: &str = "sentry.native/0.4.4";
 
 /// The Sentry Client Options.
 ///
@@ -487,6 +487,14 @@ extern "C" {
     #[link_name = "sentry_options_get_ca_certs"]
     pub fn options_get_ca_certs(opts: *const Options) -> *const c_char;
 
+    /// Configures the name of the http transport thread.
+    #[link_name = "sentry_options_set_transport_thread_name"]
+    pub fn options_set_transport_thread_name(opts: *mut Options, name: *const c_char);
+
+    /// Returns the configured http transport thread name.
+    #[link_name = "sentry_options_get_transport_thread_name"]
+    pub fn options_get_transport_thread_name(opts: *const Options) -> *const c_char;
+
     /// Enables or disables debug printing mode.
     #[link_name = "sentry_options_set_debug"]
     pub fn options_set_debug(opts: *mut Options, debug: c_int);
@@ -574,12 +582,25 @@ extern "C" {
     /// artifacts in case of a crash. This will also be used by the crashpad
     /// backend if it is configured.
     ///
-    /// The path defaults to `.sentry-native` in the current working directory,
-    /// will be created if it does not exist, and will be resolved to an
-    /// absolute path inside of `sentry_init`.
+    /// The directory is used for "cached" data, which needs to persist across
+    /// application restarts to ensure proper flagging of release-health
+    /// sessions, but might otherwise be safely purged regularly.
     ///
-    /// It is recommended that library users set an explicit absolute path,
-    /// depending on their apps runtime directory.
+    /// It is roughly equivalent to the type of `AppData/Local` on Windows and
+    /// `XDG_CACHE_HOME` on Linux, and equivalent runtime directories on other
+    /// platforms.
+    ///
+    /// It is recommended that users set an explicit absolute path, depending on
+    /// their apps runtime directory. The path will be created if it does not
+    /// exist, and will be resolved to an absolute path inside of `sentry_init`.
+    /// The directory should not be shared with other application
+    /// data/configuration, as sentry-native will enumerate and possibly delete
+    /// files in that directory. An example might be
+    /// `$XDG_CACHE_HOME/your-app/sentry`
+    ///
+    /// If no explicit path it set, sentry-native will default to
+    /// `.sentry-native` in the current working directory, with no specific
+    /// platform-specific handling.
     ///
     /// `path` is assumed to be in platform-specific filesystem path encoding.
     /// API Users on windows are encouraged to use
@@ -623,6 +644,13 @@ extern "C" {
     /// Returns 0 on success.
     #[link_name = "sentry_shutdown"]
     pub fn shutdown() -> c_int;
+
+    /// This will lazily load and cache a list of all the loaded libraries.
+    ///
+    /// Returns a new reference to an immutable, frozen list. The reference must
+    /// be released with `sentry_value_decref`.
+    #[link_name = "sentry_get_modules_list"]
+    pub fn get_modules_list() -> Value;
 
     /// Clears the internal module cache.
     ///

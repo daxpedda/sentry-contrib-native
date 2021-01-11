@@ -297,7 +297,7 @@ impl Drop for RawEnvelope {
 
 impl RawEnvelope {
     /// Serialize a [`RawEnvelope`] into an [`Envelope`].
-    #[must_use]
+    #[must_use = "`RawEnvelope::serialize` only converts it to an `Envelope`, this doesn't do anything until it is sent"]
     pub fn serialize(&self) -> Envelope {
         let mut envelope_size = 0;
         let serialized_envelope = unsafe { sys::envelope_serialize(self.0, &mut envelope_size) };
@@ -320,7 +320,7 @@ impl RawEnvelope {
     /// For more information see [`Envelope::into_request`].
     #[cfg(feature = "transport-custom")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
-    #[must_use]
+    #[must_use = "`Request` doesn't do anything until it is sent"]
     pub fn to_request(&self, dsn: Dsn) -> Request {
         self.serialize().into_request(dsn)
     }
@@ -399,7 +399,7 @@ impl Envelope {
     /// body.
     #[cfg(feature = "transport-custom")]
     #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
-    #[must_use]
+    #[must_use = "`Request` doesn't do anything until it is sent"]
     pub fn into_request(self, dsn: Dsn) -> Request {
         let mut request = HttpRequest::builder();
         *request.headers_mut().expect("failed to build headers") = dsn.to_headers();

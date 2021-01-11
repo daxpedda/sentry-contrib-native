@@ -10,6 +10,7 @@ and this project adheres to
 
 ### Added
 - Added `modules_list`, `Options::set_transport_thread_name` and `Options::transport_thread_name`.
+- Added error messages to `#[must_use]` cases when appropriate.
 
 ### Changed
 - Updated `sentry-native` to 0.4.4.
@@ -17,6 +18,7 @@ and this project adheres to
 ### Deprecated
 
 ### Removed
+- Removed `Uuid::new`, as there is no use case for it.
 
 ### Fixed
 

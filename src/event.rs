@@ -94,7 +94,7 @@ impl Event {
     /// # use sentry_contrib_native::Event;
     /// let mut event = Event::new();
     /// ```
-    #[must_use]
+    #[must_use = "`Event` doesn't do anything without `Event::capture`"]
     pub fn new() -> Self {
         Self {
             interface: Interface::Event,
@@ -235,7 +235,7 @@ pub struct Uuid(sys::Uuid);
 
 impl Default for Uuid {
     fn default() -> Self {
-        Self::new()
+        Self(unsafe { sys::uuid_nil() })
     }
 }
 
@@ -280,21 +280,6 @@ impl Hash for Uuid {
 }
 
 impl Uuid {
-    /// Creates a new empty Sentry UUID.
-    ///
-    /// # Examples
-    /// ```
-    /// # use sentry_contrib_native::{Event, Uuid};
-    /// assert_eq!(
-    ///     "00000000-0000-0000-0000-000000000000",
-    ///     Event::new().capture().to_string()
-    /// );
-    /// ```
-    #[must_use]
-    pub fn new() -> Self {
-        Self(unsafe { sys::uuid_nil() })
-    }
-
     /// Creates a new empty UUID with the given `bytes`.
     ///
     /// # Examples
@@ -425,23 +410,29 @@ fn event() {
 
 #[test]
 fn uuid() {
-    assert_eq!(Uuid::new(), Uuid::new());
+    assert_eq!(Uuid::default(), Uuid::default());
 
     assert_eq!(
         "00000000-0000-0000-0000-000000000000",
-        Uuid::new().to_string()
+        Uuid::default().to_string()
     );
 
-    assert_eq!("00000000000000000000000000000000", Uuid::new().to_plain());
+    assert_eq!(
+        "00000000000000000000000000000000",
+        Uuid::default().to_plain()
+    );
 
     assert_eq!(
         "00000000-0000-0000-0000-000000000000",
-        Uuid::new().to_string()
+        Uuid::default().to_string()
     );
 
-    assert_eq!(Uuid::new(), Uuid::from_bytes(Uuid::new().into_bytes()));
+    assert_eq!(
+        Uuid::default(),
+        Uuid::from_bytes(Uuid::default().into_bytes())
+    );
 
-    assert_eq!([0; 16], Uuid::new().into_bytes());
+    assert_eq!([0; 16], Uuid::default().into_bytes());
 
-    assert_eq!([0; 16], Uuid::new().as_bytes());
+    assert_eq!([0; 16], Uuid::default().as_bytes());
 }

@@ -108,7 +108,7 @@ impl Options {
     /// # use sentry_contrib_native::Options;
     /// let mut options = Options::new();
     /// ```
-    #[must_use]
+    #[must_use = "`Options` doesn't do anything without `Options::init`"]
     pub fn new() -> Self {
         Self::from_sys(Ownership::Owned(unsafe { sys::options_new() }))
     }

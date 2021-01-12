@@ -32,6 +32,7 @@ and this project adheres to
 ### Fixed
 
 - Fixed typos and improved general documentation.
+- Fixed cross-compiling for MSVC with `crt-static`.
 
 ### Security
 

@@ -200,7 +200,7 @@ fn build(
 
     cmake_config.define("SENTRY_BACKEND", backend.as_ref());
 
-    if cfg!(target_feature = "crt-static") {
+    if let Ok("crt-static") = env::var("CARGO_CFG_TARGET_FEATURE").as_deref() {
         cmake_config.define("SENTRY_BUILD_RUNTIMESTATIC", "ON");
     }
 

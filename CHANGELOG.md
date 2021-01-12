@@ -33,6 +33,7 @@ and this project adheres to
 
 - Fixed typos and improved general documentation.
 - Fixed cross-compiling for MSVC with `crt-static`.
+- Fix Android build.
 
 ### Security
 

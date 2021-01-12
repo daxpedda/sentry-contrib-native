@@ -204,18 +204,21 @@ fn build(
         cmake_config.define("SENTRY_BUILD_RUNTIMESTATIC", "ON");
     }
 
-    // see https://github.com/getsentry/sentry-native/issues/415
     if target_os == "windows" {
+        // see https://github.com/getsentry/sentry-native/issues/415
         cmake_config.cflag("/wd5105");
         cmake_config.cxxflag("/wd5105");
+
+        // sentry doesn't compile with an older version than 10.0.18362
+        cmake_config.define("CMAKE_SYSTEM_VERSION", "10.0.18362");
     }
 
-    // If we're targetting android, we need to set the CMAKE_TOOLCHAIN_FILE
+    // if we're targetting android, we need to set the CMAKE_TOOLCHAIN_FILE
     // which properly sets up the build environment, and we also need to set
-    // ANDROID_ABI based on our target-triple. It seems there is not really
-    // a good standard for the NDK, so we try several environment variables to
-    // find it.
-    // See https://developer.android.com/ndk/guides/cmake for details.
+    // ANDROID_ABI based on our target-triple
+    // it seems there is not really a good standard for the NDK, so we try several
+    // environment variables to find it
+    // see https://developer.android.com/ndk/guides/cmake for details
     if target_os == "android" || target_os == "androideabi" {
         let ndk_root = env::var("ANDROID_NDK_ROOT")
             .or_else(|_| env::var("ANDROID_NDK_HOME"))

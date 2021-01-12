@@ -970,8 +970,11 @@ fn options() -> anyhow::Result<()> {
     options.set_ca_certs("certs.pem");
     assert_eq!(Some("certs.pem"), options.ca_certs());
 
-    options.set_transport_thread_name("sentry transport");
-    assert_eq!(Some("sentry transport"), options.transport_thread_name());
+    #[cfg(feature = "transport-default")]
+    {
+        options.set_transport_thread_name("sentry transport");
+        assert_eq!(Some("sentry transport"), options.transport_thread_name());
+    }
 
     options.set_debug(true);
     assert!(options.debug());
@@ -1071,12 +1074,14 @@ fn threaded_stress() -> anyhow::Result<()> {
         |options, _| println!("{:?}", options.read().unwrap().http_proxy()),
         |options, index| options.write().unwrap().set_ca_certs(index.to_string()),
         |options, _| println!("{:?}", options.read().unwrap().ca_certs()),
+        #[cfg(feature = "transport-default")]
         |options, index| {
             options
                 .write()
                 .unwrap()
                 .set_transport_thread_name(index.to_string())
         },
+        #[cfg(feature = "transport-default")]
         |options, _| println!("{:?}", options.read().unwrap().transport_thread_name()),
         |options, index| {
             options.write().unwrap().set_debug(match index % 2 {

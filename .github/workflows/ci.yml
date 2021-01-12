@@ -140,7 +140,7 @@ jobs:
         if:
           always() && steps.build.outcome == 'success' && github.event_name ==
           'push'
-        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+        run: cargo -v test -j 1 ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Example
         if:
           always() && steps.build.outcome == 'success' &&
@@ -311,7 +311,7 @@ jobs:
           matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Test
         if: always() && steps.build.outcome == 'success'
-        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+        run: cargo -v test -j 1 ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Example
         if:
           always() && steps.build.outcome == 'success' &&

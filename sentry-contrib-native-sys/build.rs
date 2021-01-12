@@ -102,9 +102,9 @@ fn main() -> Result<()> {
         );
     }
 
-    // We need to check if there is a `lib64` instead of a `lib` dir, non-Debian
+    // we need to check if there is a `lib64` instead of a `lib` dir, non-Debian
     // based distros will use that directory instead for 64-bit arches
-    // See: https://cmake.org/cmake/help/v3.0/module/GNUInstallDirs.html
+    // see: https://cmake.org/cmake/help/v3.0/module/GNUInstallDirs.html
     let lib_dir = if install.join("lib64").exists() {
         "lib64"
     } else {
@@ -202,6 +202,12 @@ fn build(
 
     if cfg!(target_feature = "crt-static") {
         cmake_config.define("SENTRY_BUILD_RUNTIMESTATIC", "ON");
+    }
+
+    // see https://github.com/getsentry/sentry-native/issues/415
+    if target_os == "windows" {
+        cmake_config.cflag("/wd5105");
+        cmake_config.cxxflag("/wd5105");
     }
 
     // If we're targetting android, we need to set the CMAKE_TOOLCHAIN_FILE

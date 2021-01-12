@@ -170,14 +170,6 @@ details.
   [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html)
   and
   [`feature(doc_cfg)`](https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html).
-- **test** - Corrects testing for documentation tests and examples.
-  - Automatically sets the DSN to the `SENTRY_DSN` environment variable, no
-    matter what is set through `Options::set_dsn`.
-  - Automatically sets the database path to the `OUT_DIR` environment variable,
-    no matter what is set through `Options::set_database_path`.
-  - Automatically puts the crashpad handler path to the correct path, taking
-    into account `SENTRY_NATIVE_INSTALL`, no matter what is set through
-    `Options::set_handler_path`.
 
 ## Deployment
 
@@ -216,7 +208,16 @@ Sentry API token, therefore it is recommended to run tests against a
 [Sentry onpremise server](https://github.com/getsentry/onpremise), it is quiet
 easy to set up.
 
-`cargo test --features test`
+The hidden cargo feature `test` is automatically activated when testing. It has the following effects:
+  - Automatically sets the DSN to the `SENTRY_DSN` environment variable, no
+    matter what is set through `Options::set_dsn`.
+  - Automatically sets the database path to the `OUT_DIR` environment variable,
+    no matter what is set through `Options::set_database_path`.
+  - Automatically puts the crashpad handler path to the correct path, taking
+    into account `SENTRY_NATIVE_INSTALL`, no matter what is set through
+    `Options::set_handler_path`.
+
+`cargo test`
 
 ## Alternatives
 

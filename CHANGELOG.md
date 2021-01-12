@@ -9,16 +9,22 @@ and this project adheres to
 ## [Unreleased]
 
 ### Added
-- Added `modules_list`, `Options::set_transport_thread_name` and `Options::transport_thread_name`.
+
+- Added `modules_list`, `Options::set_transport_thread_name` and
+  `Options::transport_thread_name`.
 - Added error messages to `#[must_use]` cases when appropriate.
 
 ### Changed
+
 - Updated `sentry-native` to 0.4.4.
 
 ### Deprecated
 
 ### Removed
+
 - Removed `Uuid::new`, as there is no use case for it.
+- Removed `feature = "test"`, this is now an implementation detail and is
+  automatically activated when `cargo test` is used.
 
 ### Fixed
 

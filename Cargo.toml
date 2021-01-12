@@ -40,6 +40,7 @@ reqwest = { version = "0.10", default-features = false, features = [
 rusty-fork = { git = "https://github.com/daxpedda/rusty-fork", branch = "proc-macro-feature", features = [
   "macro"
 ] }
+sentry-contrib-native = { path = ".", features = ["test"] }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"

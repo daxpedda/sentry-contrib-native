@@ -212,7 +212,7 @@ fn build(
         cmake_config.cflag("/wd5105");
         cmake_config.cxxflag("/wd5105");
 
-        // sentry doesn't compile with an older version than 10.0.18362
+        // see https://github.com/getsentry/sentry-native/issues/459
         cmake_config.define("CMAKE_SYSTEM_VERSION", "10.0.18362");
     }
 

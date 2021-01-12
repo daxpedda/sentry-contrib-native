@@ -160,7 +160,7 @@ pub struct Envelope([u8; 0]);
 /// `sentry_value_new_null()` instead.
 /// This function may be invoked inside of a signal handler and must be safe for
 /// that purpose, see https://man7.org/linux/man-pages/man7/signal-safety.7.html.
-#[allow(non_autolinks)]
+#[allow(clippy::doc_markdown, non_autolinks)]
 pub type EventFunction =
     extern "C" fn(event: Value, hint: *mut c_void, closure: *mut c_void) -> Value;
 

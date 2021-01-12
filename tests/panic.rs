@@ -10,7 +10,7 @@ mod util;
 
 use anyhow::Result;
 
-#[tokio::test(threaded_scheduler)]
+#[tokio::test(flavor = "multi_thread")]
 async fn panic() -> Result<()> {
     util::external_events_success(vec![("panic".into(), |event| {
         assert_eq!(

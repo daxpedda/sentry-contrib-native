@@ -196,7 +196,7 @@ async fn query(
         let request = client.get(api_url.clone());
 
         // wait for the event to arrive at Sentry first!
-        time::delay_for(time_between_tries).await;
+        time::sleep(time_between_tries).await;
 
         // get that event!
         match request.send().await?.error_for_status() {
@@ -430,7 +430,7 @@ async fn external_events_internal(
                     .expect("make sure to build the example first!");
                 child.stdin.as_mut().unwrap().write_all(&id).await?;
 
-                assert!(!child.await?.success());
+                assert!(!child.wait().await?.success());
 
                 // get event from the Sentry service
                 let event = event_by_user(

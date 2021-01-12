@@ -17,6 +17,9 @@ and this project adheres to
 ### Changed
 
 - Updated `sentry-native` to 0.4.4.
+- Updated `rand` to 0.8.
+- Updated `tokio` to 1.
+- Updated `reqwest` to 0.11.
 
 ### Deprecated
 

@@ -38,7 +38,7 @@ jobs:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-true-${{
             hashFiles('sentry-contrib-native-sys/build.rs') }}
       - name: Set SENTRY_NATIVE_INSTALL
-        run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
+        run: echo >>$GITHUB_ENV SENTRY_NATIVE_INSTALL=$HOME/sentry-native
       - name: Documentation
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page

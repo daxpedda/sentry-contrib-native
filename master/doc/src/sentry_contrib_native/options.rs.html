@@ -1196,6 +1196,11 @@
 <span id="1193">1193</span>
 <span id="1194">1194</span>
 <span id="1195">1195</span>
+<span id="1196">1196</span>
+<span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry options implementation.</span>
 
@@ -2169,8 +2174,11 @@
     <span class="ident">options</span>.<span class="ident">set_ca_certs</span>(<span class="string">&quot;certs.pem&quot;</span>);
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;certs.pem&quot;</span>), <span class="ident">options</span>.<span class="ident">ca_certs</span>());
 
-    <span class="ident">options</span>.<span class="ident">set_transport_thread_name</span>(<span class="string">&quot;sentry transport&quot;</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;sentry transport&quot;</span>), <span class="ident">options</span>.<span class="ident">transport_thread_name</span>());
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-default&quot;</span>)]</span>
+    {
+        <span class="ident">options</span>.<span class="ident">set_transport_thread_name</span>(<span class="string">&quot;sentry transport&quot;</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;sentry transport&quot;</span>), <span class="ident">options</span>.<span class="ident">transport_thread_name</span>());
+    }
 
     <span class="ident">options</span>.<span class="ident">set_debug</span>(<span class="bool-val">true</span>);
     <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">options</span>.<span class="ident">debug</span>());
@@ -2270,12 +2278,14 @@
         <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">http_proxy</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_ca_certs</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">ca_certs</span>()),
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-default&quot;</span>)]</span>
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="ident">options</span>
                 .<span class="ident">write</span>()
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">set_transport_thread_name</span>(<span class="ident">index</span>.<span class="ident">to_string</span>())
         },
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-default&quot;</span>)]</span>
         <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">transport_thread_name</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_debug</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">2</span> {

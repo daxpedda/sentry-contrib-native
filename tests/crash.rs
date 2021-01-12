@@ -41,7 +41,7 @@ fn lib_path() -> PathBuf {
     path
 }
 
-#[tokio::test(threaded_scheduler)]
+#[tokio::test(flavor = "multi_thread")]
 async fn crash() -> Result<()> {
     util::external_events_success(vec![("crash".into(), |event| {
         // options

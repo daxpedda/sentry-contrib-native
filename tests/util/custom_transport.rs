@@ -37,7 +37,7 @@ impl Transport {
 impl SentryTransport for Transport {
     fn send(&self, envelope: RawEnvelope) {
         let dsn = self.dsn.clone();
-        let mut sender = self.sender.clone();
+        let sender = self.sender.clone();
         let client = self.client.clone();
 
         if let Err(error) = executor::block_on(async move {
@@ -67,7 +67,7 @@ impl SentryTransport for Transport {
         executor::block_on(async {
             let mut ret = TransportShutdown::Success;
 
-            while let Ok(task) = self.receiver.try_recv() {
+            while let Some(Some(task)) = self.receiver.recv().now_or_never() {
                 if let Err(error) = task.await {
                     eprintln!("{}", error);
                     ret = TransportShutdown::TimedOut;

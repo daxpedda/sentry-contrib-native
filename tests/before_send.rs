@@ -12,7 +12,7 @@ use anyhow::Result;
 use sentry::{Event, Options, Value};
 use sentry_contrib_native as sentry;
 
-#[tokio::test(threaded_scheduler)]
+#[tokio::test(flavor = "multi_thread")]
 async fn before_send() -> Result<()> {
     util::events_success(
         Some(|options: &mut Options| {

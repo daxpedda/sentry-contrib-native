@@ -88,7 +88,7 @@ impl Transport {
 
 impl SentryTransport for Transport {
     fn send(&self, envelope: RawEnvelope) {
-        let mut sender = self.sender.clone();
+        let sender = self.sender.clone();
         task::spawn(async move {
             if let Err(err) = sender.send(envelope).await {
                 eprintln!("failed to send envelope to send queue: {}", err);
@@ -114,7 +114,7 @@ impl SentryTransport for Transport {
     }
 }
 
-#[tokio::main(threaded_scheduler)]
+#[tokio::main]
 async fn main() -> Result<()> {
     let mut options = sentry::Options::new();
 

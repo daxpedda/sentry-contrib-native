@@ -14,7 +14,7 @@ use std::{
     ptr,
 };
 
-#[tokio::main(threaded_scheduler)]
+#[tokio::main]
 async fn main() -> Result<()> {
     sentry::set_hook(None, None);
 

@@ -14,7 +14,7 @@ use sentry_contrib_native as sentry;
 use sha1::{Digest, Sha1};
 use std::fs;
 
-#[tokio::test(threaded_scheduler)]
+#[tokio::test(flavor = "multi_thread")]
 async fn options() -> Result<()> {
     util::events_success(
         Some(|options| {

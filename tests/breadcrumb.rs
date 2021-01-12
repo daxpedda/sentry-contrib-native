@@ -13,7 +13,7 @@ use sentry::{Breadcrumb, Event};
 use sentry_contrib_native as sentry;
 use serde_json::Value;
 
-#[tokio::test(threaded_scheduler)]
+#[tokio::test(flavor = "multi_thread")]
 async fn breadcrumb() -> Result<()> {
     util::events_success(
         None,

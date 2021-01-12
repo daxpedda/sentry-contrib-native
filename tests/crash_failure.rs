@@ -11,7 +11,7 @@ mod util;
 
 use anyhow::Result;
 
-#[tokio::test(threaded_scheduler)]
+#[tokio::test(flavor = "multi_thread")]
 async fn crash() -> Result<()> {
     util::external_events_failure(vec!["crash_failure".into()]).await
 }

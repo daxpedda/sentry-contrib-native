@@ -12,7 +12,7 @@ use anyhow::Result;
 use sentry::{Event, Level};
 use sentry_contrib_native as sentry;
 
-#[tokio::test(threaded_scheduler)]
+#[tokio::test(flavor = "multi_thread")]
 async fn event() -> Result<()> {
     util::events_success(
         None,

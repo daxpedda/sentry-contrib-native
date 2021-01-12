@@ -117,7 +117,7 @@ jobs:
             matrix.feature.transport-default }}-${{
             hashFiles('sentry-contrib-native-sys/build.rs') }}
       - name: Set SENTRY_NATIVE_INSTALL
-        run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
+        run: echo >>$GITHUB_ENV SENTRY_NATIVE_INSTALL=$HOME/sentry-native"
       - name: Build
         id: build
         run:
@@ -290,7 +290,7 @@ jobs:
             matrix.feature.transport-default }}-${{
             hashFiles('sentry-contrib-native-sys/build.rs') }}
       - name: Set SENTRY_NATIVE_INSTALL
-        run: echo "::set-env name=SENTRY_NATIVE_INSTALL::$HOME/sentry-native"
+        run: echo >>$GITHUB_ENV SENTRY_NATIVE_INSTALL=$HOME/sentry-native"
       - name: Build
         id: build
         run:

@@ -128,7 +128,7 @@ jobs:
           'ubuntu-latest' && matrix.feature.transport-default
         run:
           cargo clippy -v --all-targets --features transport-custom ${{
-          matrix.rust.feature }} -- -F warnings
+          matrix.rust.feature }}
       - name: Documentation
         if: always() && steps.build.outcome == 'success'
         env:

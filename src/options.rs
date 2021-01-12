@@ -1014,6 +1014,12 @@ fn threaded_stress() -> anyhow::Result<()> {
 
     #[allow(clippy::type_complexity)]
     fn spawns(tests: Vec<fn(Arc<RwLock<Options>>, usize)>) -> Options {
+        /// Github Actions MacOS CI machines can't handle that many threads.
+        #[cfg(target_os = "macos")]
+        static THREADS: usize = 50;
+        #[cfg(not(target_os = "macos"))]
+        static THREADS: usize = 100;
+
         let options = Arc::new(RwLock::new(Options::new()));
 
         let mut spawns = Vec::with_capacity(tests.len());
@@ -1023,7 +1029,7 @@ fn threaded_stress() -> anyhow::Result<()> {
             let handle = thread::spawn(move || {
                 let mut handles = Vec::with_capacity(100);
 
-                for index in 0..100 {
+                for index in 0..THREADS {
                     let options = Arc::clone(&options);
 
                     handles.push(thread::spawn(move || test(options, index)))

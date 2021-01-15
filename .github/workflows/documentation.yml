@@ -63,6 +63,6 @@ jobs:
           BRANCH: gh-pages
           FOLDER: target/doc/
           GIT_CONFIG_NAME: github-actions
-          GIT_CONFIG_EMAIL: github-actions@github.com
+          GIT_CONFIG_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           TARGET_FOLDER: master/doc/
           CLEAN: true

@@ -5,12 +5,11 @@
     clippy::pedantic,
     missing_docs
 )]
-// currently nightly allows many more const fn's than stable or beta
-#![allow(clippy::missing_const_for_fn)]
 #![cfg_attr(
     feature = "nightly",
     feature(doc_cfg),
     feature(external_doc),
+    allow(non_autolinks),
     doc(include = "../README.md")
 )]
 #![cfg_attr(not(feature = "nightly"), doc = "")]
@@ -126,7 +125,7 @@ impl Display for Level {
 
 impl Level {
     /// Convert [`Level`] to [`i32`].
-    fn into_raw(self) -> i32 {
+    const fn into_raw(self) -> i32 {
         match self {
             Self::Debug => sys::Level::Debug as _,
             Self::Info => sys::Level::Info as _,
@@ -162,7 +161,7 @@ pub enum Consent {
 
 impl Consent {
     /// Convert [`sys::UserConsent`] to [`Consent`].
-    fn from_raw(level: sys::UserConsent) -> Self {
+    const fn from_raw(level: sys::UserConsent) -> Self {
         match level {
             sys::UserConsent::Unknown => Self::Unknown,
             sys::UserConsent::Revoked => Self::Revoked,

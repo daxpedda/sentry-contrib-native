@@ -93,6 +93,7 @@ pub extern "C" fn before_send(
 
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
+#[allow(clippy::items_after_statements)]
 fn before_send_test() -> anyhow::Result<()> {
     use crate::{Event, Options, Value};
     use std::{

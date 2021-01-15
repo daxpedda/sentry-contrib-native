@@ -70,6 +70,7 @@ impl Breadcrumb {
     /// let mut breadcrumb = Breadcrumb::new(None, Some("test message".into()));
     /// ```
     #[must_use = "`Breadcrumb` doesn't do anything without `Breadcrumb::add`"]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn new(r#type: Option<String>, message: Option<String>) -> Self {
         Self {
             ty: r#type,

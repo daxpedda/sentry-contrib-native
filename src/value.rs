@@ -153,7 +153,7 @@ impl Value {
     /// assert!(Value::new(()).is_null());
     /// ```
     #[must_use]
-    pub fn is_null(&self) -> bool {
+    pub const fn is_null(&self) -> bool {
         matches!(self, Self::Null)
     }
 
@@ -165,7 +165,7 @@ impl Value {
     /// assert_eq!(Some(()), Value::new(()).as_null());
     /// ```
     #[must_use]
-    pub fn as_null(&self) -> Option<()> {
+    pub const fn as_null(&self) -> Option<()> {
         if let Self::Null = self {
             Some(())
         } else {
@@ -187,6 +187,7 @@ impl Value {
     ///     Value::new(false).into_null()
     /// );
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn into_null(self) -> Result<(), Error> {
         if let Self::Null = self {
             Ok(())
@@ -203,7 +204,7 @@ impl Value {
     /// assert!(Value::new(true).is_bool());
     /// ```
     #[must_use]
-    pub fn is_bool(&self) -> bool {
+    pub const fn is_bool(&self) -> bool {
         matches!(self, Self::Bool(_))
     }
 
@@ -215,7 +216,7 @@ impl Value {
     /// assert_eq!(Some(true), Value::new(true).as_bool());
     /// ```
     #[must_use]
-    pub fn as_bool(&self) -> Option<bool> {
+    pub const fn as_bool(&self) -> Option<bool> {
         if let Self::Bool(value) = self {
             Some(*value)
         } else {
@@ -256,6 +257,7 @@ impl Value {
     ///     Value::new(()).into_bool()
     /// );
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn into_bool(self) -> Result<bool, Error> {
         if let Self::Bool(value) = self {
             Ok(value)
@@ -272,7 +274,7 @@ impl Value {
     /// assert!(Value::new(10).is_int());
     /// ```
     #[must_use]
-    pub fn is_int(&self) -> bool {
+    pub const fn is_int(&self) -> bool {
         matches!(self, Self::Int(_))
     }
 
@@ -284,7 +286,7 @@ impl Value {
     /// assert_eq!(Some(10), Value::new(10).as_int());
     /// ```
     #[must_use]
-    pub fn as_int(&self) -> Option<i32> {
+    pub const fn as_int(&self) -> Option<i32> {
         if let Self::Int(value) = self {
             Some(*value)
         } else {
@@ -325,6 +327,7 @@ impl Value {
     ///     Value::new(false).into_int()
     /// );
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn into_int(self) -> Result<i32, Error> {
         if let Self::Int(value) = self {
             Ok(value)
@@ -341,7 +344,7 @@ impl Value {
     /// assert!(Value::new(10.).is_double());
     /// ```
     #[must_use]
-    pub fn is_double(&self) -> bool {
+    pub const fn is_double(&self) -> bool {
         matches!(self, Self::Double(_))
     }
 
@@ -353,7 +356,7 @@ impl Value {
     /// assert_eq!(Some(10.), Value::new(10.).as_double());
     /// ```
     #[must_use]
-    pub fn as_double(&self) -> Option<f64> {
+    pub const fn as_double(&self) -> Option<f64> {
         if let Self::Double(value) = self {
             Some(*value)
         } else {
@@ -394,6 +397,7 @@ impl Value {
     ///     Value::new(false).into_double()
     /// );
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn into_double(self) -> Result<f64, Error> {
         if let Self::Double(value) = self {
             Ok(value)
@@ -410,7 +414,7 @@ impl Value {
     /// assert!(Value::new("test").is_string());
     /// ```
     #[must_use]
-    pub fn is_string(&self) -> bool {
+    pub const fn is_string(&self) -> bool {
         matches!(self, Self::String(_))
     }
 
@@ -465,6 +469,7 @@ impl Value {
     ///     Value::new(false).into_string()
     /// );
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn into_string(self) -> Result<String, Error> {
         if let Self::String(value) = self {
             Ok(value)
@@ -481,7 +486,7 @@ impl Value {
     /// assert!(Value::new(vec!["test 1", "test 2"]).is_list());
     /// ```
     #[must_use]
-    pub fn is_list(&self) -> bool {
+    pub const fn is_list(&self) -> bool {
         matches!(self, Self::List(_))
     }
 
@@ -496,7 +501,7 @@ impl Value {
     /// );
     /// ```
     #[must_use]
-    pub fn as_list(&self) -> Option<&Vec<Self>> {
+    pub const fn as_list(&self) -> Option<&Vec<Self>> {
         if let Self::List(value) = self {
             Some(value)
         } else {
@@ -542,6 +547,7 @@ impl Value {
     ///     Value::new(false).into_list()
     /// );
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn into_list(self) -> Result<Vec<Self>, Error> {
         if let Self::List(value) = self {
             Ok(value)
@@ -558,7 +564,7 @@ impl Value {
     /// assert!(Value::new(vec![("test key 1", "test 1"), ("test key 2", "test 2")]).is_map());
     /// ```
     #[must_use]
-    pub fn is_map(&self) -> bool {
+    pub const fn is_map(&self) -> bool {
         matches!(self, Self::Map(_))
     }
 
@@ -577,7 +583,7 @@ impl Value {
     /// );
     /// ```
     #[must_use]
-    pub fn as_map(&self) -> Option<&BTreeMap<String, Self>> {
+    pub const fn as_map(&self) -> Option<&BTreeMap<String, Self>> {
         if let Self::Map(value) = self {
             Some(value)
         } else {
@@ -632,6 +638,7 @@ impl Value {
     ///     Value::new(false).into_map()
     /// );
     /// ```
+    #[allow(clippy::missing_const_for_fn)]
     pub fn into_map(self) -> Result<BTreeMap<String, Self>, Error> {
         if let Self::Map(value) = self {
             Ok(value)

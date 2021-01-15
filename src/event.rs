@@ -95,6 +95,7 @@ impl Event {
     /// let mut event = Event::new();
     /// ```
     #[must_use = "`Event` doesn't do anything without `Event::capture`"]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn new() -> Self {
         Self {
             interface: Interface::Event,

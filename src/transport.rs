@@ -79,7 +79,7 @@ pub enum Shutdown {
 
 impl Shutdown {
     /// Converts [`Shutdown`] into [`c_int`].
-    fn into_raw(self) -> c_int {
+    const fn into_raw(self) -> c_int {
         match self {
             Self::Success => 0,
             Self::TimedOut => 1,
@@ -551,6 +551,7 @@ impl Dsn {
 
     /// Consume [`Dsn`] and return it's parts.
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn into_parts(self) -> Parts {
         Parts {
             auth: self.auth,

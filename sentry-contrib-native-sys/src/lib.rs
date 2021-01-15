@@ -8,6 +8,7 @@
 #![cfg_attr(
     feature = "nightly",
     feature(external_doc),
+    allow(non_autolinks),
     doc(include = "../README.md")
 )]
 #![cfg_attr(not(feature = "nightly"), doc = "")]

@@ -53,6 +53,7 @@ impl User {
     /// let mut user = User::new();
     /// ```
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn new() -> Self {
         Self(BTreeMap::new())
     }

@@ -916,7 +916,7 @@
 <span class="doccomment">/// `sentry_value_new_null()` instead.</span>
 <span class="doccomment">/// This function may be invoked inside of a signal handler and must be safe for</span>
 <span class="doccomment">/// that purpose, see https://man7.org/linux/man-pages/man7/signal-safety.7.html.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_autolinks</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">doc_markdown</span>, <span class="ident">non_autolinks</span>)]</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventFunction</span> <span class="op">=</span>
     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">event</span>: <span class="ident">Value</span>, <span class="ident">hint</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>, <span class="ident">closure</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
 

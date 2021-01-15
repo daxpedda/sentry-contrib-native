@@ -127,8 +127,13 @@ fancy, so we mostly rely on <code>sentry-native</code> for support.</p>
 <a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
 which in turn builds
 <a href="https://github.com/getsentry/sentry-native">Sentry's Native SDK</a>. This requires
-<a href="https://cmake.org">CMake</a> or alternatively a pre-installed version can be
-provided with the <code>SENTRY_NATIVE_INSTALL</code> environment variable.</p>
+<a href="https://cmake.org">CMake</a>.</p>
+<p>Alternatively a path to a pre-built version of
+<a href="https://github.com/getsentry/sentry-native">Sentry's Native SDK</a> can be
+provided with the <code>SENTRY_NATIVE_INSTALL</code> environment variable. If none is found
+at that path,
+<a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
+will use that path as the build output.</p>
 <p>Additionally, if the <code>transport-default</code> feature on Android, Linux and MacOS is
 used, the development version of Curl is required.</p>
 <p>See the <a href="https://github.com/getsentry/sentry-native">Sentry Native SDK</a> for more

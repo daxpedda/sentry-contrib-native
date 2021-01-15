@@ -30,8 +30,6 @@ enum Backend {
     Breakpad,
     /// In-process backend.
     InProc,
-    /// No backend.
-    None,
 }
 
 impl AsRef<str> for Backend {
@@ -40,7 +38,6 @@ impl AsRef<str> for Backend {
             Self::Crashpad => "crashpad",
             Self::Breakpad => "breakpad",
             Self::InProc => "inproc",
-            Self::None => "none",
         }
     }
 }
@@ -60,14 +57,12 @@ impl Backend {
             Self::Breakpad
         } else if cfg!(feature = "backend-inproc") {
             Self::InProc
-        } else if cfg!(feature = "backend-default") {
+        } else {
             match target_os {
                 "windows" | "macos" | "linux" => Self::Crashpad,
                 "android" => Self::InProc,
-                _ => Self::None,
+                _ => panic!("Unspported OS: {}", target_os),
             }
-        } else {
-            Self::None
         }
     }
 }
@@ -137,7 +132,7 @@ fn main() -> Result<()> {
         Backend::Breakpad => {
             println!("cargo:rustc-link-lib=breakpad_client");
         }
-        Backend::InProc | Backend::None => {}
+        Backend::InProc => {}
     }
 
     match target_os.as_str() {

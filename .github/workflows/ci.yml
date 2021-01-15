@@ -48,9 +48,7 @@ jobs:
           - { channel: nightly, feature: --features nightly }
         feature:
           - {
-              name:
-                "--no-default-features --features
-                backend-default,transport-custom",
+              name: "--no-default-features --features transport-custom",
               transport-default: false,
               transport-custom: true,
             }
@@ -111,9 +109,7 @@ jobs:
         if:
           always() && steps.build.outcome == 'success' && github.event_name ==
           'push'
-        run:
-          cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature
-          }}
+        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Example
         if:
           always() && steps.build.outcome == 'success' &&
@@ -175,9 +171,7 @@ jobs:
           - { channel: nightly, feature: --features nightly }
         feature:
           - {
-              name:
-                "--no-default-features --features
-                backend-default,transport-custom",
+              name: "--no-default-features --features transport-custom",
               transport-default: false,
               transport-custom: true,
             }
@@ -242,9 +236,7 @@ jobs:
           cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Test
         if: always() && steps.build.outcome == 'success'
-        run:
-          cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature
-          }}
+        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Example
         if:
           always() && steps.build.outcome == 'success' &&

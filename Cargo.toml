@@ -58,8 +58,7 @@ tokio = { version = "1", features = [
 url = "2"
 
 [features]
-default = ["backend-default", "transport-default"]
-backend-default = ["sys/backend-default"]
+default = ["transport-default"]
 backend-crashpad = ["sys/backend-crashpad"]
 backend-breakpad = ["sys/backend-breakpad"]
 backend-inproc = ["sys/backend-inproc"]

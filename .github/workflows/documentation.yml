@@ -16,6 +16,16 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: nightly
+      - name: Cache rustc version
+        uses: actions/cache@v2
+        with:
+          path: ~/rustc-version.txt
+          key: documentation-${{ runner.os }}-${{ matrix.rust.channel }}
+      - name: Compare rustc versions
+        if: github.event_name == 'schedule'
+        run: "! diff -u ~/rustc-version.txt <(rustc -V)"
+      - name: Save new rustc version
+        run: rustc -V > ~/rustc-version.txt
       - name: Checkout
         uses: actions/checkout@v2
         with:

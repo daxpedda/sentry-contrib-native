@@ -143,8 +143,14 @@ This crate relies on
 [`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys)
 which in turn builds
 [Sentry's Native SDK](https://github.com/getsentry/sentry-native). This requires
-[CMake](https://cmake.org) or alternatively a pre-installed version can be
-provided with the `SENTRY_NATIVE_INSTALL` environment variable.
+[CMake](https://cmake.org).
+
+Alternatively a path to a pre-built version of
+[Sentry's Native SDK](https://github.com/getsentry/sentry-native) can be
+provided with the `SENTRY_NATIVE_INSTALL` environment variable. If none is found
+at that path,
+[`sentry-contrib-native-sys`](https://crates.io/crates/sentry-contrib-native-sys)
+will use that path as the build output.
 
 Additionally, if the `transport-default` feature on Android, Linux and MacOS is
 used, the development version of Curl is required.

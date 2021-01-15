@@ -100,7 +100,7 @@ jobs:
           path: ~/rustc-version.txt
           key: lint-${{ matrix.rust.channel }}
       - name: Compare rustc versions
-        run: ! diff -u ~/rustc-version.txt <(rustc -V)
+        run: "! diff -u ~/rustc-version.txt <(rustc -V)"
       - name: Save new rustc version
         run: rustc -V > ~/rustc-version.txt
       - name: Checkout

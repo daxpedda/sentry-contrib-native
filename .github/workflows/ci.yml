@@ -71,6 +71,13 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust.channel }}
+      - name: Cache rustc version
+        uses: actions/cache@v2
+        with:
+          path: ~/rustc-version.txt
+          key: CI-${{ runner.os }}-${{ matrix.rust.channel }}
+      - name: Save new rustc version
+        run: rustc -V > ~/rustc-version.txt
       - name: Checkout
         id: checkout
         uses: actions/checkout@v2
@@ -194,6 +201,15 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust.channel }}
+      - name: Cache rustc version
+        uses: actions/cache@v2
+        with:
+          path: ~/rustc-version.txt
+          key: CI-${{ runner.os }}-${{ matrix.rust.channel }}
+      - name: Compare rustc versions
+        run: ! diff -u ~/rustc-version.txt <(rustc -V)
+      - name: Save new rustc version
+        run: rustc -V > ~/rustc-version.txt
       - name: Checkout
         id: checkout
         uses: actions/checkout@v2

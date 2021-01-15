@@ -30,6 +30,13 @@ jobs:
         with:
           rust-version: ${{ matrix.rust.channel }}
           components: clippy
+      - name: Cache rustc version
+        uses: actions/cache@v2
+        with:
+          path: ~/rustc-version.txt
+          key: lint-${{ matrix.rust.channel }}
+      - name: Save new rustc version
+        run: rustc -V > ~/rustc-version.txt
       - name: Checkout
         id: checkout
         uses: actions/checkout@v2
@@ -87,6 +94,15 @@ jobs:
         with:
           rust-version: ${{ matrix.rust.channel }}
           components: clippy
+      - name: Cache rustc version
+        uses: actions/cache@v2
+        with:
+          path: ~/rustc-version.txt
+          key: lint-${{ matrix.rust.channel }}
+      - name: Compare rustc versions
+        run: ! diff -u ~/rustc-version.txt <(rustc -V)
+      - name: Save new rustc version
+        run: rustc -V > ~/rustc-version.txt
       - name: Checkout
         id: checkout
         uses: actions/checkout@v2

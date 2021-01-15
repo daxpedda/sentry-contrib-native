@@ -50,8 +50,7 @@ struct Transport {
 
 impl Transport {
     /// Create a new [`Transport`].
-    #[allow(clippy::unnecessary_wraps)]
-    fn new(client: Client, options: &Options) -> Result<Self, ()> {
+    fn new(client: Client, options: &Options) -> Self {
         let (sender, mut receiver) = mpsc::channel::<RawEnvelope>(1024);
         let shutdown = Arc::new((Mutex::new(()), Condvar::new()));
         let transport = Self {
@@ -82,7 +81,7 @@ impl Transport {
             cvar.notify_one();
         });
 
-        Ok(transport)
+        transport
     }
 }
 
@@ -133,7 +132,7 @@ async fn main() -> Result<()> {
     // that come with the SDK
     {
         let client = client.clone();
-        options.set_transport(move |options| Transport::new(client, options));
+        options.set_transport(move |options| Ok(Transport::new(client, options)));
     }
 
     let _shutdown = options.init().expect("failed to initialize Sentry");

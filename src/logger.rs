@@ -123,6 +123,7 @@ pub extern "C" fn logger(
 
 #[cfg(test)]
 #[rusty_fork::test_fork(timeout_ms = 60000)]
+#[allow(clippy::items_after_statements)]
 fn logger_test() -> anyhow::Result<()> {
     use crate::{Level, Logger, Message, Options};
     use std::{

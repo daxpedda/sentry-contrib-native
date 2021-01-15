@@ -913,7 +913,7 @@ fn options() -> anyhow::Result<()> {
     struct CustomTransport;
 
     impl CustomTransport {
-        #[allow(clippy::unnecessary_wraps)]
+        #[allow(warnings)]
         const fn new(_: &Options) -> Result<Self, ()> {
             Ok(Self)
         }
@@ -1177,7 +1177,6 @@ fn sync() -> anyhow::Result<()> {
     let options = Arc::new(options);
     let mut handles = vec![];
 
-    #[cfg_attr(feature = "nightly", allow(clippy::same_item_push))]
     for _ in 0..100 {
         let options = Arc::clone(&options);
         let handle = thread::spawn(move || {
@@ -1190,6 +1189,7 @@ fn sync() -> anyhow::Result<()> {
         handle.join().unwrap();
     }
 
+    #[allow(clippy::map_err_ignore)]
     thread::spawn(move || -> Result<Shutdown> {
         Arc::try_unwrap(options)
             .map_err(|_| anyhow!("failed to unwrap arc"))?

@@ -715,6 +715,7 @@
 <span id="712">712</span>
 <span id="713">713</span>
 <span id="714">714</span>
+<span id="715">715</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry custom transport implementation.</span>
 <span class="doccomment">//!</span>
@@ -797,7 +798,7 @@
 
 <span class="kw">impl</span> <span class="ident">Shutdown</span> {
     <span class="doccomment">/// Converts [`Shutdown`] into [`c_int`].</span>
-    <span class="kw">fn</span> <span class="ident">into_raw</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span> {
+    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">into_raw</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="self">Self</span>::<span class="ident">Success</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
             <span class="self">Self</span>::<span class="ident">TimedOut</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
@@ -1269,6 +1270,7 @@
 
     <span class="doccomment">/// Consume [`Dsn`] and return it&#39;s parts.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_const_for_fn</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Parts</span> {
         <span class="ident">Parts</span> {
             <span class="ident">auth</span>: <span class="self">self</span>.<span class="ident">auth</span>,

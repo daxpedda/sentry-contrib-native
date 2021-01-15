@@ -750,7 +750,6 @@
 <span id="747">747</span>
 <span id="748">748</span>
 <span id="749">749</span>
-<span id="750">750</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -759,12 +758,11 @@
     <span class="ident">clippy</span>::<span class="ident">pedantic</span>,
     <span class="ident">missing_docs</span>
 )]</span>
-<span class="comment">// currently nightly allows many more const fn&#39;s than stable or beta</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_const_for_fn</span>)]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(
     <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>,
     <span class="ident">feature</span>(<span class="ident">doc_cfg</span>),
     <span class="ident">feature</span>(<span class="ident">external_doc</span>),
+    <span class="ident">allow</span>(<span class="ident">non_autolinks</span>),
     <span class="ident">doc</span>(<span class="ident">include</span> <span class="op">=</span> <span class="string">&quot;../README.md&quot;</span>)
 )]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>), <span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>)]</span>
@@ -880,7 +878,7 @@
 
 <span class="kw">impl</span> <span class="ident">Level</span> {
     <span class="doccomment">/// Convert [`Level`] to [`i32`].</span>
-    <span class="kw">fn</span> <span class="ident">into_raw</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span> {
+    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">into_raw</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="self">Self</span>::<span class="ident">Debug</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sys</span>::<span class="ident">Level</span>::<span class="ident">Debug</span> <span class="kw">as</span> <span class="kw">_</span>,
             <span class="self">Self</span>::<span class="ident">Info</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sys</span>::<span class="ident">Level</span>::<span class="ident">Info</span> <span class="kw">as</span> <span class="kw">_</span>,
@@ -916,7 +914,7 @@
 
 <span class="kw">impl</span> <span class="ident">Consent</span> {
     <span class="doccomment">/// Convert [`sys::UserConsent`] to [`Consent`].</span>
-    <span class="kw">fn</span> <span class="ident">from_raw</span>(<span class="ident">level</span>: <span class="ident">sys</span>::<span class="ident">UserConsent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from_raw</span>(<span class="ident">level</span>: <span class="ident">sys</span>::<span class="ident">UserConsent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">level</span> {
             <span class="ident">sys</span>::<span class="ident">UserConsent</span>::<span class="ident">Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Unknown</span>,
             <span class="ident">sys</span>::<span class="ident">UserConsent</span>::<span class="ident">Revoked</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Revoked</span>,

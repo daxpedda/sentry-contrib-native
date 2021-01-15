@@ -439,6 +439,7 @@
 <span id="436">436</span>
 <span id="437">437</span>
 <span id="438">438</span>
+<span id="439">439</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry event implementation.</span>
 
@@ -537,6 +538,7 @@
     <span class="doccomment">/// let mut event = Event::new();</span>
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span> <span class="op">=</span> <span class="string">&quot;`Event` doesn&#39;t do anything without `Event::capture`&quot;</span>]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_const_for_fn</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">interface</span>: <span class="ident">Interface</span>::<span class="ident">Event</span>,

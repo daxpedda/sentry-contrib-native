@@ -34,10 +34,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Audit
-        # Ignore net2 deprecation, only used by examples
-        run: |
-          cargo audit -D warnings \
-          --ignore RUSTSEC-2020-0016
+        run: cargo audit -D warnings
 
   ci:
     if: github.event_name != 'schedule'
@@ -157,10 +154,7 @@ jobs:
         with:
           ref: ${{ matrix.branch }}
       - name: Audit
-        # Ignore net2 deprecation, only used by examples
-        run: |
-          cargo audit -D warnings \
-          --ignore RUSTSEC-2020-0016
+        run: cargo audit -D warnings
 
   schedule-ci:
     if: github.event_name == 'schedule'

@@ -8,7 +8,7 @@ on:
     - cron: 0 0 * * *
 
 jobs:
-  docs:
+  documentation:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +21,7 @@ jobs:
         with:
           ref: master
           submodules: recursive
-      - name: Install curl
+      - name: Install Curl
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev
@@ -52,5 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
           FOLDER: target/doc/
+          GIT_CONFIG_NAME: github-actions
+          GIT_CONFIG_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           TARGET_FOLDER: master/doc/
           CLEAN: true

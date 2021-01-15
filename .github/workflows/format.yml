@@ -1,0 +1,102 @@
+name: format
+
+on:
+  push:
+    branches-ignore:
+      - gh-pages
+  pull_request:
+    branches-ignore:
+      - gh-pages
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  prettier:
+    if: github.event_name != 'schedule'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Prettier
+        run: npm install --no-save prettier prettier-plugin-toml
+      - name: Prettier
+        run: npx prettier -l .
+
+  schedule-prettier:
+    if: github.event_name == 'schedule'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        branch:
+          - master
+          - release
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Install Prettier
+        run: npm install --no-save prettier prettier-plugin-toml
+      - name: Prettier
+        run: npx prettier -l .
+
+  rustfmt:
+    if: github.event_name != 'schedule'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust }}
+          components: rustfmt
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Rust Formatting
+        run: cargo fmt -v -- --check
+
+  schedule-rustfmt:
+    if: github.event_name == 'schedule'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust.channel }}
+          components: rustfmt
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.branch }}
+          submodules: recursive
+      - name: Rust Formatting
+        run: cargo fmt -v -- --check

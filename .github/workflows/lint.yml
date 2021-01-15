@@ -1,0 +1,124 @@
+name: lint
+
+on:
+  push:
+    branches-ignore:
+      - gh-pages
+  pull_request:
+    branches-ignore:
+      - gh-pages
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  clippy:
+    if: github.event_name != 'schedule'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        rust:
+          - { channel: stable, feature: "" }
+          - { channel: beta, feature: "" }
+          - { channel: nightly, feature: --features nightly }
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust.channel }}
+          components: clippy
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Curl
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev
+      - name: Get sentry-native commit
+        id: sentry_native
+        run:
+          echo "::set-output name=version::$(git submodule status | cut -d ' '
+          -f 2)"
+      - name: Cache sentry-native
+        uses: actions/cache@v2
+        with:
+          path: ~/sentry-native
+          key:
+            ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
+            matrix.feature.transport-default }}-${{
+            hashFiles('sentry-contrib-native-sys/build.rs') }}
+      - name: Set SENTRY_NATIVE_INSTALL
+        run: echo >>$GITHUB_ENV SENTRY_NATIVE_INSTALL=$HOME/sentry-native
+      - name: Clippy
+        run:
+          cargo clippy -v --all-targets --features transport-custom ${{
+          matrix.rust.feature }} -- -D warnings
+      - name: Documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run:
+          cargo -v doc --no-deps --document-private-items --workspace --features
+          transport-custom ${{ matrix.rust.feature }}
+
+  schedule-clippy:
+    if: github.event_name == 'schedule'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        rust:
+          - { channel: stable, feature: "" }
+          - { channel: beta, feature: "" }
+          - { channel: nightly, feature: --features nightly }
+        branch:
+          - master
+          - release
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust.channel }}
+          components: clippy
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.branch }}
+          submodules: recursive
+      - name: Install Curl
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev
+      - name: Get sentry-native commit
+        id: sentry_native
+        run:
+          echo "::set-output name=version::$(git submodule status | cut -d ' '
+          -f 2)"
+      - name: Cache sentry-native
+        uses: actions/cache@v2
+        with:
+          path: ~/sentry-native
+          key:
+            ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
+            matrix.feature.transport-default }}-${{
+            hashFiles('sentry-contrib-native-sys/build.rs') }}
+      - name: Set SENTRY_NATIVE_INSTALL
+        run: echo >>$GITHUB_ENV SENTRY_NATIVE_INSTALL=$HOME/sentry-native
+      - name: Clippy
+        run:
+          cargo clippy -v --all-targets --features transport-custom ${{
+          matrix.rust.feature }} -- -D warnings
+      - name: Documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run:
+          cargo -v doc --no-deps --document-private-items --workspace --features
+          transport-custom ${{ matrix.rust.feature }}

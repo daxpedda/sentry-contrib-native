@@ -39,19 +39,6 @@ jobs:
           cargo audit -D warnings \
           --ignore RUSTSEC-2020-0016
 
-  prettier:
-    if: github.event_name != 'schedule'
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install Prettier
-        run: npm install --no-save prettier prettier-plugin-toml
-      - name: Prettier
-        run: npx prettier -l .
-
   ci:
     if: github.event_name != 'schedule'
 
@@ -59,13 +46,9 @@ jobs:
       fail-fast: false
       matrix:
         rust:
-          - { channel: stable, continue-on-error: false, feature: "" }
-          - { channel: beta, continue-on-error: false, feature: "" }
-          - {
-              channel: nightly,
-              continue-on-error: true,
-              feature: --features nightly,
-            }
+          - { channel: stable, feature: "" }
+          - { channel: beta, feature: "" }
+          - { channel: nightly, feature: --features nightly }
         feature:
           - {
               name:
@@ -91,13 +74,12 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust.channel }}
-          components: rustfmt, clippy
       - name: Checkout
         id: checkout
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Install curl
+      - name: Install Curl
         if: matrix.os == 'ubuntu-latest' && matrix.feature.transport-default
         run: |
           sudo apt update
@@ -121,20 +103,6 @@ jobs:
         id: build
         run:
           cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
-      - name: Clippy
-        if:
-          always() && steps.build.outcome == 'success' && matrix.os ==
-          'ubuntu-latest' && matrix.feature.transport-default
-        run:
-          cargo clippy -v --all-targets --features transport-custom ${{
-          matrix.rust.feature }}
-      - name: Documentation
-        if:
-          always() && steps.build.outcome == 'success' && matrix.os ==
-          'ubuntu-latest' && matrix.feature.transport-default
-        run:
-          cargo -v doc --no-deps --document-private-items --workspace --features
-          transport-custom ${{ matrix.rust.feature }}
       - name: Test
         if:
           always() && steps.build.outcome == 'success' && github.event_name ==
@@ -156,12 +124,6 @@ jobs:
         run:
           cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
-      - name: Rust Formatting
-        if:
-          always() && steps.checkout.outcome == 'success' && matrix.os ==
-          'ubuntu-latest' && matrix.feature.transport-default
-        continue-on-error: ${{ matrix.rust.continue-on-error }}
-        run: cargo fmt -v -- --check
 
   schedule-cargo-audit:
     if: github.event_name == 'schedule'
@@ -200,28 +162,6 @@ jobs:
           cargo audit -D warnings \
           --ignore RUSTSEC-2020-0016
 
-  schedule-prettier:
-    if: github.event_name == 'schedule'
-
-    strategy:
-      fail-fast: false
-      matrix:
-        branch:
-          - master
-          - release
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ matrix.branch }}
-      - name: Install Prettier
-        run: npm install --no-save prettier prettier-plugin-toml
-      - name: Prettier
-        run: npx prettier -l .
-
   schedule-ci:
     if: github.event_name == 'schedule'
 
@@ -229,13 +169,9 @@ jobs:
       fail-fast: false
       matrix:
         rust:
-          - { channel: stable, continue-on-error: false, feature: "" }
-          - { channel: beta, continue-on-error: false, feature: "" }
-          - {
-              channel: nightly,
-              continue-on-error: true,
-              feature: --features nightly,
-            }
+          - { channel: stable, feature: "" }
+          - { channel: beta, feature: "" }
+          - { channel: nightly, feature: --features nightly }
         feature:
           - {
               name:
@@ -264,14 +200,13 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust.channel }}
-          components: rustfmt, clippy
       - name: Checkout
         id: checkout
         uses: actions/checkout@v2
         with:
           ref: ${{ matrix.branch }}
           submodules: recursive
-      - name: Install curl
+      - name: Install Curl
         if: matrix.os == 'ubuntu-latest' && matrix.feature.transport-default
         run: |
           sudo apt update
@@ -295,20 +230,6 @@ jobs:
         id: build
         run:
           cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
-      - name: Clippy
-        if:
-          always() && steps.build.outcome == 'success' && matrix.os ==
-          'ubuntu-latest' && matrix.feature.transport-default
-        run:
-          cargo clippy -v --all-targets --features transport-custom ${{
-          matrix.rust.feature }}
-      - name: Documentation
-        if:
-          always() && steps.build.outcome == 'success' && matrix.os ==
-          'ubuntu-latest' && matrix.feature.transport-default
-        run:
-          cargo -v doc --no-deps --document-private-items --workspace --features
-          transport-custom ${{ matrix.rust.feature }}
       - name: Test
         if: always() && steps.build.outcome == 'success'
         run:
@@ -328,9 +249,3 @@ jobs:
         run:
           cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
-      - name: Rust Formatting
-        if:
-          always() && steps.checkout.outcome == 'success' && matrix.os ==
-          'ubuntu-latest' && matrix.feature.transport-default
-        continue-on-error: ${{ matrix.rust.continue-on-error }}
-        run: cargo fmt -v -- --check

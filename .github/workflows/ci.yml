@@ -133,7 +133,7 @@ jobs:
           path: ~/outcome.txt
           key: CI-${{ runner.os }}-${{ matrix.rust.channel }}-outcome
       - name: Save outcome
-        run: echo ${{ success() }} > ~/outcome.txt
+        run: echo ${{ job.status }} > ~/outcome.txt
 
   schedule-cargo-audit:
     if: github.event_name == 'schedule'
@@ -224,7 +224,7 @@ jobs:
           key: CI-${{ runner.os }}-${{ matrix.rust.channel }}-outcome
       - name: Emit last outcome if rustc version is the same
         if: steps.rustc_version.outcome == 'failure'
-        run: diff -u ~/outcome.txt <(echo "true")
+        run: diff -u ~/outcome.txt <(echo "success")
 
       - name: Checkout
         if: steps.rustc_version.outcome == 'success'
@@ -283,4 +283,4 @@ jobs:
 
       - name: Save outcome
         if: always() && steps.rustc_version.outcome == 'success'
-        run: echo ${{ success() }} > ~/outcome.txt
+        run: echo ${{ job.status }} > ~/outcome.txt

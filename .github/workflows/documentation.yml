@@ -38,7 +38,7 @@ jobs:
         if:
           github.event_name == 'schedule' && steps.rustc_version.outcome ==
           'failure'
-        run: diff -u ~/outcome.txt <(echo "true")
+        run: diff -u ~/outcome.txt <(echo "success")
 
       - name: Checkout
         if:
@@ -107,4 +107,4 @@ jobs:
         if:
           always() && (github.event_name == 'push'
           || steps.rustc_version.outcome == 'success')
-        run: echo ${{ success() }} > ~/outcome.txt
+        run: echo ${{ job.status }} > ~/outcome.txt

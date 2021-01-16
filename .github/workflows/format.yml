@@ -10,8 +10,6 @@ on:
 
 jobs:
   prettier:
-    if: github.event_name != 'schedule'
-
     runs-on: ubuntu-latest
 
     steps:
@@ -23,8 +21,6 @@ jobs:
         run: npx prettier -l .
 
   rustfmt:
-    if: github.event_name != 'schedule'
-
     strategy:
       fail-fast: false
       matrix:
@@ -42,7 +38,6 @@ jobs:
           rust-version: ${{ matrix.rust }}
           components: rustfmt
       - name: Checkout
-        id: checkout
         uses: actions/checkout@v2
         with:
           submodules: recursive

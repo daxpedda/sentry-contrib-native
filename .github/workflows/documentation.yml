@@ -20,27 +20,53 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/rustc-version.txt
-          key: documentation-${{ runner.os }}-${{ matrix.rust.channel }}
+          key: documentation-version
       - name: Compare rustc versions
+        id: rustc_version
         if: github.event_name == 'schedule'
+        continue-on-error: true
         run: "! diff -u ~/rustc-version.txt <(rustc -V)"
       - name: Save new rustc version
         run: rustc -V > ~/rustc-version.txt
+
+      - name: Cache outcome
+        uses: actions/cache@v2
+        with:
+          path: ~/outcome.txt
+          key: documentation-outcome
+      - name: Emit last outcome if rustc version is the same
+        if:
+          github.event_name == 'schedule' && steps.rustc_version.outcome ==
+          'failure'
+        run: diff -u ~/outcome.txt <(echo "true")
+
       - name: Checkout
+        if:
+          github.event_name == 'push' || steps.rustc_version.outcome ==
+          'success'
         uses: actions/checkout@v2
         with:
           ref: master
           submodules: recursive
       - name: Install Curl
+        if:
+          github.event_name == 'push' || steps.rustc_version.outcome ==
+          'success'
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev
       - name: Get sentry-native commit
         id: sentry_native
+        if:
+          github.event_name == 'push' || steps.rustc_version.outcome ==
+          'success'
         run:
           echo "::set-output name=version::$(git submodule status | cut -d ' '
           -f 2)"
       - name: Cache sentry-native
+        if:
+          github.event_name == 'push' || steps.rustc_version.outcome ==
+          'success'
         uses: actions/cache@v2
         with:
           path: ~/sentry-native
@@ -48,15 +74,25 @@ jobs:
             ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-true-${{
             hashFiles('sentry-contrib-native-sys/build.rs') }}
       - name: Set SENTRY_NATIVE_INSTALL
+        if:
+          github.event_name == 'push' || steps.rustc_version.outcome ==
+          'success'
         run: echo >>$GITHUB_ENV SENTRY_NATIVE_INSTALL=$HOME/sentry-native
+
       - name: Documentation
+        if:
+          github.event_name == 'push' || steps.rustc_version.outcome ==
+          'success'
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page
         run:
           cargo -v doc --features transport-custom,nightly --no-deps --workspace
           --exclude dylib
+
       - name: Deploy
-        if: success()
+        if:
+          (github.event_name == 'push' || steps.rustc_version.outcome ==
+          'success') && success()
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -66,3 +102,9 @@ jobs:
           GIT_CONFIG_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           TARGET_FOLDER: master/doc/
           CLEAN: true
+
+      - name: Save outcome
+        if:
+          always() && (github.event_name == 'push'
+          || steps.rustc_version.outcome == 'success')
+        run: echo ${{ success() }} > ~/outcome.txt

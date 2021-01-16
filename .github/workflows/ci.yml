@@ -11,24 +11,30 @@ on:
     - cron: 0 0 * * *
 
 jobs:
-  build_matrix:
+  build-matrix:
     runs-on: ubuntu-latest
 
     steps:
       - name: Push/PR
         if: github.event_name != 'schedule'
-        run: echo "::set-output name=matrix::{\"${{ github.ref }}\"}"
+        run: echo >>$GITHUB_ENV BRANCHES={"${{ github.ref }}"}
       - name: Schedule
         if: github.event_name == 'schedule'
-        run: echo "::set-output name=matrix::{\"master\", \"release\"}"
+        run: echo >>$GITHUB_ENV BRANCHES={"master", "release"}
+      - name: Set matrix
+        id: matrix
+        run: echo "::set-output name=matrix::$BRANCHES"
+
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
 
   cargo-audit:
-    needs: build_matrix
+    needs: build-matrix
 
     strategy:
       fail-fast: false
       matrix:
-        branch: ${{ fromJson(needs.build_matrix.outputs.matrix) }}
+        branch: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
 
     runs-on: ubuntu-latest
 
@@ -55,7 +61,7 @@ jobs:
         run: cargo audit -D warnings
 
   ci:
-    needs: build_matrix
+    needs: build-matrix
 
     strategy:
       fail-fast: false
@@ -75,7 +81,7 @@ jobs:
           - ubuntu-latest
           - macos-latest
           - windows-latest
-        branch: ${{ fromJson(needs.build_matrix.outputs.matrix) }}
+        branch: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
 
     runs-on: ${{ matrix.os }}
 
@@ -94,7 +100,7 @@ jobs:
           path: ~/rustc-version.txt
           key: CI-${{ runner.os }}-${{ matrix.rust.channel }}-version
       - name: Compare rustc versions
-        id: rustc_version
+        id: rustc-version
         if: github.event_name == 'schedule'
         continue-on-error: true
         run: "! diff -u ~/rustc-version.txt <(rustc -V)"
@@ -107,44 +113,44 @@ jobs:
           path: ~/outcome.txt
           key: CI-${{ runner.os }}-${{ matrix.rust.channel }}-outcome
       - name: Emit last outcome if rustc version is the same
-        if: steps.rustc_version.outcome == 'failure'
+        if: steps.rustc-version.outcome == 'failure'
         run: diff -u ~/outcome.txt <(echo "success")
 
       - name: Checkout
-        if: steps.rustc_version.outcome != 'failure'
+        if: steps.rustc-version.outcome != 'failure'
         uses: actions/checkout@v2
         with:
           ref: ${{ matrix.branch }}
           submodules: recursive
       - name: Install Curl
         if:
-          steps.rustc_version.outcome != 'failure' && matrix.os ==
+          steps.rustc-version.outcome != 'failure' && matrix.os ==
           'ubuntu-latest' && matrix.feature.transport-default
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev
       - name: Get sentry-native commit
-        id: sentry_native
-        if: steps.rustc_version.outcome != 'failure'
+        id: sentry-native
+        if: steps.rustc-version.outcome != 'failure'
         run:
           echo "::set-output name=version::$(git submodule status | cut -d ' '
           -f 2)"
       - name: Cache sentry-native
-        if: steps.rustc_version.outcome != 'failure'
+        if: steps.rustc-version.outcome != 'failure'
         uses: actions/cache@v2
         with:
           path: ~/sentry-native
           key:
-            ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-${{
+            ${{ runner.os }}-${{ steps.sentry-native.outputs.version }}-${{
             matrix.feature.transport-default }}-${{
             hashFiles('sentry-contrib-native-sys/build.rs') }}
       - name: Set SENTRY_NATIVE_INSTALL
-        if: steps.rustc_version.outcome != 'failure'
+        if: steps.rustc-version.outcome != 'failure'
         run: echo >>$GITHUB_ENV SENTRY_NATIVE_INSTALL=$HOME/sentry-native
 
       - name: Build
         id: build
-        if: steps.rustc_version.outcome != 'failure'
+        if: steps.rustc-version.outcome != 'failure'
         run:
           cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Test
@@ -168,5 +174,5 @@ jobs:
           matrix.rust.feature }}
 
       - name: Save outcome
-        if: always() && steps.rustc_version.outcome != 'failure'
+        if: always() && steps.rustc-version.outcome != 'failure'
         run: echo ${{ job.status }} > ~/outcome.txt

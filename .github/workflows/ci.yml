@@ -17,10 +17,10 @@ jobs:
     steps:
       - name: Push/PR
         if: github.event_name != 'schedule'
-        run: echo >>$GITHUB_ENV BRANCHES={"${{ github.ref }}"}
+        run: echo >>$GITHUB_ENV BRANCHES={\"${{ github.ref }}\"}
       - name: Schedule
         if: github.event_name == 'schedule'
-        run: echo >>$GITHUB_ENV BRANCHES={"master", "release"}
+        run: echo >>$GITHUB_ENV BRANCHES={\"master\", \"release\"}
       - name: Set matrix
         id: matrix
         run: echo "::set-output name=matrix::$BRANCHES"

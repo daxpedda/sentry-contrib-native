@@ -98,7 +98,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/rustc-version.txt
-          key: CI-${{ runner.os }}-${{ matrix.rust.channel }}-version
+          key: CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.rust.channel }}-version
       - name: Compare rustc versions
         id: rustc-version
         if: github.event_name == 'schedule'
@@ -111,10 +111,10 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/outcome.txt
-          key: CI-${{ runner.os }}-${{ matrix.rust.channel }}-outcome
+          key: CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.rust.channel }}-outcome
       - name: Emit last outcome if rustc version is the same
         if: steps.rustc-version.outcome == 'failure'
-        run: diff -u ~/outcome.txt <(echo "success")
+        run: "diff -u ~/outcome.txt <(echo \"success\")"
 
       - name: Checkout
         if: steps.rustc-version.outcome != 'failure'

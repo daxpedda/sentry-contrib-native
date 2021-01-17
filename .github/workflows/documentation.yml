@@ -22,7 +22,7 @@ jobs:
           path: ~/rustc-version.txt
           key: documentation-version
       - name: Compare rustc versions
-        id: rustc_version
+        id: rustc-version
         if: github.event_name == 'schedule'
         continue-on-error: true
         run: "! diff -u ~/rustc-version.txt <(rustc -V)"
@@ -35,40 +35,40 @@ jobs:
           path: ~/outcome.txt
           key: documentation-outcome
       - name: Emit last outcome if rustc version is the same
-        if: steps.rustc_version.outcome == 'failure'
-        run: diff -u ~/outcome.txt <(echo "success")
+        if: steps.rustc-version.outcome == 'failure'
+        run: "diff -u ~/outcome.txt <(echo \"success\")"
 
       - name: Checkout
-        if: steps.rustc_version.outcome != 'failure'
+        if: steps.rustc-version.outcome != 'failure'
         uses: actions/checkout@v2
         with:
           ref: master
           submodules: recursive
       - name: Install Curl
-        if: steps.rustc_version.outcome != 'failure'
+        if: steps.rustc-version.outcome != 'failure'
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev
       - name: Get sentry-native commit
-        id: sentry_native
-        if: steps.rustc_version.outcome != 'failure'
+        id: sentry-native
+        if: steps.rustc-version.outcome != 'failure'
         run:
           echo "::set-output name=version::$(git submodule status | cut -d ' '
           -f 2)"
       - name: Cache sentry-native
-        if: steps.rustc_version.outcome != 'failure'
+        if: steps.rustc-version.outcome != 'failure'
         uses: actions/cache@v2
         with:
           path: ~/sentry-native
           key:
-            ${{ runner.os }}-${{ steps.sentry_native.outputs.version }}-true-${{
+            ${{ runner.os }}-${{ steps.sentry-native.outputs.version }}-true-${{
             hashFiles('sentry-contrib-native-sys/build.rs') }}
       - name: Set SENTRY_NATIVE_INSTALL
-        if: steps.rustc_version.outcome != 'failure'
+        if: steps.rustc-version.outcome != 'failure'
         run: echo >>$GITHUB_ENV SENTRY_NATIVE_INSTALL=$HOME/sentry-native
 
       - name: Documentation
-        if: steps.rustc_version.outcome != 'failure'
+        if: steps.rustc-version.outcome != 'failure'
         env:
           RUSTDOCFLAGS: -Z unstable-options --enable-index-page
         run:
@@ -76,7 +76,7 @@ jobs:
           --exclude dylib
 
       - name: Deploy
-        if: steps.rustc_version.outcome != 'failure' && success()
+        if: steps.rustc-version.outcome != 'failure'
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,5 +88,5 @@ jobs:
           CLEAN: true
 
       - name: Save outcome
-        if: always() && steps.rustc_version.outcome != 'failure'
+        if: always() && steps.rustc-version.outcome != 'failure'
         run: echo ${{ job.status }} > ~/outcome.txt

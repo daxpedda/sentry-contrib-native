@@ -36,7 +36,7 @@ jobs:
           key: documentation-outcome
       - name: Emit last outcome if rustc version is the same
         if: steps.rustc-version.outcome == 'failure'
-        run: "diff -u ~/outcome.txt <(echo \"success\")"
+        run: 'diff -u ~/outcome.txt <(echo "success")'
 
       - name: Checkout
         if: steps.rustc-version.outcome != 'failure'

@@ -22,8 +22,7 @@ jobs:
       - name: Push/PR
         if: github.event_name != 'schedule'
         run:
-          echo >>$GITHUB_ENV BRANCHES=[\"$(echo ${{ github.ref }} | cut -c12-
-          )\"]
+          echo >>$GITHUB_ENV BRANCHES=[\"$(echo ${{ github.ref }}|cut -c12- )\"]
       - name: Schedule
         if: github.event_name == 'schedule'
         run: echo >>$GITHUB_ENV BRANCHES=[\"master\", \"release\"]

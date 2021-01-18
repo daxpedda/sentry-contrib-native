@@ -12,34 +12,7 @@ mod util;
 use anyhow::Result;
 use serde_json::Value;
 use sha1::{Digest, Sha1};
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
-
-fn lib_path() -> PathBuf {
-    let mut path = PathBuf::from(env!("OUT_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .and_then(Path::parent)
-        .unwrap()
-        .join("deps");
-
-    #[cfg(target_os = "linux")]
-    {
-        path = path.join("libdylib.so");
-    }
-    #[cfg(target_os = "macos")]
-    {
-        path = path.join("libdylib.dylib");
-    }
-    #[cfg(target_os = "windows")]
-    {
-        path = path.join("dylib.dll");
-    }
-
-    path
-}
+use std::fs;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn crash() -> Result<()> {
@@ -101,7 +74,7 @@ async fn crash() -> Result<()> {
             assert!(libs
                 .iter()
                 .any(|v| v.get("code_file").and_then(Value::as_str).unwrap()
-                    == lib_path().to_str().unwrap()));
+                    == dylib::location().to_str().unwrap()));
         }
 
         // tag

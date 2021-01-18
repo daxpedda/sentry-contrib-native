@@ -10,6 +10,10 @@ on:
   schedule:
     - cron: 0 0 * * *
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build-matrix:
     runs-on: ubuntu-latest
@@ -17,7 +21,9 @@ jobs:
     steps:
       - name: Push/PR
         if: github.event_name != 'schedule'
-        run: echo >>$GITHUB_ENV BRANCHES=[\"${{ github.ref }}\"]
+        run:
+          echo >>$GITHUB_ENV BRANCHES=[\"$(echo ${{ github.ref }} | cut -c12-
+          )\"]
       - name: Schedule
         if: github.event_name == 'schedule'
         run: echo >>$GITHUB_ENV BRANCHES=[\"master\", \"release\"]
@@ -68,7 +74,7 @@ jobs:
           key: lint-${{ matrix.branch }}-${{ matrix.rust.channel }}-outcome
       - name: Emit last outcome if rustc version is the same
         if: steps.rustc-version.outcome == 'failure'
-        run: 'diff -u ~/outcome.txt <(echo "success")'
+        run: diff -u ~/outcome.txt <(echo "success")
 
       - name: Checkout
         if: steps.rustc-version.outcome != 'failure'

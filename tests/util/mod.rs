@@ -530,9 +530,8 @@ async fn event_by_user(
                     let uuid = Uuid::from(uuid);
                     // we didn't get the whole event, just a minified version, query for the full
                     // one
-                    return Ok(
-                        self::event(client, api_url.clone(), uuid, 1, Duration::default()).await?,
-                    );
+                    return self::event(client, api_url.clone(), uuid, 1, Duration::default())
+                        .await;
                 }
             }
         }

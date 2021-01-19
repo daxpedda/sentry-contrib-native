@@ -105,7 +105,7 @@ jobs:
           path: ~/rustc-version.txt
           key:
             CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.rust.channel
-            }}-version
+            }}-${{ matrix.feature.transport-default }}-version
       - name: Compare rustc versions
         id: rustc-version
         if: github.event_name == 'schedule'
@@ -120,7 +120,7 @@ jobs:
           path: ~/outcome.txt
           key:
             CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.rust.channel
-            }}-outcome
+            }}-${{ matrix.feature.transport-default }}-outcome
       - name: Emit last outcome if rustc version is the same
         if: steps.rustc-version.outcome == 'failure'
         run: diff -u ~/outcome.txt <(echo "success")

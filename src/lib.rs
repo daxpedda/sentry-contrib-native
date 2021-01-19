@@ -64,6 +64,9 @@ pub use value::Value;
 /// Errors for this crate.
 #[derive(Debug, Error, PartialEq)]
 pub enum Error {
+    /// Re-initializing the backend failed.
+    #[error("re-initializing the backend failed")]
+    ReinstallBackend,
     /// Sample rate outside of allowed range.
     #[error("sample rate outside of allowed range")]
     SampleRateRange,
@@ -272,6 +275,23 @@ pub fn modules_list() -> Vec<String> {
 /// ```
 pub fn clear_modulecache() {
     unsafe { sys::clear_modulecache() }
+}
+
+/// Re-initializes the Sentry backend.
+///
+/// This is needed if a third-party library overrides the previously
+/// installed  signal handler. Calling this function can be potentially
+/// dangerous and should  only be done when necessary.
+///
+/// # Errors
+/// Fails with [`Error::ReinstallBackend`] if re-initializing the backend
+/// failed.
+pub fn reinstall_backend() -> Result<(), Error> {
+    if unsafe { sys::reinstall_backend() } == 0 {
+        Ok(())
+    } else {
+        Err(Error::ReinstallBackend)
+    }
 }
 
 /// Resets the user consent (back to unknown).

@@ -45,14 +45,14 @@ impl AsRef<str> for Backend {
 impl Backend {
     /// Gets the backend we want to use, see <https://github.com/getsentry/sentry-native#compile-time-options>
     /// for details.
-    #[allow(clippy::ifs_same_cond)]
+    #[allow(clippy::ifs_same_cond, clippy::same_functions_in_if_condition)]
     fn new(target_os: &str) -> Self {
         if cfg!(feature = "backend-crashpad")
             && (target_os == "linux" || target_os == "macos" || target_os == "windows")
         {
             Self::Crashpad
         } else if cfg!(feature = "backend-breakpad")
-            && (target_os == "linux" || target_os == "windows")
+            && (target_os == "linux" || target_os == "macos" || target_os == "windows")
         {
             Self::Breakpad
         } else if cfg!(feature = "backend-inproc") {
@@ -200,15 +200,6 @@ fn build(
 
     if let Ok("crt-static") = env::var("CARGO_CFG_TARGET_FEATURE").as_deref() {
         cmake_config.define("SENTRY_BUILD_RUNTIMESTATIC", "ON");
-    }
-
-    if target_os == "windows" {
-        // see https://github.com/getsentry/sentry-native/issues/415
-        cmake_config.cflag("/wd5105");
-        cmake_config.cxxflag("/wd5105");
-
-        // see https://github.com/getsentry/sentry-native/issues/459
-        cmake_config.define("CMAKE_SYSTEM_VERSION", "10.0.18362");
     }
 
     // if we're targetting android, we need to set the CMAKE_TOOLCHAIN_FILE

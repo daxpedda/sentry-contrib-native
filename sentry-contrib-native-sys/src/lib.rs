@@ -664,6 +664,16 @@ extern "C" {
     #[link_name = "sentry_clear_modulecache"]
     pub fn clear_modulecache();
 
+    /// Re-initializes the Sentry backend.
+    ///
+    /// This is needed if a third-party library overrides the previously
+    /// installed  signal handler. Calling this function can be potentially
+    /// dangerous and should  only be done when necessary.
+    ///
+    /// Returns 0 on success.
+    #[link_name = "sentry_reinstall_backend"]
+    pub fn reinstall_backend() -> c_int;
+
     /// Gives user consent.
     #[link_name = "sentry_user_consent_give"]
     pub fn user_consent_give();

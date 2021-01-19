@@ -1175,7 +1175,7 @@ fn sync() -> anyhow::Result<()> {
     let mut options = Options::new();
     options.set_debug(true);
     let options = Arc::new(options);
-    let mut handles = vec![];
+    let mut handles = Vec::new();
 
     for _ in 0..100 {
         let options = Arc::clone(&options);

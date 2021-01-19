@@ -711,11 +711,6 @@
 <span id="708">708</span>
 <span id="709">709</span>
 <span id="710">710</span>
-<span id="711">711</span>
-<span id="712">712</span>
-<span id="713">713</span>
-<span id="714">714</span>
-<span id="715">715</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry custom transport implementation.</span>
 <span class="doccomment">//!</span>
@@ -960,11 +955,6 @@
 
 <span class="doccomment">/// Function to pass to [`sys::transport_set_shutdown_func`], which in turn</span>
 <span class="doccomment">/// calls the user defined one.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `state` is ownership thread-safe, because this function is only called once</span>
-<span class="doccomment">/// during [`shutdown`](crate::shutdown), which is blocked with our global</span>
-<span class="doccomment">/// [`Mutex`], preventing [`Options::init`] or [`Event::capture`], the only</span>
-<span class="doccomment">/// functions that interfere.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// This function will catch any unwinding panics and [`abort`] if any occured.</span>
 <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">shutdown</span>(<span class="ident">timeout</span>: <span class="ident">u64</span>, <span class="ident">state</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span> {

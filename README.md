@@ -125,9 +125,9 @@ Currently the following systems are tested with CI:
 
 See the [CI itself](https://github.com/daxpedda/sentry-contrib-native/actions)
 for more detailed information. See the
-[Sentry Native SDK](https://github.com/getsentry/sentry-native) for more
-platform and feature support details there, this crate doesn't do anything
-fancy, so we mostly rely on `sentry-native` for support.
+[Sentry Native SDK](https://github.com/getsentry/sentry-native#platform-and-feature-support)
+for more platform and feature support details there, this crate doesn't do
+anything fancy, so we mostly rely on `sentry-native` for support.
 
 The default backend for Linux is changed from Breakpad to Crashpad.
 
@@ -153,8 +153,9 @@ will use that path as the build output.
 Additionally, if the `transport-default` feature on Android, Linux and MacOS is
 used, the development version of Curl is required.
 
-See the [Sentry Native SDK](https://github.com/getsentry/sentry-native) for more
-details.
+See the
+[Sentry Native SDK](https://github.com/getsentry/sentry-native#building-and-installation)
+for more details.
 
 ## Crate features
 

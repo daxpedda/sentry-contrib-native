@@ -16,15 +16,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Load last run details
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/rustc-version.txt
+            ~/outcome.txt
+          key: documentation
+
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: nightly
-      - name: Cache rustc version
-        uses: actions/cache@v2
-        with:
-          path: ~/rustc-version.txt
-          key: documentation-version
       - name: Compare rustc versions
         id: rustc-version
         if: github.event_name == 'schedule'
@@ -33,11 +36,6 @@ jobs:
       - name: Save new rustc version
         run: rustc -V > ~/rustc-version.txt
 
-      - name: Cache outcome
-        uses: actions/cache@v2
-        with:
-          path: ~/outcome.txt
-          key: documentation-outcome
       - name: Emit last outcome if rustc version is the same
         if: steps.rustc-version.outcome == 'failure'
         run: diff -u ~/outcome.txt <(echo "success")

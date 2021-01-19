@@ -48,16 +48,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Load last run details
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/rustc-version.txt
+            ~/outcome.txt
+          key: lint-${{ matrix.branch }}-${{ matrix.rust.channel }}
+
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust.channel }}
           components: clippy
-      - name: Cache rustc version
-        uses: actions/cache@v2
-        with:
-          path: ~/rustc-version.txt
-          key: lint-${{ matrix.branch }}-${{ matrix.rust.channel }}-version
       - name: Compare rustc versions
         id: rustc-version
         if: github.event_name == 'schedule'
@@ -66,11 +69,6 @@ jobs:
       - name: Save new rustc version
         run: rustc -V > ~/rustc-version.txt
 
-      - name: Cache outcome
-        uses: actions/cache@v2
-        with:
-          path: ~/outcome.txt
-          key: lint-${{ matrix.branch }}-${{ matrix.rust.channel }}-outcome
       - name: Emit last outcome if rustc version is the same
         if: steps.rustc-version.outcome == 'failure'
         run: diff -u ~/outcome.txt <(echo "success")

@@ -95,17 +95,20 @@ jobs:
       SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
 
     steps:
+      - name: Load last run details
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/rustc-version.txt
+            ~/outcome.txt
+          key:
+            CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.rust.channel
+            }}-${{ matrix.feature.transport-default }}
+
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust.channel }}
-      - name: Cache rustc version
-        uses: actions/cache@v2
-        with:
-          path: ~/rustc-version.txt
-          key:
-            CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.rust.channel
-            }}-${{ matrix.feature.transport-default }}-version
       - name: Compare rustc versions
         id: rustc-version
         if: github.event_name == 'schedule'
@@ -114,13 +117,6 @@ jobs:
       - name: Save new rustc version
         run: rustc -V > ~/rustc-version.txt
 
-      - name: Cache outcome
-        uses: actions/cache@v2
-        with:
-          path: ~/outcome.txt
-          key:
-            CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.rust.channel
-            }}-${{ matrix.feature.transport-default }}-outcome
       - name: Emit last outcome if rustc version is the same
         if: steps.rustc-version.outcome == 'failure'
         run: diff -u ~/outcome.txt <(echo "success")

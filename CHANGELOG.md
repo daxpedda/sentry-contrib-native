@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2021-01-19
 
 ### Added
 
@@ -20,8 +20,7 @@ and this project adheres to
 - Updated `rand` to 0.8.
 - Updated `tokio` to 1.
 - Updated `reqwest` to 0.11.
-
-### Deprecated
+- The minimum supported Windows SDK is version 1903 (10.0.18362.1) now.
 
 ### Removed
 
@@ -34,8 +33,6 @@ and this project adheres to
 - Fixed typos and improved general documentation.
 - Fixed cross-compiling for MSVC with `crt-static`.
 - Fix Android build.
-
-### Security
 
 ## [0.1.0] - 2020-08-18
 
@@ -113,7 +110,8 @@ and this project adheres to
 - Initial release.
 
 [unreleased]:
-  https://github.com/daxpedda/sentry-contrib-native/compare/0.1.0...HEAD
+  https://github.com/daxpedda/sentry-contrib-native/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.2.0
 [0.1.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.1.0
 [0.1.0-rc]:
   https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.1.0-rc

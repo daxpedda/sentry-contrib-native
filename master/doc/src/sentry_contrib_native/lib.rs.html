@@ -750,6 +750,26 @@
 <span id="747">747</span>
 <span id="748">748</span>
 <span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -817,6 +837,9 @@
 <span class="doccomment">/// Errors for this crate.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Error</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="doccomment">/// Re-initializing the backend failed.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;re-initializing the backend failed&quot;</span>)]</span>
+    <span class="ident">ReinstallBackend</span>,
     <span class="doccomment">/// Sample rate outside of allowed range.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;sample rate outside of allowed range&quot;</span>)]</span>
     <span class="ident">SampleRateRange</span>,
@@ -1025,6 +1048,23 @@
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_modulecache</span>() {
     <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">clear_modulecache</span>() }
+}
+
+<span class="doccomment">/// Re-initializes the Sentry backend.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This is needed if a third-party library overrides the previously</span>
+<span class="doccomment">/// installed  signal handler. Calling this function can be potentially</span>
+<span class="doccomment">/// dangerous and should  only be done when necessary.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Errors</span>
+<span class="doccomment">/// Fails with [`Error::ReinstallBackend`] if re-initializing the backend</span>
+<span class="doccomment">/// failed.</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reinstall_backend</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">reinstall_backend</span>() } <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="prelude-val">Ok</span>(())
+    } <span class="kw">else</span> {
+        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">ReinstallBackend</span>)
+    }
 }
 
 <span class="doccomment">/// Resets the user consent (back to unknown).</span>

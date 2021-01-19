@@ -754,6 +754,16 @@
 <span id="751">751</span>
 <span id="752">752</span>
 <span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy</span>::<span class="ident">all</span>,
@@ -1420,6 +1430,16 @@
     <span class="doccomment">/// list.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_clear_modulecache&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_modulecache</span>();
+
+    <span class="doccomment">/// Re-initializes the Sentry backend.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is needed if a third-party library overrides the previously</span>
+    <span class="doccomment">/// installed  signal handler. Calling this function can be potentially</span>
+    <span class="doccomment">/// dangerous and should  only be done when necessary.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Returns 0 on success.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_reinstall_backend&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reinstall_backend</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// Gives user consent.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_user_consent_give&quot;</span>]</span>

@@ -129,6 +129,8 @@ for more detailed information. See the
 for more platform and feature support details there, this crate doesn't do
 anything fancy, so we mostly rely on `sentry-native` for support.
 
+The minimum supported Windows SDK is version 1903 (10.0.18362.1).
+
 The default backend for Linux is changed from Breakpad to Crashpad.
 
 The default transport for Android is changed from none to Curl.

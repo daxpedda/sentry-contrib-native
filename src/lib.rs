@@ -170,6 +170,15 @@ impl Consent {
     }
 }
 
+/// Global lock to prevent thread-safety issues with certain functions. This
+/// will hopefully be fixed upstream.
+static GLOBAL_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+/// Convenience function to get a write lock on `GLOBAL_LOCK`.
+fn global_lock() -> MutexGuard<'static, ()> {
+    GLOBAL_LOCK.lock().expect("global lock poisoned")
+}
+
 /// Shuts down the Sentry client and forces transports to flush out.
 ///
 /// # Examples
@@ -318,6 +327,7 @@ pub fn user_consent() -> Consent {
 /// remove_user();
 /// ```
 pub fn remove_user() {
+    let _lock = global_lock();
     unsafe { sys::remove_user() }
 }
 
@@ -332,7 +342,10 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
     let key = key.into().into_cstring();
     let value = value.into().into_cstring();
 
-    unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
+    {
+        let _lock = global_lock();
+        unsafe { sys::set_tag(key.as_ptr(), value.as_ptr()) }
+    }
 }
 
 /// Removes the tag with the specified `key`.
@@ -345,7 +358,11 @@ pub fn set_tag<S1: Into<String>, S2: Into<String>>(key: S1, value: S2) {
 /// ```
 pub fn remove_tag<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
-    unsafe { sys::remove_tag(key.as_ptr()) }
+
+    {
+        let _lock = global_lock();
+        unsafe { sys::remove_tag(key.as_ptr()) }
+    }
 }
 
 /// Sets extra information.
@@ -359,7 +376,10 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    unsafe { sys::set_extra(key.as_ptr(), value) }
+    {
+        let _lock = global_lock();
+        unsafe { sys::set_extra(key.as_ptr(), value) }
+    }
 }
 
 /// Removes the extra with the specified `key`.
@@ -372,7 +392,11 @@ pub fn set_extra<S: Into<String>, V: Into<Value>>(key: S, value: V) {
 /// ```
 pub fn remove_extra<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
-    unsafe { sys::remove_extra(key.as_ptr()) }
+
+    {
+        let _lock = global_lock();
+        unsafe { sys::remove_extra(key.as_ptr()) }
+    }
 }
 
 /// Sets a context object.
@@ -386,7 +410,10 @@ pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
     let key = key.into().into_cstring();
     let value = value.into().into_raw();
 
-    unsafe { sys::set_context(key.as_ptr(), value) }
+    {
+        let _lock = global_lock();
+        unsafe { sys::set_context(key.as_ptr(), value) }
+    }
 }
 
 /// Removes the context object with the specified key.
@@ -399,7 +426,11 @@ pub fn set_context<S: Into<String>, M: Map + Into<Value>>(key: S, value: M) {
 /// ```
 pub fn remove_context<S: Into<String>>(key: S) {
     let key = key.into().into_cstring();
-    unsafe { sys::remove_context(key.as_ptr()) }
+
+    {
+        let _lock = global_lock();
+        unsafe { sys::remove_context(key.as_ptr()) }
+    }
 }
 
 /// Sets the event fingerprint.

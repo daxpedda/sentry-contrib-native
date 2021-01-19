@@ -242,6 +242,11 @@ pub extern "C" fn send(envelope: *mut sys::Envelope, state: *mut c_void) {
 /// Function to pass to [`sys::transport_set_shutdown_func`], which in turn
 /// calls the user defined one.
 ///
+/// `state` is ownership thread-safe, because this function is only called once
+/// during [`shutdown`](crate::shutdown), which is blocked with our global
+/// [`Mutex`], preventing [`Options::init`] or [`Event::capture`], the only
+/// functions that interfere.
+///
 /// This function will catch any unwinding panics and [`abort`] if any occured.
 pub extern "C" fn shutdown(timeout: u64, state: *mut c_void) -> c_int {
     let timeout = Duration::from_millis(timeout);

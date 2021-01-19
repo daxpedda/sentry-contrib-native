@@ -20,7 +20,6 @@ and this project adheres to
 - Updated `rand` to 0.8.
 - Updated `tokio` to 1.
 - Updated `reqwest` to 0.11.
-- Removed internal global lock, it seems to have been fixed upstream.
 
 ### Deprecated
 

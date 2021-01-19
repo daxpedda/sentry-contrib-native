@@ -227,14 +227,14 @@ the following effects:
 
 ## Alternatives
 
-It's recommended to use Sentry's official SDK for rust:
+It's recommended to use Sentry's official SDK for Rust:
 **[sentry](https://github.com/getsentry/sentry-rust)** -
 [![Crates.io](https://img.shields.io/crates/v/sentry.svg)](https://crates.io/crates/sentry).
 
 The official SDK provides a much better user experience and customizability.
 
 In comparison the only upside this crate can provide is application crash
-handling, the official SDK for rust can only handle panics.
+handling, the official SDK for Rust can only handle panics.
 
 ## Changelog
 

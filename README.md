@@ -3,8 +3,6 @@
 [![Crates.io](https://img.shields.io/crates/v/sentry-contrib-native.svg)](https://crates.io/crates/sentry-contrib-native)
 [![Libraries.io](https://img.shields.io/librariesio/release/cargo/sentry-contrib-native.svg)](https://libraries.io/cargo/sentry-contrib-native)
 [![Commits since](https://img.shields.io/github/commits-since/daxpedda/sentry-contrib-native/latest)](https://github.com/daxpedda/sentry-contrib-native/releases/latest)
-[![Resolution](https://isitmaintained.com/badge/resolution/daxpedda/sentry-contrib-native.svg)](http://isitmaintained.com/project/daxpedda/sentry-contrib-native)
-[![Issues](https://isitmaintained.com/badge/open/daxpedda/sentry-contrib-native.svg)](http://isitmaintained.com/project/daxpedda/sentry-contrib-native)
 [![License](https://img.shields.io/crates/l/sentry-contrib-native)](https://github.com/daxpedda/sentry-contrib-native/blob/master/LICENSE)
 [![LoC](https://tokei.rs/b1/github/daxpedda/sentry-contrib-native)](https://github.com/daxpedda/sentry-contrib-native)
 

@@ -2,7 +2,7 @@
 
 #[cfg(doc)]
 use crate::Event;
-use crate::{global_lock, Object, RToC, Value};
+use crate::{Object, RToC, Value};
 use std::{
     collections::BTreeMap,
     ffi::CStr,
@@ -100,11 +100,7 @@ impl Breadcrumb {
     /// ```
     pub fn add(self) {
         let breadcrumb = self.into_raw();
-
-        {
-            let _lock = global_lock();
-            unsafe { sys::add_breadcrumb(breadcrumb) }
-        }
+        unsafe { sys::add_breadcrumb(breadcrumb) }
     }
 }
 

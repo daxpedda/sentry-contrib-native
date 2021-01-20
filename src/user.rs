@@ -1,6 +1,6 @@
 //! Sentry user implementation.
 
-use crate::{global_lock, Object, Value};
+use crate::{Object, Value};
 use std::{
     collections::BTreeMap,
     ops::{Deref, DerefMut},
@@ -81,11 +81,7 @@ impl User {
     /// ```
     pub fn set(self) {
         let user = self.into_raw();
-
-        {
-            let _lock = global_lock();
-            unsafe { sys::set_user(user) };
-        }
+        unsafe { sys::set_user(user) }
     }
 }
 

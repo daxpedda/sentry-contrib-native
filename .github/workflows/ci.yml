@@ -86,16 +86,26 @@ jobs:
             }
           - { name: "", transport-default: true, transport-custom: false }
         os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
+          - {
+              runner: ubuntu-latest,
+              target: x86_64-unknown-linux-gnu,
+              test: true,
+            }
+          - { runner: macos-latest, target: x86_64-apple-darwin, test: true }
+          - { runner: macos-latest, target: aarch64-apple-darwin, test: false }
+          - {
+              runner: windows-latest,
+              target: x86_64-pc-windows-msvc,
+              test: true,
+            }
         branch: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.runner }}
 
     env:
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
+      CARGO_BUILD_TARGET: ${{ matrix.os.target }}
 
     steps:
       - name: Load last run details
@@ -113,6 +123,7 @@ jobs:
         uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust.channel }}
+          targets: ${{ matrix.os.target }}
       - name: Compare rustc versions
         id: rustc-version
         if: github.event_name == 'schedule'
@@ -134,8 +145,8 @@ jobs:
           submodules: recursive
       - name: Install Curl
         if:
-          steps.rustc-version.outcome != 'failure' && matrix.os ==
-          'ubuntu-latest' && matrix.feature.transport-default
+          steps.rustc-version.outcome != 'failure' && runner.os == 'Linux' &&
+          matrix.feature.transport-default
         run: |
           sudo apt update
           sudo apt install libcurl4-openssl-dev
@@ -151,8 +162,8 @@ jobs:
         with:
           path: ~/sentry-native
           key:
-            ${{ runner.os }}-${{ steps.sentry-native.outputs.version }}-${{
-            matrix.feature.transport-default }}-${{
+            ${{ matrix.os.target }}-${{ steps.sentry-native.outputs.version
+            }}-${{ matrix.feature.transport-default }}-${{
             hashFiles('sentry-contrib-native-sys/build.rs') }}
       - name: Set SENTRY_NATIVE_INSTALL
         if: steps.rustc-version.outcome != 'failure'
@@ -166,20 +177,19 @@ jobs:
       - name: Test
         if:
           always() && steps.build.outcome == 'success' && github.event_name !=
-          'pull_request'
+          'pull_request' && matrix.os.test
         run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Example
         if:
-          always() && steps.build.outcome == 'success' &&
-          matrix.feature.transport-default && github.event_name !=
-          'pull_request'
+          always() && steps.build.outcome == 'success' && github.event_name !=
+          'pull_request' && matrix.os.test && matrix.feature.transport-default
         run:
           cargo -v run --example example ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
       - name: Custom transport example
         if:
-          always() && steps.build.outcome == 'success' &&
-          matrix.feature.transport-custom && github.event_name != 'pull_request'
+          always() && steps.build.outcome == 'success' && github.event_name !=
+          'pull_request' && matrix.os.test && matrix.feature.transport-custom
         run:
           cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}

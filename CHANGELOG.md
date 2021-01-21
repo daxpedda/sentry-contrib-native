@@ -12,6 +12,7 @@ and this project adheres to
 
 - Added `reinstall_backend`.
 - Enabled Breakpad support for MacOS.
+- Added official support for the `aarch64-apple-darwin` target.
 
 ### Changed
 

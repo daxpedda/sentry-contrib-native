@@ -110,6 +110,7 @@ with that: <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
 <ul>
 <li>x86_64-unknown-linux-gnu</li>
 <li>x86_64-apple-darwin</li>
+<li>aarch64-apple-darwin (not tested in CI)</li>
 <li>x86_64-pc-windows-msvc</li>
 </ul>
 <p>See the <a href="https://github.com/daxpedda/sentry-contrib-native/actions">CI itself</a>
@@ -133,7 +134,8 @@ at that path,
 <a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
 will use that path as the build output.</p>
 <p>Additionally, if the <code>transport-default</code> feature on Android, Linux and MacOS is
-used, the development version of Curl is required.</p>
+used, the development version of Curl is required. For example on Ubuntu you can
+use the <code>libcurl4-openssl-dev</code> package.</p>
 <p>See the
 <a href="https://github.com/getsentry/sentry-native#building-and-installation">Sentry Native SDK</a>
 for more details.</p>

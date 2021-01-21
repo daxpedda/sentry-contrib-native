@@ -23,7 +23,7 @@ use std::{
 pub type c_wchar = u16;
 
 /// SDK Version
-pub const SDK_USER_AGENT: &str = "sentry.native/0.4.4";
+pub const SDK_USER_AGENT: &str = "sentry.native/0.4.5";
 
 /// The Sentry Client Options.
 ///

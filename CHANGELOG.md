@@ -15,7 +15,7 @@ and this project adheres to
 
 ### Changed
 
-- Updated `sentry-native` to `46d2a61`.
+- Updated `sentry-native` to 0.4.5.
 - Removed minimum supported Windows SDK requirement.
 - Removed internal global lock.
 

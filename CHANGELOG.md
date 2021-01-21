@@ -26,6 +26,7 @@ and this project adheres to
 ### Fixed
 
 - Improved README.
+- Fixed cross-compiling for MSVC with `crt-static`.
 
 ### Security
 

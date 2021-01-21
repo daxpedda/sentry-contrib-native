@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.1] - 2021-01-21
 
 ### Added
 
@@ -21,16 +21,10 @@ and this project adheres to
 - Removed minimum supported Windows SDK requirement.
 - Removed internal global lock.
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 
 - Improved README.
 - Fixed cross-compiling for MSVC with `crt-static`.
-
-### Security
 
 ## [0.2.0] - 2021-01-19
 
@@ -135,8 +129,7 @@ and this project adheres to
 
 - Initial release.
 
-[unreleased]:
-  https://github.com/daxpedda/sentry-contrib-native/compare/0.2.0...HEAD
+[0.2.1]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.2.1
 [0.2.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.2.0
 [0.1.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.1.0
 [0.1.0-rc]:

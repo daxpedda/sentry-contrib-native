@@ -1,6 +1,6 @@
 [package]
 name = "sentry-contrib-native"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["daxpedda <daxpedda@gmail.com>"]
 edition = "2018"
 description = "Unofficial bindings to the Sentry Native SDK for Rust."
@@ -17,7 +17,7 @@ members = ["sentry-contrib-native-sys", "tests/res/dylib"]
 http = { version = "0.2", optional = true }
 once_cell = "1"
 rmpv = "0.4"
-sys = { package = "sentry-contrib-native-sys", version = "0.2.0", path = "sentry-contrib-native-sys", default-features = false }
+sys = { package = "sentry-contrib-native-sys", version = "0.2.1", path = "sentry-contrib-native-sys", default-features = false }
 thiserror = "1"
 url = { version = "2", optional = true }
 vsprintf = "2"

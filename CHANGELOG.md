@@ -12,6 +12,8 @@ and this project adheres to
 
 ### Changed
 
+- Changed `zlib` for Crashpad to always build from source.
+
 ### Deprecated
 
 ### Removed

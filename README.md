@@ -152,7 +152,8 @@ at that path,
 will use that path as the build output.
 
 Additionally, if the `transport-default` feature on Android, Linux and MacOS is
-used, the development version of Curl is required.
+used, the development version of Curl is required. For example on Ubuntu you can
+use the `libcurl4-openssl-dev` package.
 
 See the
 [Sentry Native SDK](https://github.com/getsentry/sentry-native#building-and-installation)

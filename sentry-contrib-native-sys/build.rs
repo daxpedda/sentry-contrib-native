@@ -198,6 +198,10 @@ fn build(
 
     cmake_config.define("SENTRY_BACKEND", backend.as_ref());
 
+    if let Backend::Crashpad = backend {
+        cmake_config.define("CRASHPAD_ZLIB_SYSTEM", "OFF");
+    }
+
     if let Ok(true) = env::var("CARGO_CFG_TARGET_FEATURE").map(|var| var.contains("crt-static")) {
         cmake_config.define("SENTRY_BUILD_RUNTIMESTATIC", "ON");
     }

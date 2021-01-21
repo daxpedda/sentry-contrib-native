@@ -133,6 +133,9 @@ The default backend for Linux is changed from Breakpad to Crashpad.
 
 The default transport for Android is changed from none to Curl.
 
+The default behaviour of including the system shared zlib is disabled and
+instead built from source.
+
 Only the default backend is tested in the CI.
 
 ## Build

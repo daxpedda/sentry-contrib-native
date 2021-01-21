@@ -19,10 +19,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Push/PR
-        if: github.event_name != 'schedule'
+      - name: Push
+        if: github.event_name == 'push'
         run:
           echo >>$GITHUB_ENV BRANCHES=[\"$(echo ${{ github.ref }}|cut -c12- )\"]
+      - name: Pull request
+        if: github.event_name == 'pull_request'
+        run: echo >>$GITHUB_ENV BRANCHES=[\"${{ github.ref }}\"]
       - name: Schedule
         if: github.event_name == 'schedule'
         run: echo >>$GITHUB_ENV BRANCHES=[\"master\", \"release\"]
@@ -96,6 +99,7 @@ jobs:
 
     steps:
       - name: Load last run details
+        if: github.event_name != 'pull_request'
         uses: actions/cache@v2
         with:
           path: |
@@ -115,6 +119,7 @@ jobs:
         continue-on-error: true
         run: "! diff -u ~/rustc-version.txt <(rustc -V)"
       - name: Save new rustc version
+        if: github.event_name != 'pull_request'
         run: rustc -V > ~/rustc-version.txt
 
       - name: Emit last outcome if rustc version is the same
@@ -160,24 +165,27 @@ jobs:
           cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Test
         if:
-          always() && steps.build.outcome == 'success' && github.event_name ==
-          'push'
+          always() && steps.build.outcome == 'success' && github.event_name !=
+          'pull_request'
         run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
       - name: Example
         if:
           always() && steps.build.outcome == 'success' &&
-          matrix.feature.transport-default && github.event_name == 'push'
+          matrix.feature.transport-default && github.event_name !=
+          'pull_request'
         run:
           cargo -v run --example example ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
       - name: Custom transport example
         if:
           always() && steps.build.outcome == 'success' &&
-          matrix.feature.transport-custom && github.event_name == 'push'
+          matrix.feature.transport-custom && github.event_name != 'pull_request'
         run:
           cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
           matrix.rust.feature }}
 
       - name: Save outcome
-        if: always() && steps.rustc-version.outcome != 'failure'
+        if:
+          always() && steps.rustc-version.outcome != 'failure' &&
+          github.event_name != 'pull_request'
         run: echo ${{ job.status }} > ~/outcome.txt

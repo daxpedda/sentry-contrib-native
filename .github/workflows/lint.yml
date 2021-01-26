@@ -2,11 +2,13 @@ name: lint
 
 on:
   push:
-    branches-ignore:
-      - gh-pages
+    branches:
+      - master
+      - release
   pull_request:
-    branches-ignore:
-      - gh-pages
+    branches:
+      - master
+      - release
   schedule:
     - cron: 0 0 * * *
 

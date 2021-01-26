@@ -119,6 +119,8 @@ for more platform and feature support details there, this crate doesn't do
 anything fancy, so we mostly rely on <code>sentry-native</code> for support.</p>
 <p>The default backend for Linux is changed from Breakpad to Crashpad.</p>
 <p>The default transport for Android is changed from none to Curl.</p>
+<p>The default behaviour of including the system shared zlib is disabled and
+instead built from source.</p>
 <p>Only the default backend is tested in the CI.</p>
 <h2 id="build" class="section-header"><a href="#build">Build</a></h2>
 <p>This crate relies on

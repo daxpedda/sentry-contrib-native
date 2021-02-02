@@ -3,6 +3,13 @@ name = "dylib"
 version = "0.0.0"
 edition = "2018"
 publish = false
+authors = ["none"]
+description = "empty"
+license = "none"
+repository = "none"
+readme = "none"
+keywords = ["none"]
+categories = ["none"]
 
 [lib]
 crate-type = ["cdylib", "lib"]

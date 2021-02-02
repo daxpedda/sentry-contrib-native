@@ -1,13 +1,27 @@
+#![warn(
+    clippy::cargo,
+    clippy::missing_docs_in_private_items,
+    clippy::nursery,
+    clippy::pedantic,
+    missing_docs
+)]
+
+//! Crate to test if sentry is correctly detecting dynamically loaded libraries.
+
 use std::{
     env,
     path::{Path, PathBuf},
 };
 
+/// Simple test function to make sure the library has been correctly loaded.
+#[allow(clippy::missing_const_for_fn)]
 #[no_mangle]
 pub extern "C" fn test() -> bool {
     true
 }
 
+/// Helper function to determine the location of the dynamic library.
+#[must_use]
 pub fn location() -> PathBuf {
     let mut path = PathBuf::from(env!("OUT_DIR"))
         .parent()

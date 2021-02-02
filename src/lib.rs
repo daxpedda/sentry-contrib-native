@@ -1,5 +1,5 @@
 #![warn(
-    clippy::all,
+    clippy::cargo,
     clippy::missing_docs_in_private_items,
     clippy::nursery,
     clippy::pedantic,
@@ -9,7 +9,6 @@
     feature = "nightly",
     feature(doc_cfg),
     feature(external_doc),
-    allow(non_autolinks),
     doc(include = "../README.md")
 )]
 #![cfg_attr(not(feature = "nightly"), doc = "")]

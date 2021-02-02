@@ -1735,12 +1735,12 @@
 }
 
 <span class="doccomment">/// Convenience trait to convert [`rmpv::Value`] to [`Value`].</span>
-<span class="kw">trait</span> <span class="ident">MP</span> {
+<span class="kw">trait</span> <span class="ident">Mp</span> {
     <span class="doccomment">/// Convert [`rmpv::Value`] to [`Value`].</span>
     <span class="kw">fn</span> <span class="ident">into_value</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">MP</span> <span class="kw">for</span> <span class="ident">rmpv</span>::<span class="ident">Value</span> {
+<span class="kw">impl</span> <span class="ident">Mp</span> <span class="kw">for</span> <span class="ident">rmpv</span>::<span class="ident">Value</span> {
     <span class="kw">fn</span> <span class="ident">into_value</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="self">Self</span>::<span class="ident">Nil</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Null</span>,
@@ -1755,7 +1755,7 @@
             <span class="self">Self</span>::<span class="ident">String</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Value</span>::<span class="ident">String</span>(<span class="ident">value</span>.<span class="ident">into_str</span>().<span class="ident">expect</span>(<span class="string">&quot;message pack decoding failed&quot;</span>))
             }
-            <span class="self">Self</span>::<span class="ident">Array</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">List</span>(<span class="ident">value</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">MP</span>::<span class="ident">into_value</span>).<span class="ident">collect</span>()),
+            <span class="self">Self</span>::<span class="ident">Array</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">List</span>(<span class="ident">value</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">Mp</span>::<span class="ident">into_value</span>).<span class="ident">collect</span>()),
             <span class="self">Self</span>::<span class="ident">Map</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Map</span>(
                 <span class="ident">value</span>
                     .<span class="ident">into_iter</span>()

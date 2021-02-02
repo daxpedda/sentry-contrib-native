@@ -7,10 +7,6 @@ on:
   schedule:
     - cron: 0 0 * * *
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   documentation:
     runs-on: ubuntu-latest
@@ -44,7 +40,6 @@ jobs:
         if: steps.rustc-version.outcome != 'failure'
         uses: actions/checkout@v2
         with:
-          ref: master
           submodules: recursive
       - name: Install Curl
         if: steps.rustc-version.outcome != 'failure'

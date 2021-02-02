@@ -12,10 +12,6 @@ on:
   schedule:
     - cron: 0 0 * * *
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   build-matrix:
     runs-on: ubuntu-latest

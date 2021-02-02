@@ -649,12 +649,12 @@ impl Value {
 }
 
 /// Convenience trait to convert [`rmpv::Value`] to [`Value`].
-trait MP {
+trait Mp {
     /// Convert [`rmpv::Value`] to [`Value`].
     fn into_value(self) -> Value;
 }
 
-impl MP for rmpv::Value {
+impl Mp for rmpv::Value {
     fn into_value(self) -> Value {
         match self {
             Self::Nil => Value::Null,
@@ -669,7 +669,7 @@ impl MP for rmpv::Value {
             Self::String(value) => {
                 Value::String(value.into_str().expect("message pack decoding failed"))
             }
-            Self::Array(value) => Value::List(value.into_iter().map(MP::into_value).collect()),
+            Self::Array(value) => Value::List(value.into_iter().map(Mp::into_value).collect()),
             Self::Map(value) => Value::Map(
                 value
                     .into_iter()

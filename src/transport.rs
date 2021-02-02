@@ -42,7 +42,7 @@ pub enum Error {
     Username,
     /// DSN has no project ID.
     #[error("DSN has no project ID")]
-    ProjectID,
+    ProjectId,
     /// DSN has no host.
     #[error("DSN has no host")]
     Host,
@@ -501,7 +501,7 @@ impl Dsn {
         }
 
         if dsn_url.path().is_empty() || dsn_url.path() == "/" {
-            return Err(Error::ProjectID.into());
+            return Err(Error::ProjectId.into());
         }
 
         match dsn_url.host_str() {

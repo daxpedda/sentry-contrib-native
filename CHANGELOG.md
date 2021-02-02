@@ -14,6 +14,7 @@ and this project adheres to
 
 - Changed `zlib` for Crashpad to always build from source.
 - Updated `sentry-native` to `c95dbb0`.
+- Changed `Error::ProjectID` to `Error::ProjectId`.
 
 ### Deprecated
 

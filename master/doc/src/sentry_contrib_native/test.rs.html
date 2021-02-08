@@ -27,6 +27,9 @@
 <span id="24">24</span>
 <span id="25">25</span>
 <span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Test helper implementations.</span>
 
@@ -47,8 +50,11 @@
     }))
 }
 
-<span class="doccomment">/// Call thihs at the end of a test to check if a thread panicked, if it did,</span>
+<span class="doccomment">/// Call this at the end of a test to check if a thread panicked, if it did,</span>
 <span class="doccomment">/// panic!</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Panics</span>
+<span class="doccomment">/// Panics in the main thread if a panic occured in another thread.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_panics</span>() {
     <span class="kw">if</span> <span class="ident">PANICKED</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
         <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;panicked in thread&quot;</span>);

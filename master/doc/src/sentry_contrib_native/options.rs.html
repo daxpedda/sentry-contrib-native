@@ -1207,6 +1207,11 @@
 <span id="1204">1204</span>
 <span id="1205">1205</span>
 <span id="1206">1206</span>
+<span id="1207">1207</span>
+<span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Sentry options implementation.</span>
 
@@ -1716,6 +1721,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// assert!(options.debug());</span>
     <span class="doccomment">/// ```</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>))]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">debug</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_debug</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
@@ -1785,6 +1791,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// assert!(!options.auto_session_tracking());</span>
     <span class="doccomment">/// ```</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>))]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">auto_session_tracking</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_auto_session_tracking</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
@@ -1821,6 +1828,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// assert!(options.require_user_consent());</span>
     <span class="doccomment">/// ```</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>))]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">require_user_consent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_require_user_consent</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
@@ -1858,6 +1866,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// assert!(options.symbolize_stacktraces());</span>
     <span class="doccomment">/// ```</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>))]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbolize_stacktraces</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_symbolize_stacktraces</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
@@ -1999,6 +2008,7 @@
     <span class="doccomment">/// let _shutdown = Options::new().init()?;</span>
     <span class="doccomment">/// # Ok(()) }</span>
     <span class="doccomment">/// ```</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>))]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Shutdown</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="comment">// disolve `Options`, `sys::init` is going to take ownership now</span>
         <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>().<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {

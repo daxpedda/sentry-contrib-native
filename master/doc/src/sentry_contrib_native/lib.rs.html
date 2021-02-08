@@ -954,9 +954,9 @@
 <span class="doccomment">/// # use sentry_contrib_native::{clear_modulecache, modules_list};</span>
 <span class="doccomment">/// # fn main() -&gt; anyhow::Result&lt;()&gt; {</span>
 <span class="doccomment">/// # /*</span>
-<span class="doccomment">/// let lib = libloading::Library::new(&quot;/path/to/liblibrary.so&quot;)?;</span>
+<span class="doccomment">/// let lib = unsafe { libloading::Library::new(&quot;/path/to/liblibrary.so&quot;) }?;</span>
 <span class="doccomment">/// # */</span>
-<span class="doccomment">/// # let lib = libloading::Library::new(dylib::location())?;</span>
+<span class="doccomment">/// # let lib = unsafe { libloading::Library::new(dylib::location()) }?;</span>
 <span class="doccomment">/// clear_modulecache();</span>
 <span class="doccomment">/// # /*</span>
 <span class="doccomment">/// assert!(modules_list().contains(&amp;&quot;/path/to/liblibrary.so&quot;.to_string()));</span>

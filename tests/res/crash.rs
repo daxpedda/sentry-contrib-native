@@ -32,9 +32,10 @@ async fn main() -> Result<()> {
     Breadcrumb::new(Some("test type".into()), Some("test message".into())).add();
 
     // dylib
-    let lib = Library::new(dylib::location()).unwrap();
+    let lib_location = dylib::location();
+    let lib = unsafe { Library::new(&lib_location) }.unwrap();
     sentry::clear_modulecache();
-    assert!(sentry::modules_list().contains(&dylib::location().to_str().unwrap().to_string()));
+    assert!(sentry::modules_list().contains(&lib_location.to_str().unwrap().to_string()));
     let func: Symbol<extern "C" fn() -> bool> = unsafe { lib.get(b"test\0") }.unwrap();
     assert_eq!(true, func());
 

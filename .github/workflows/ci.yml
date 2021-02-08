@@ -52,7 +52,7 @@ jobs:
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: |
             ~/.cargo/.crates.toml
@@ -110,7 +110,7 @@ jobs:
     steps:
       - name: Load last run details
         if: github.event_name != 'pull_request'
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: |
             ~/rustc-version.txt
@@ -158,7 +158,7 @@ jobs:
           -f 2)"
       - name: Cache sentry-native
         if: steps.rustc-version.outcome != 'failure'
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ~/sentry-native
           key:

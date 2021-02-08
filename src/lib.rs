@@ -255,9 +255,9 @@ pub fn modules_list() -> Vec<String> {
 /// # use sentry_contrib_native::clear_modulecache;
 /// # fn main() -> anyhow::Result<()> {
 /// # /*
-/// let lib = libloading::Library::new("/path/to/liblibrary.so")?;
+/// let lib = unsafe { libloading::Library::new("/path/to/liblibrary.so") }?;
 /// # */
-/// # let lib = libloading::Library::new(dylib::location())?;
+/// # let lib = unsafe { libloading::Library::new(dylib::location()) }?;
 /// clear_modulecache();
 /// # Ok(()) }
 /// ```

@@ -17,8 +17,11 @@ pub fn set_hook() {
     }))
 }
 
-/// Call thihs at the end of a test to check if a thread panicked, if it did,
+/// Call this at the end of a test to check if a thread panicked, if it did,
 /// panic!
+///
+/// # Panics
+/// Panics in the main thread if a panic occured in another thread.
 pub fn verify_panics() {
     if PANICKED.load(Ordering::SeqCst) {
         panic!("panicked in thread");

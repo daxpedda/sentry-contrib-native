@@ -506,6 +506,7 @@ impl Options {
     ///
     /// assert!(options.debug());
     /// ```
+    #[cfg_attr(feature = "nightly", allow(clippy::missing_panics_doc))]
     #[must_use]
     pub fn debug(&self) -> bool {
         match unsafe { sys::options_get_debug(self.as_ref()) } {
@@ -575,6 +576,7 @@ impl Options {
     ///
     /// assert!(!options.auto_session_tracking());
     /// ```
+    #[cfg_attr(feature = "nightly", allow(clippy::missing_panics_doc))]
     #[must_use]
     pub fn auto_session_tracking(&self) -> bool {
         match unsafe { sys::options_get_auto_session_tracking(self.as_ref()) } {
@@ -611,6 +613,7 @@ impl Options {
     ///
     /// assert!(options.require_user_consent());
     /// ```
+    #[cfg_attr(feature = "nightly", allow(clippy::missing_panics_doc))]
     #[must_use]
     pub fn require_user_consent(&self) -> bool {
         match unsafe { sys::options_get_require_user_consent(self.as_ref()) } {
@@ -648,6 +651,7 @@ impl Options {
     ///
     /// assert!(options.symbolize_stacktraces());
     /// ```
+    #[cfg_attr(feature = "nightly", allow(clippy::missing_panics_doc))]
     #[must_use]
     pub fn symbolize_stacktraces(&self) -> bool {
         match unsafe { sys::options_get_symbolize_stacktraces(self.as_ref()) } {
@@ -789,6 +793,7 @@ impl Options {
     /// let _shutdown = Options::new().init()?;
     /// # Ok(()) }
     /// ```
+    #[cfg_attr(feature = "nightly", allow(clippy::missing_panics_doc))]
     pub fn init(mut self) -> Result<Shutdown, Error> {
         // disolve `Options`, `sys::init` is going to take ownership now
         let options = if let Ownership::Owned(options) = self.raw.take().expect("use after free") {

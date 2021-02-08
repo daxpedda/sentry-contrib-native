@@ -215,9 +215,9 @@ pub fn shutdown() {
 /// # use sentry_contrib_native::{clear_modulecache, modules_list};
 /// # fn main() -> anyhow::Result<()> {
 /// # /*
-/// let lib = libloading::Library::new("/path/to/liblibrary.so")?;
+/// let lib = unsafe { libloading::Library::new("/path/to/liblibrary.so") }?;
 /// # */
-/// # let lib = libloading::Library::new(dylib::location())?;
+/// # let lib = unsafe { libloading::Library::new(dylib::location()) }?;
 /// clear_modulecache();
 /// # /*
 /// assert!(modules_list().contains(&"/path/to/liblibrary.so".to_string()));

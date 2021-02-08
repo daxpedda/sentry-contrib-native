@@ -21,6 +21,7 @@ pub extern "C" fn test() -> bool {
 }
 
 /// Helper function to determine the location of the dynamic library.
+#[allow(clippy::missing_panics_doc)]
 #[must_use]
 pub fn location() -> PathBuf {
     let mut path = PathBuf::from(env!("OUT_DIR"))

@@ -143,6 +143,7 @@ fn main() -> Result<()> {
 
             println!("cargo:rustc-link-lib=dbghelp");
             println!("cargo:rustc-link-lib=shlwapi");
+            println!("cargo:rustc-link-lib=version");
         }
         "macos" => {
             if cfg!(feature = "transport-default") {

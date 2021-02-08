@@ -206,7 +206,6 @@ If nightly isn't available, use `cargo doc` as usual.
 
 For correct testing the following has to be provided:
 
-- `feature = "test"` has to be enabled.
 - `SENTRY_DSN` environment variable has to contain a valid Sentry DSN URL.
 - `SENTRY_TOKEN` environment variable has to contain a valid Sentry API Token
   with read access to "Organization", "Project" and "Issue & Event".

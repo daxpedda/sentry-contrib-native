@@ -29,7 +29,7 @@ dylib = { path = "tests/res/dylib" }
 hex = "0.4"
 futures-executor = "0.3"
 futures-util = "0.3"
-libloading = "0.6"
+libloading = "0.7"
 parking_lot = "0.11"
 rand = "0.8"
 reqwest = { version = "0.11", default-features = false, features = [

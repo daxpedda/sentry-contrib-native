@@ -6,24 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2021-02-08
 
 ### Added
+
+- Added `Options::set_max_breadcrumbs` and `Options::max_breadcrumbs`.
 
 ### Changed
 
 - Changed `zlib` for Crashpad to always build from source.
 - Updated `sentry-native` to 0.4.7.
 - Changed `Error::ProjectID` to `Error::ProjectId`.
-- Added `Options::set_max_breadcrumbs` and `Options::max_breadcrumbs`.
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## [0.2.1] - 2021-01-21
 
@@ -148,8 +141,7 @@ and this project adheres to
 
 - Initial release.
 
-[unreleased]:
-  https://github.com/daxpedda/sentry-contrib-native/compare/0.2.1...HEAD
+[0.3.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.3.0
 [0.2.1]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.2.1
 [0.2.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.2.0
 [0.1.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.1.0

@@ -516,6 +516,34 @@ impl Options {
         }
     }
 
+    /// Sets the number of breadcrumbs being tracked and attached to events.
+    /// Defaults to 100.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Options;
+    /// let mut options = Options::new();
+    /// options.set_max_breadcrumbs(10);
+    /// ```
+    pub fn set_max_breadcrumbs(&mut self, max_breadcrumbs: usize) {
+        unsafe { sys::options_set_max_breadcrumbs(self.as_mut(), max_breadcrumbs) }
+    }
+
+    /// Gets the number of breadcrumbs being tracked and attached to events.
+    ///
+    /// # Examples
+    /// ```
+    /// # use sentry_contrib_native::Options;
+    /// let mut options = Options::new();
+    /// options.set_max_breadcrumbs(10);
+    ///
+    /// assert_eq!(options.max_breadcrumbs(), 10);
+    /// ```
+    #[must_use]
+    pub fn max_breadcrumbs(&self) -> usize {
+        unsafe { sys::options_get_max_breadcrumbs(self.as_ref()) }
+    }
+
     /// Sets a callback that is used for logging purposes when
     /// [`Options::debug`] is `true`.
     ///
@@ -983,6 +1011,11 @@ fn options() -> anyhow::Result<()> {
 
     options.set_debug(true);
     assert!(options.debug());
+
+    assert_eq!(options.max_breadcrumbs(), 100);
+
+    options.set_max_breadcrumbs(10);
+    assert_eq!(options.max_breadcrumbs(), 10);
 
     options.set_logger(|_, _| ());
     options.set_logger(Log);

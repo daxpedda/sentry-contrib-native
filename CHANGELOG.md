@@ -13,8 +13,9 @@ and this project adheres to
 ### Changed
 
 - Changed `zlib` for Crashpad to always build from source.
-- Updated `sentry-native` to `c95dbb0`.
+- Updated `sentry-native` to 0.4.7.
 - Changed `Error::ProjectID` to `Error::ProjectId`.
+- Added `Options::set_max_breadcrumbs` and `Options::max_breadcrumbs`.
 
 ### Deprecated
 

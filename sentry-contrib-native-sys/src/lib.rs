@@ -22,7 +22,7 @@ use std::{
 pub type c_wchar = u16;
 
 /// SDK Version
-pub const SDK_USER_AGENT: &str = "sentry.native/0.4.5";
+pub const SDK_USER_AGENT: &str = "sentry.native/0.4.7";
 
 /// The Sentry Client Options.
 ///
@@ -502,6 +502,16 @@ extern "C" {
     /// Returns the current value of the debug flag.
     #[link_name = "sentry_options_get_debug"]
     pub fn options_get_debug(opts: *const Options) -> c_int;
+
+    /// Sets the number of breadcrumbs being tracked and attached to events.
+    ///
+    /// Defaults to 100.
+    #[link_name = "sentry_options_set_max_breadcrumbs"]
+    pub fn options_set_max_breadcrumbs(opts: *mut Options, max_breadcrumbs: usize);
+
+    /// Gets the number of breadcrumbs being tracked and attached to events.
+    #[link_name = "sentry_options_get_max_breadcrumbs"]
+    pub fn options_get_max_breadcrumbs(opts: *const Options) -> usize;
 
     /// Sets the sentry-native logger function.
     ///

@@ -631,7 +631,7 @@ fn transport() -> anyhow::Result<()> {
         fn send(&self, envelope: RawEnvelope) {
             SEND.fetch_add(1, Ordering::SeqCst);
 
-            let _ = envelope.event();
+            let _event = envelope.event();
             let request_1 = envelope.to_request(self.dsn.clone());
 
             let envelope = envelope.serialize();
@@ -654,7 +654,7 @@ fn transport() -> anyhow::Result<()> {
 
     let mut options = Options::new();
     let dsn = Dsn::new(options.dsn().unwrap())?;
-    let _ = dsn.to_headers();
+    let _event = dsn.to_headers();
     options.set_transport(|options| Ok(CustomTransport::new(dsn, options)));
     let shutdown = options.init()?;
 

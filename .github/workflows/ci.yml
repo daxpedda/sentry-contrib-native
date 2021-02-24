@@ -97,6 +97,7 @@ jobs:
               runner: windows-latest,
               target: x86_64-pc-windows-msvc,
               test: true,
+              SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk,
             }
         branch: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
 
@@ -106,6 +107,7 @@ jobs:
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
       CARGO_BUILD_TARGET: ${{ matrix.os.target }}
+      SDKROOT: ${{ matrix.os.SDKROOT }}
 
     steps:
       - name: Load last run details

@@ -9,7 +9,7 @@ is captures.</p>
 <p>This will not work properly if used with <code>panic = &quot;abort&quot;</code> because
 <a href="../sentry_contrib_native/struct.Shutdown.html" title="Shutdown"><code>Shutdown</code></a> is never unwound. To fix this make sure you make the panic
 handler itself call <a href="../sentry_contrib_native/fn.shutdown.html" title="shutdown"><code>shutdown</code></a>.</p>
-<p>Rust doesn't allow panics inside of a panicking thread and reacts with an
+<p>Rust doesn’t allow panics inside of a panicking thread and reacts with an
 <a href="https://doc.rust-lang.org/nightly/std/process/fn.abort.html" title="abort"><code>abort</code></a>: if a custom transport or a before-send callback was registered
 that can panic, it might lead to any <a href="https://doc.rust-lang.org/nightly/std/macro.panic.html" title="panic!"><code>panic!</code></a> being an <a href="https://doc.rust-lang.org/nightly/std/process/fn.abort.html" title="abort"><code>abort</code></a> instead.</p>
 <h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>

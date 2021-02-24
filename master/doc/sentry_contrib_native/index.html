@@ -45,7 +45,7 @@ for Rust.</p>
 <li><strong><a href="https://github.com/daxpedda/sentry-contrib-native/tree/release">release</a></strong> -
 For releases only.</li>
 <li><strong><a href="https://github.com/daxpedda/sentry-contrib-native">master</a></strong> - For active
-development inluding PR's.</li>
+development inluding PR’s.</li>
 </ul>
 <h2 id="usage" class="section-header"><a href="#usage">Usage</a></h2>
 <div class='information'><div class='tooltip should_panic'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered should_panic">
@@ -72,10 +72,10 @@ development inluding PR's.</li>
 }</pre></div>
 <p>By default, on Linux, MacOS and Windows the Crashpad handler executable has to
 be shipped with the application, for convenience the Crashpad handler executable
-will be copied to Cargo's default binary output folder, so using <code>cargo run</code>
+will be copied to Cargo’s default binary output folder, so using <code>cargo run</code>
 works without any additional setup or configuration.</p>
 <p>If you need to export the Crashpad handler executable programmatically to a
-specific output path, a &quot;convenient&quot; environment variable is provided to help
+specific output path, a “convenient” environment variable is provided to help
 with that: <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
 <p>Here is an example <code>build.rs</code>.</p>
 
@@ -110,12 +110,13 @@ with that: <code>DEP_SENTRY_NATIVE_CRASHPAD_HANDLER</code>.</p>
 <ul>
 <li>x86_64-unknown-linux-gnu</li>
 <li>x86_64-apple-darwin</li>
+<li>aarch64-apple-darwin (building only)</li>
 <li>x86_64-pc-windows-msvc</li>
 </ul>
 <p>See the <a href="https://github.com/daxpedda/sentry-contrib-native/actions">CI itself</a>
 for more detailed information. See the
 <a href="https://github.com/getsentry/sentry-native#platform-and-feature-support">Sentry Native SDK</a>
-for more platform and feature support details there, this crate doesn't do
+for more platform and feature support details there, this crate doesn’t do
 anything fancy, so we mostly rely on <code>sentry-native</code> for support.</p>
 <p>The default backend for Linux is changed from Breakpad to Crashpad.</p>
 <p>The default transport for Android is changed from none to Curl.</p>
@@ -126,10 +127,10 @@ instead built from source.</p>
 <p>This crate relies on
 <a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
 which in turn builds
-<a href="https://github.com/getsentry/sentry-native">Sentry's Native SDK</a>. This requires
+<a href="https://github.com/getsentry/sentry-native">Sentry’s Native SDK</a>. This requires
 <a href="https://cmake.org">CMake</a>.</p>
 <p>Alternatively a path to a pre-built version of
-<a href="https://github.com/getsentry/sentry-native">Sentry's Native SDK</a> can be
+<a href="https://github.com/getsentry/sentry-native">Sentry’s Native SDK</a> can be
 provided with the <code>SENTRY_NATIVE_INSTALL</code> environment variable. If none is found
 at that path,
 <a href="https://crates.io/crates/sentry-contrib-native-sys"><code>sentry-contrib-native-sys</code></a>
@@ -174,13 +175,13 @@ Windows, the application has to be shipped together with the
 </ul>
 <p>Currently, nightly is needed for full documentation:
 <code>cargo doc --features nightly</code></p>
-<p>If nightly isn't available, use <code>cargo doc</code> as usual.</p>
+<p>If nightly isn’t available, use <code>cargo doc</code> as usual.</p>
 <h2 id="tests" class="section-header"><a href="#tests">Tests</a></h2>
 <p>For correct testing the following has to be provided:</p>
 <ul>
 <li><code>SENTRY_DSN</code> environment variable has to contain a valid Sentry DSN URL.</li>
 <li><code>SENTRY_TOKEN</code> environment variable has to contain a valid Sentry API Token
-with read access to &quot;Organization&quot;, &quot;Project&quot; and &quot;Issue &amp; Event&quot;.</li>
+with read access to “Organization”, “Project” and “Issue &amp; Event”.</li>
 </ul>
 <p>Tests may easily exhaust large number of events and you may not want to expose a
 Sentry API token, therefore it is recommended to run tests against a
@@ -199,7 +200,7 @@ account <code>SENTRY_NATIVE_INSTALL</code>, no matter what is set through
 </ul>
 <p><code>cargo test</code></p>
 <h2 id="alternatives" class="section-header"><a href="#alternatives">Alternatives</a></h2>
-<p>It's recommended to use Sentry's official SDK for Rust:
+<p>It’s recommended to use Sentry’s official SDK for Rust:
 <strong><a href="https://github.com/getsentry/sentry-rust">sentry</a></strong> -
 <a href="https://crates.io/crates/sentry"><img src="https://img.shields.io/crates/v/sentry.svg" alt="Crates.io" /></a>.</p>
 <p>The official SDK provides a much better user experience and customizability.</p>
@@ -259,7 +260,7 @@ or not in the allotted time.</p>
 </td></tr><tr class="module-item"><td><a class="enum" href="enum.Value.html" title="sentry_contrib_native::Value enum">Value</a></td><td class="docblock-short"><p>Represents a Sentry protocol value.</p>
 </td></tr></table><h2 id="constants" class="section-header"><a href="#constants">Constants</a></h2>
 <table><tr class="module-item"><td><a class="constant" href="constant.API_VERSION.html" title="sentry_contrib_native::API_VERSION constant">API_VERSION</a></td><td class="docblock-short"><p>Version of the Sentry API we can communicate with, AFAICT this is just
-hardcoded into sentry-native, so ... two can play at that game!</p>
+hardcoded into sentry-native, so … two can play at that game!</p>
 </td></tr><tr class="module-item"><td><a class="constant" href="constant.ENVELOPE_MIME.html" title="sentry_contrib_native::ENVELOPE_MIME constant">ENVELOPE_MIME</a></td><td class="docblock-short"><p>The MIME type for Sentry envelopes.</p>
 </td></tr><tr class="module-item"><td><a class="constant" href="constant.SDK_USER_AGENT.html" title="sentry_contrib_native::SDK_USER_AGENT constant">SDK_USER_AGENT</a></td><td class="docblock-short"><p>SDK Version</p>
 </td></tr></table><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>

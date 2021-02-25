@@ -92,12 +92,7 @@ jobs:
               test: true,
             }
           - { runner: macos-latest, target: x86_64-apple-darwin, test: true }
-          - {
-              runner: macos-latest,
-              target: aarch64-apple-darwin,
-              test: false,
-              SDKROOT: /Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk,
-            }
+          - { runner: macos-latest, target: aarch64-apple-darwin, test: false }
           - {
               runner: windows-latest,
               target: x86_64-pc-windows-msvc,
@@ -111,7 +106,6 @@ jobs:
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
       SENTRY_TOKEN: ${{ secrets.SENTRY_TOKEN }}
       CARGO_BUILD_TARGET: ${{ matrix.os.target }}
-      SDKROOT: ${{ matrix.os.SDKROOT }}
 
     steps:
       - name: Load last run details

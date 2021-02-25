@@ -74,15 +74,14 @@ jobs:
 
       - name: Deploy
         if: steps.rustc-version.outcome != 'failure'
-        uses: JamesIves/github-pages-deploy-action@releases/v3
+        uses: JamesIves/github-pages-deploy-action@releases/v4
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: target/doc/
-          GIT_CONFIG_NAME: github-actions
-          GIT_CONFIG_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          TARGET_FOLDER: master/doc/
-          CLEAN: true
+          branch: gh-pages
+          folder: target/doc/
+          git-config-name: github-actions
+          git-config-email: 41898282+github-actions[bot]@users.noreply.github.com
+          target-folder: master/doc/
+          clean: true
 
       - name: Save outcome
         if: always() && steps.rustc-version.outcome != 'failure'

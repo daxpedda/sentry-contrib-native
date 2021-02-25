@@ -171,7 +171,7 @@ for more details.
 - **backend-inproc** - Will use InProc.
 - **transport-custom** - Adds helper types and methods to custom transport.
 - **nightly** - Enables full documentation through
-  [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html)
+  [`feature(extended_key_value_attributes)`](https://doc.rust-lang.org/unstable-book/language-features/extended-key-value-attributes.html)
   and
   [`feature(doc_cfg)`](https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html).
 

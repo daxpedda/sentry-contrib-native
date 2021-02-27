@@ -36,7 +36,7 @@ For more details see
 - **backend-breakpad** - Will use Breakpad.
 - **backend-inproc** - Will use InProc.
 - **nightly** - Enables full documentation through
-  [`feature(extended_key_value_attributes)`](https://doc.rust-lang.org/unstable-book/language-features/extended-key-value-attributes.html).
+  [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html).
 
 By default the selected backend will be Crashpad for Linux, MacOS and Windows
 and InProc for Android, even if no corresponding feature is active. See

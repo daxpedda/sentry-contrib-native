@@ -12,9 +12,6 @@ and this project adheres to
 
 ### Changed
 
-- Moved from `feature(external_doc)` to `feature(extended_key_value_attributes)`
-  with `feature = "nightly"`.
-
 ### Deprecated
 
 ### Removed

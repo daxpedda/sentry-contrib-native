@@ -8,8 +8,8 @@
 #![cfg_attr(
     feature = "nightly",
     feature(doc_cfg),
-    feature(extended_key_value_attributes),
-    doc = include_str!("../README.md")
+    feature(external_doc),
+    doc(include = "../README.md")
 )]
 #![cfg_attr(not(feature = "nightly"), doc = "")]
 

@@ -1,3 +1,4 @@
 [submodule "sentry-contrib-native-sys/sentry-native"]
 	path = sentry-contrib-native-sys/sentry-native
-	url = https://github.com/getsentry/sentry-native.git
+	url = https://github.com/daxpedda/sentry-native.git
+	branch = zlib-apple-silicon

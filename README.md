@@ -121,6 +121,7 @@ Currently the following systems are tested with CI:
 
 - x86_64-unknown-linux-gnu
 - x86_64-apple-darwin
+- aarch64-apple-darwin (building only)
 - x86_64-pc-windows-msvc
 
 See the [CI itself](https://github.com/daxpedda/sentry-contrib-native/actions)

@@ -184,6 +184,29 @@ fn build(
         .define("SENTRY_BUILD_EXAMPLES", "OFF")
         .profile("RelWithDebInfo");
 
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH")?;
+
+    // fix CMake cross compile
+    // see <https://github.com/alexcrichton/cmake-rs/issues/87> for details
+    if target_os == "macos" {
+        let host_arch = if cfg!(target_arch = "x86_64") {
+            "x86_64"
+        } else if cfg!(target_arch = "aarch64") {
+            "aarch64"
+        } else {
+            panic!("Unspported OS")
+        };
+
+        if host_arch != target_arch {
+            let target_arch = if target_arch == "aarch64" {
+                "arm64"
+            } else {
+                &target_arch
+            };
+            cmake_config.define("CMAKE_OSX_ARCHITECTURES", target_arch);
+        }
+    }
+
     if let Some(install) = install {
         fs::create_dir_all(install).expect("failed to create install directory");
         cmake_config.out_dir(install);
@@ -228,7 +251,6 @@ fn build(
             );
         }
 
-        let target_arch = env::var("CARGO_CFG_TARGET_ARCH")?;
         let abi = match target_arch.as_ref() {
             "aarch64" => "arm64-v8a",
             "arm" | "armv7" => "armeabi-v7a",

@@ -760,13 +760,13 @@ impl From<&str> for Value {
     }
 }
 
-impl<V: Into<Value>> From<Vec<V>> for Value {
+impl<V: Into<Self>> From<Vec<V>> for Value {
     fn from(value: Vec<V>) -> Self {
         Self::List(value.into_iter().map(Into::into).collect())
     }
 }
 
-impl<K: Into<String>, V: Into<Value>> From<Vec<(K, V)>> for Value {
+impl<K: Into<String>, V: Into<Self>> From<Vec<(K, V)>> for Value {
     fn from(value: Vec<(K, V)>) -> Self {
         Self::Map(
             value
@@ -777,7 +777,7 @@ impl<K: Into<String>, V: Into<Value>> From<Vec<(K, V)>> for Value {
     }
 }
 
-impl<K: Into<String>, V: Into<Value>> From<BTreeMap<K, V>> for Value {
+impl<K: Into<String>, V: Into<Self>> From<BTreeMap<K, V>> for Value {
     fn from(value: BTreeMap<K, V>) -> Self {
         Self::Map(
             value

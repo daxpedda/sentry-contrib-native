@@ -326,7 +326,7 @@ impl Uuid {
     /// );
     /// ```
     #[must_use]
-    pub fn to_plain(&self) -> String {
+    pub fn to_plain(self) -> String {
         let mut uuid = self.to_string();
         uuid.retain(|c| c != '-');
         uuid

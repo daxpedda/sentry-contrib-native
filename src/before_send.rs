@@ -92,7 +92,7 @@ pub extern "C" fn before_send(
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 60000)]
+#[rusty_fork::fork_test(timeout_ms = 60000)]
 #[allow(clippy::items_after_statements)]
 fn before_send_test() -> anyhow::Result<()> {
     use crate::{Event, Options, Value};
@@ -140,7 +140,7 @@ fn before_send_test() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-#[rusty_fork::test_fork(timeout_ms = 60000)]
+#[rusty_fork::fork_test(timeout_ms = 60000)]
 #[should_panic]
 fn catch_panic() -> anyhow::Result<()> {
     use crate::{Event, Options};

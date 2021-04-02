@@ -22,7 +22,7 @@
 <h1 id="examples-3" class="section-header"><a href="#examples-3">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="macro">assert_eq</span><span class="macro">!</span>([<span class="number">0</span>; <span class="number">16</span>], <span class="ident">Event</span>::<span class="ident">new</span>().<span class="ident">capture</span>().<span class="ident">as_bytes</span>());</pre></div>
-</div><h4 id="method.to_plain" class="method"><code><span class="docblock attributes">#[must_use]</span>pub fn <a href="#method.to_plain" class="fnname">to_plain</a>(&amp;self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a></code><a class="srclink" href="../src/sentry_contrib_native/event.rs.html#329-333" title="goto source code">[src]</a></h4><div class="docblock"><p>Yield the UUID without dashes.</p>
+</div><h4 id="method.to_plain" class="method"><code><span class="docblock attributes">#[must_use]</span>pub fn <a href="#method.to_plain" class="fnname">to_plain</a>(self) -&gt; <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a></code><a class="srclink" href="../src/sentry_contrib_native/event.rs.html#329-333" title="goto source code">[src]</a></h4><div class="docblock"><p>Yield the UUID without dashes.</p>
 <h1 id="examples-4" class="section-header"><a href="#examples-4">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="macro">assert_eq</span><span class="macro">!</span>(

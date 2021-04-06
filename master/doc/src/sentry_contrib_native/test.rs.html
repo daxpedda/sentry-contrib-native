@@ -57,7 +57,7 @@
 <span class="doccomment">/// Panics in the main thread if a panic occured in another thread.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_panics</span>() {
     <span class="kw">if</span> <span class="ident">PANICKED</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
-        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;panicked in thread&quot;</span>);
+        <span class="macro">panic!</span>(<span class="string">&quot;panicked in thread&quot;</span>);
     }
 }
 </pre></div>

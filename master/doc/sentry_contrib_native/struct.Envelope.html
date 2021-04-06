@@ -14,7 +14,7 @@
         <span class="comment">// serialize it, maybe move this to another thread to prevent blocking</span>
         <span class="kw">let</span> <span class="ident">envelope</span>: <span class="ident">Envelope</span> <span class="op">=</span> <span class="ident">raw_envelope</span>.<span class="ident">serialize</span>();
         <span class="comment">// look at that body!</span>
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">envelope</span>.<span class="ident">as_bytes</span>());
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">envelope</span>.<span class="ident">as_bytes</span>());
         <span class="comment">// let&#39;s build the whole `Request`</span>
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-custom&quot;</span>)]</span>
         <span class="kw">let</span> <span class="ident">request</span>: <span class="ident">Request</span> <span class="op">=</span> <span class="ident">envelope</span>.<span class="ident">into_request</span>(<span class="self">self</span>.<span class="ident">dsn</span>.<span class="ident">clone</span>());

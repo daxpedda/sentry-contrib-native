@@ -858,7 +858,7 @@
             <span class="self">Self</span>::<span class="ident">Error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Error&quot;</span>,
             <span class="self">Self</span>::<span class="ident">Fatal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Fatal&quot;</span>,
         };
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">text</span>)
+        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">text</span>)
     }
 }
 
@@ -882,7 +882,7 @@
             <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sys</span>::<span class="ident">Level</span>::<span class="ident">Warning</span> <span class="kw">as</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Warning</span>,
             <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sys</span>::<span class="ident">Level</span>::<span class="ident">Error</span> <span class="kw">as</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Error</span>,
             <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sys</span>::<span class="ident">Level</span>::<span class="ident">Fatal</span> <span class="kw">as</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Fatal</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;failed to convert `i32` to `Level`&quot;</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;failed to convert `i32` to `Level`&quot;</span>),
         }
     }
 }
@@ -1318,43 +1318,43 @@
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">level</span>() {
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="op">-</span><span class="number">1</span>, <span class="ident">Level</span>::<span class="ident">Debug</span>.<span class="ident">into_raw</span>());
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="number">0</span>, <span class="ident">Level</span>::<span class="ident">Info</span>.<span class="ident">into_raw</span>());
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="number">1</span>, <span class="ident">Level</span>::<span class="ident">Warning</span>.<span class="ident">into_raw</span>());
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="number">2</span>, <span class="ident">Level</span>::<span class="ident">Error</span>.<span class="ident">into_raw</span>());
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="number">3</span>, <span class="ident">Level</span>::<span class="ident">Fatal</span>.<span class="ident">into_raw</span>());
+    <span class="macro">assert_eq!</span>(<span class="op">-</span><span class="number">1</span>, <span class="ident">Level</span>::<span class="ident">Debug</span>.<span class="ident">into_raw</span>());
+    <span class="macro">assert_eq!</span>(<span class="number">0</span>, <span class="ident">Level</span>::<span class="ident">Info</span>.<span class="ident">into_raw</span>());
+    <span class="macro">assert_eq!</span>(<span class="number">1</span>, <span class="ident">Level</span>::<span class="ident">Warning</span>.<span class="ident">into_raw</span>());
+    <span class="macro">assert_eq!</span>(<span class="number">2</span>, <span class="ident">Level</span>::<span class="ident">Error</span>.<span class="ident">into_raw</span>());
+    <span class="macro">assert_eq!</span>(<span class="number">3</span>, <span class="ident">Level</span>::<span class="ident">Fatal</span>.<span class="ident">into_raw</span>());
 
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Level</span>::<span class="ident">Debug</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="op">-</span><span class="number">1</span>));
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Level</span>::<span class="ident">Info</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="number">0</span>));
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Level</span>::<span class="ident">Warning</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="number">1</span>));
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Level</span>::<span class="ident">Error</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="number">2</span>));
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Level</span>::<span class="ident">Fatal</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="number">3</span>));
+    <span class="macro">assert_eq!</span>(<span class="ident">Level</span>::<span class="ident">Debug</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="op">-</span><span class="number">1</span>));
+    <span class="macro">assert_eq!</span>(<span class="ident">Level</span>::<span class="ident">Info</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="number">0</span>));
+    <span class="macro">assert_eq!</span>(<span class="ident">Level</span>::<span class="ident">Warning</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="number">1</span>));
+    <span class="macro">assert_eq!</span>(<span class="ident">Level</span>::<span class="ident">Error</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="number">2</span>));
+    <span class="macro">assert_eq!</span>(<span class="ident">Level</span>::<span class="ident">Fatal</span>, <span class="ident">Level</span>::<span class="ident">from_raw</span>(<span class="number">3</span>));
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">fork_test</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
 <span class="kw">fn</span> <span class="ident">consent</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
     <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
     <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Revoked</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
     <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Given</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
     <span class="kw">let</span> <span class="ident">_shutdown</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>().<span class="ident">init</span>()<span class="question-mark">?</span>;
 
     <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Given</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Given</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent</span>::<span class="ident">Given</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
     <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Revoked</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Revoked</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent</span>::<span class="ident">Revoked</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
     <span class="kw">crate</span>::<span class="ident">set_user_consent</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent</span>::<span class="ident">Unknown</span>, <span class="kw">crate</span>::<span class="ident">user_consent</span>());
 
     <span class="prelude-val">Ok</span>(())
 }
@@ -1420,7 +1420,7 @@
     <span class="ident">options</span>.<span class="ident">set_require_user_consent</span>(<span class="bool-val">true</span>);
     <span class="kw">let</span> <span class="ident">shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;
 
-    <span class="ident">spawns</span>(<span class="macro">vec</span><span class="macro">!</span>[
+    <span class="ident">spawns</span>(<span class="macro">vec!</span>[
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">_modules</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">modules_list</span>();
         },
@@ -1430,7 +1430,7 @@
                 <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Consent</span>::<span class="ident">Unknown</span>,
                 <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Consent</span>::<span class="ident">Given</span>,
                 <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Consent</span>::<span class="ident">Revoked</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
             })
         },
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
@@ -1446,9 +1446,9 @@
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">remove_tag</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_extra</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">remove_extra</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="macro">vec</span><span class="macro">!</span>[(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>)]),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="macro">vec!</span>[(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>)]),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">remove_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_fingerprint</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">index</span>.<span class="ident">to_string</span>()]).<span class="ident">unwrap</span>(),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_fingerprint</span>(<span class="macro">vec!</span>[<span class="ident">index</span>.<span class="ident">to_string</span>()]).<span class="ident">unwrap</span>(),
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">remove_fingerprint</span>(),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">set_transaction</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">remove_transaction</span>(),
@@ -1459,7 +1459,7 @@
                 <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Level</span>::<span class="ident">Warning</span>,
                 <span class="number">3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Level</span>::<span class="ident">Error</span>,
                 <span class="number">4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Level</span>::<span class="ident">Fatal</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
             })
         },
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">start_session</span>(),

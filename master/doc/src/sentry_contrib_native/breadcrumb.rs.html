@@ -229,13 +229,13 @@
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">breadcrumb</span>() {
     <span class="kw">let</span> <span class="ident">breadcrumb</span> <span class="op">=</span> <span class="ident">Breadcrumb</span>::<span class="ident">new</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()));
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="ident">breadcrumb</span>.<span class="ident">ty</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="ident">breadcrumb</span>.<span class="ident">message</span>);
+    <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="ident">breadcrumb</span>.<span class="ident">ty</span>);
+    <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>.<span class="ident">into</span>()), <span class="ident">breadcrumb</span>.<span class="ident">message</span>);
     <span class="ident">breadcrumb</span>.<span class="ident">add</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">breadcrumb</span> <span class="op">=</span> <span class="ident">Breadcrumb</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
     <span class="ident">breadcrumb</span>.<span class="ident">insert</span>(<span class="string">&quot;test&quot;</span>, <span class="string">&quot;test&quot;</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>), <span class="ident">breadcrumb</span>.<span class="ident">get</span>(<span class="string">&quot;test&quot;</span>).<span class="ident">and_then</span>(<span class="ident">Value</span>::<span class="ident">as_str</span>));
+    <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;test&quot;</span>), <span class="ident">breadcrumb</span>.<span class="ident">get</span>(<span class="string">&quot;test&quot;</span>).<span class="ident">and_then</span>(<span class="ident">Value</span>::<span class="ident">as_str</span>));
     <span class="ident">breadcrumb</span>.<span class="ident">add</span>()
 }
 </pre></div>

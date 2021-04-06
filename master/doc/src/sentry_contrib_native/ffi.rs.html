@@ -341,14 +341,14 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">valid</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;abcdefgh\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;abcdefgh\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh\0&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;\0abcdefgh&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;\0🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;abcd\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcd\0efgh&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️\0🤷‍♂️🤷‍♀️&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;abcdefgh\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;abcdefgh\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh\0&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;\0abcdefgh&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;\0🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;abcd\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcd\0efgh&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️\0&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️\0🤷‍♂️🤷‍♀️&quot;</span>));
     }
 }
 
@@ -366,16 +366,16 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">valid</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;abcdefgh&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;abcd🤦‍♂️efgh&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcd🤦‍♂️efgh&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">None</span>, <span class="kw">unsafe</span> { <span class="ident">ptr</span>::<span class="ident">null</span>::<span class="op">&lt;</span><span class="ident">c_char</span><span class="op">&gt;</span>().<span class="ident">as_str</span>() });
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;abcdefgh&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;abcd🤦‍♂️efgh&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcd🤦‍♂️efgh&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">None</span>, <span class="kw">unsafe</span> { <span class="ident">ptr</span>::<span class="ident">null</span>::<span class="op">&lt;</span><span class="ident">c_char</span><span class="op">&gt;</span>().<span class="ident">as_str</span>() });
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="attribute">#[<span class="ident">should_panic</span>]</span>
     <span class="kw">fn</span> <span class="ident">invalid</span>() {
-        <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">0xfe</span>, <span class="number">0xfe</span>, <span class="number">0xff</span>, <span class="number">0xff</span>]).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="macro">vec!</span>[<span class="number">0xfe</span>, <span class="number">0xfe</span>, <span class="number">0xff</span>, <span class="number">0xff</span>]).<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> { <span class="ident">string</span>.<span class="ident">as_ptr</span>().<span class="ident">as_str</span>() };
     }
 }
@@ -397,14 +397,14 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">valid</span>() {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;abcdefgh&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;abcdefgh&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh\0&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;\0abcdefgh&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;\0🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;abcd&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcd\0efgh&quot;</span>));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️\0🤷‍♂️🤷‍♀️&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;abcdefgh&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;abcdefgh&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcdefgh\0&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️\0&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;\0abcdefgh&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;\0🤦‍♂️🤦‍♀️🤷‍♂️🤷‍♀️&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;abcd&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;abcd\0efgh&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️&quot;</span>, <span class="ident">convert</span>(<span class="string">&quot;🤦‍♂️🤦‍♀️\0🤷‍♂️🤷‍♀️&quot;</span>));
     }
 }
 
@@ -412,7 +412,7 @@
 <span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">fork_test</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
 <span class="attribute">#[<span class="ident">should_panic</span>]</span>
 <span class="kw">fn</span> <span class="ident">catch_panic</span>() {
-    <span class="ident">catch</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;test&quot;</span>))
+    <span class="ident">catch</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic!</span>(<span class="string">&quot;test&quot;</span>))
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="sentry_contrib_native" data-search-js="../../search-index.js"></div>

@@ -1402,7 +1402,7 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
             <span class="ident">options</span>
         } <span class="kw">else</span> {
-            <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;can&#39;t mutably borrow `Options`&quot;</span>)
+            <span class="macro">unreachable!</span>(<span class="string">&quot;can&#39;t mutably borrow `Options`&quot;</span>)
         }
     }
 
@@ -1760,7 +1760,7 @@
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_debug</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
+            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
         }
     }
 
@@ -1858,7 +1858,7 @@
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_auto_session_tracking</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
+            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
         }
     }
 
@@ -1895,7 +1895,7 @@
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_require_user_consent</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
+            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
         }
     }
 
@@ -1933,7 +1933,7 @@
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_symbolize_stacktraces</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
+            <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
         }
     }
 
@@ -1979,7 +1979,7 @@
         <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>, <span class="ident">crashpad</span>), <span class="ident">allow</span>(<span class="ident">unused_variables</span>))]</span> <span class="ident">path</span>: <span class="ident">P</span>,
     ) {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>, <span class="ident">crashpad</span>))]</span>
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">env</span><span class="macro">!</span>(<span class="string">&quot;CRASHPAD_HANDLER&quot;</span>)).<span class="ident">into_os_vec</span>();
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">env!</span>(<span class="string">&quot;CRASHPAD_HANDLER&quot;</span>)).<span class="ident">into_os_vec</span>();
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>, <span class="ident">crashpad</span>)))]</span>
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">into</span>().<span class="ident">into_os_vec</span>();
 
@@ -2018,7 +2018,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_database_path</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">path</span>: <span class="ident">P</span>) {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">env</span><span class="macro">!</span>(<span class="string">&quot;OUT_DIR&quot;</span>))
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">env!</span>(<span class="string">&quot;OUT_DIR&quot;</span>))
             .<span class="ident">join</span>(<span class="ident">path</span>.<span class="ident">into</span>())
             .<span class="ident">into_os_vec</span>();
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>))]</span>
@@ -2075,7 +2075,7 @@
         <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>().<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
             <span class="ident">options</span>
         } <span class="kw">else</span> {
-            <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;can&#39;t mutably borrow `Options`&quot;</span>)
+            <span class="macro">unreachable!</span>(<span class="string">&quot;can&#39;t mutably borrow `Options`&quot;</span>)
         };
 
         <span class="comment">// only lock if we need it</span>
@@ -2100,7 +2100,7 @@
 
                 <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Init</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;invalid return value&quot;</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;invalid return value&quot;</span>),
         }
     }
 }
@@ -2227,55 +2227,55 @@
     <span class="ident">options</span>.<span class="ident">set_before_send</span>(<span class="ident">Filter</span>);
 
     <span class="ident">options</span>.<span class="ident">set_dsn</span>(<span class="string">&quot;yourdsn.com&quot;</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;yourdsn.com&quot;</span>), <span class="ident">options</span>.<span class="ident">dsn</span>());
+    <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;yourdsn.com&quot;</span>), <span class="ident">options</span>.<span class="ident">dsn</span>());
 
     <span class="kw">let</span> <span class="ident">sample_rate</span> <span class="op">=</span> <span class="number">0.5</span>;
     <span class="ident">options</span>.<span class="ident">set_sample_rate</span>(<span class="ident">sample_rate</span>)<span class="question-mark">?</span>;
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">float_cmp</span>)]</span>
     {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">sample_rate</span>, <span class="ident">options</span>.<span class="ident">sample_rate</span>());
+        <span class="macro">assert_eq!</span>(<span class="ident">sample_rate</span>, <span class="ident">options</span>.<span class="ident">sample_rate</span>());
     }
 
     <span class="ident">options</span>.<span class="ident">set_release</span>(<span class="string">&quot;1.0&quot;</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;1.0&quot;</span>), <span class="ident">options</span>.<span class="ident">release</span>());
+    <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;1.0&quot;</span>), <span class="ident">options</span>.<span class="ident">release</span>());
 
     <span class="ident">options</span>.<span class="ident">set_environment</span>(<span class="string">&quot;production&quot;</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;production&quot;</span>), <span class="ident">options</span>.<span class="ident">environment</span>());
+    <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;production&quot;</span>), <span class="ident">options</span>.<span class="ident">environment</span>());
 
     <span class="ident">options</span>.<span class="ident">set_distribution</span>(<span class="string">&quot;release-pgo&quot;</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;release-pgo&quot;</span>), <span class="ident">options</span>.<span class="ident">distribution</span>());
+    <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;release-pgo&quot;</span>), <span class="ident">options</span>.<span class="ident">distribution</span>());
 
     <span class="ident">options</span>.<span class="ident">set_http_proxy</span>(<span class="string">&quot;http://some.proxy/&quot;</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;http://some.proxy/&quot;</span>), <span class="ident">options</span>.<span class="ident">http_proxy</span>());
+    <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;http://some.proxy/&quot;</span>), <span class="ident">options</span>.<span class="ident">http_proxy</span>());
 
     <span class="ident">options</span>.<span class="ident">set_ca_certs</span>(<span class="string">&quot;certs.pem&quot;</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;certs.pem&quot;</span>), <span class="ident">options</span>.<span class="ident">ca_certs</span>());
+    <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;certs.pem&quot;</span>), <span class="ident">options</span>.<span class="ident">ca_certs</span>());
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-default&quot;</span>)]</span>
     {
         <span class="ident">options</span>.<span class="ident">set_transport_thread_name</span>(<span class="string">&quot;sentry transport&quot;</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;sentry transport&quot;</span>), <span class="ident">options</span>.<span class="ident">transport_thread_name</span>());
+        <span class="macro">assert_eq!</span>(<span class="prelude-val">Some</span>(<span class="string">&quot;sentry transport&quot;</span>), <span class="ident">options</span>.<span class="ident">transport_thread_name</span>());
     }
 
     <span class="ident">options</span>.<span class="ident">set_debug</span>(<span class="bool-val">true</span>);
-    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">options</span>.<span class="ident">debug</span>());
+    <span class="macro">assert!</span>(<span class="ident">options</span>.<span class="ident">debug</span>());
 
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">options</span>.<span class="ident">max_breadcrumbs</span>(), <span class="number">100</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">options</span>.<span class="ident">max_breadcrumbs</span>(), <span class="number">100</span>);
 
     <span class="ident">options</span>.<span class="ident">set_max_breadcrumbs</span>(<span class="number">10</span>);
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">options</span>.<span class="ident">max_breadcrumbs</span>(), <span class="number">10</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">options</span>.<span class="ident">max_breadcrumbs</span>(), <span class="number">10</span>);
 
     <span class="ident">options</span>.<span class="ident">set_logger</span>(<span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> ());
     <span class="ident">options</span>.<span class="ident">set_logger</span>(<span class="ident">Log</span>);
 
     <span class="ident">options</span>.<span class="ident">set_auto_session_tracking</span>(<span class="bool-val">false</span>);
-    <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">options</span>.<span class="ident">auto_session_tracking</span>());
+    <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">options</span>.<span class="ident">auto_session_tracking</span>());
 
     <span class="ident">options</span>.<span class="ident">set_require_user_consent</span>(<span class="bool-val">true</span>);
-    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">options</span>.<span class="ident">require_user_consent</span>());
+    <span class="macro">assert!</span>(<span class="ident">options</span>.<span class="ident">require_user_consent</span>());
 
     <span class="ident">options</span>.<span class="ident">set_symbolize_stacktraces</span>(<span class="bool-val">true</span>);
-    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">options</span>.<span class="ident">symbolize_stacktraces</span>());
+    <span class="macro">assert!</span>(<span class="ident">options</span>.<span class="ident">symbolize_stacktraces</span>());
 
     <span class="ident">options</span>.<span class="ident">add_attachment</span>(<span class="string">&quot;server.log&quot;</span>);
 
@@ -2337,16 +2337,16 @@
 
     <span class="ident">test</span>::<span class="ident">set_hook</span>();
 
-    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">spawns</span>(<span class="macro">vec</span><span class="macro">!</span>[
+    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">spawns</span>(<span class="macro">vec!</span>[
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="ident">options</span>
                 .<span class="ident">write</span>()
                 .<span class="ident">unwrap</span>()
-                .<span class="ident">set_transport</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">index</span>)))
+                .<span class="ident">set_transport</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">index</span>)))
         },
         <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_before_send</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">value</span>),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_dsn</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">dsn</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">dsn</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">sample_rate</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from</span>(<span class="ident">u32</span>::<span class="ident">try_from</span>(<span class="ident">index</span>).<span class="ident">unwrap</span>()) <span class="op">/</span> <span class="number">100.</span>;
             <span class="ident">options</span>
@@ -2355,17 +2355,17 @@
                 .<span class="ident">set_sample_rate</span>(<span class="ident">sample_rate</span>)
                 .<span class="ident">unwrap</span>()
         },
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">sample_rate</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">sample_rate</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_release</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">release</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">release</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_environment</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">environment</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">environment</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_distribution</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">distribution</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">distribution</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_http_proxy</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">http_proxy</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">http_proxy</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_ca_certs</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">ca_certs</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">ca_certs</span>()),
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-default&quot;</span>)]</span>
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="ident">options</span>
@@ -2374,20 +2374,20 @@
                 .<span class="ident">set_transport_thread_name</span>(<span class="ident">index</span>.<span class="ident">to_string</span>())
         },
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-default&quot;</span>)]</span>
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">transport_thread_name</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">transport_thread_name</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_debug</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">2</span> {
                 <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                 <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
             })
         },
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">debug</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">debug</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="ident">options</span>
                 .<span class="ident">write</span>()
                 .<span class="ident">unwrap</span>()
-                .<span class="ident">set_logger</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">index</span>))
+                .<span class="ident">set_logger</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">index</span>))
         },
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="ident">options</span>
@@ -2396,10 +2396,10 @@
                 .<span class="ident">set_auto_session_tracking</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">2</span> {
                     <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                     <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
                 })
         },
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">auto_session_tracking</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">auto_session_tracking</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="ident">options</span>
                 .<span class="ident">write</span>()
@@ -2407,10 +2407,10 @@
                 .<span class="ident">set_require_user_consent</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">2</span> {
                     <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                     <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
                 })
         },
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">require_user_consent</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">require_user_consent</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
             <span class="ident">options</span>
                 .<span class="ident">write</span>()
@@ -2418,10 +2418,10 @@
                 .<span class="ident">set_symbolize_stacktraces</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">2</span> {
                     <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                     <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
                 })
         },
-        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">symbolize_stacktraces</span>()),
+        <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">symbolize_stacktraces</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">add_attachment</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_handler_path</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
@@ -2437,7 +2437,7 @@
                 .<span class="ident">set_system_crash_reporter</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">2</span> {
                     <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                     <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
                 })
         },
     ]);
@@ -2466,7 +2466,7 @@
     <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
         <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>);
         <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-            <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">options</span>.<span class="ident">debug</span>());
+            <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">options</span>.<span class="ident">debug</span>());
         });
         <span class="ident">handles</span>.<span class="ident">push</span>(<span class="ident">handle</span>);
     }
@@ -2478,7 +2478,7 @@
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">map_err_ignore</span>)]</span>
     <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Shutdown</span><span class="op">&gt;</span> {
         <span class="ident">Arc</span>::<span class="ident">try_unwrap</span>(<span class="ident">options</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro">anyhow</span><span class="macro">!</span>(<span class="string">&quot;failed to unwrap arc&quot;</span>))<span class="question-mark">?</span>
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;failed to unwrap arc&quot;</span>))<span class="question-mark">?</span>
             .<span class="ident">init</span>()
             .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
     })

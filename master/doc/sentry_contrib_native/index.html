@@ -68,7 +68,7 @@ development inluding PR’s.</li>
     <span class="kw">unsafe</span> { <span class="kw-2">*</span><span class="ident">ptr</span>::<span class="ident">null_mut</span>() <span class="op">=</span> <span class="bool-val">true</span>; }
 
     <span class="comment">// Sentry receives an event with an attached stacktrace and message</span>
-    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;application should have crashed at this point&quot;</span>);
+    <span class="macro">panic!</span>(<span class="string">&quot;application should have crashed at this point&quot;</span>);
 }</pre></div>
 <p>By default, on Linux, MacOS and Windows the Crashpad handler executable has to
 be shipped with the application, for convenience the Crashpad handler executable

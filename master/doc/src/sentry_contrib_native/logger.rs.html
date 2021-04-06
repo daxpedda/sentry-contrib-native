@@ -271,8 +271,8 @@
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Message</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FmtResult</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Utf8</span>(<span class="ident">text</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">text</span>),
-            <span class="self">Self</span>::<span class="ident">Raw</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="ident">raw</span>)),
+            <span class="self">Self</span>::<span class="ident">Utf8</span>(<span class="ident">text</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">text</span>),
+            <span class="self">Self</span>::<span class="ident">Raw</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="ident">raw</span>)),
         }
     }
 }
@@ -313,7 +313,7 @@
         <span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>},
     };
 
-    <span class="macro">thread_local</span><span class="macro">!</span> {
+    <span class="macro">thread_local!</span> {
         <span class="kw">static</span> <span class="ident">LOGGED</span>: <span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RefCell</span>::<span class="ident">new</span>(<span class="bool-val">false</span>);
     }
 
@@ -324,7 +324,7 @@
     <span class="kw">impl</span> <span class="ident">Logger</span> <span class="kw">for</span> <span class="ident">Log</span> {
         <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">level</span>: <span class="ident">Level</span>, <span class="ident">message</span>: <span class="ident">Message</span>) {
             <span class="self">self</span>.<span class="ident">logged</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
-            <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;[{}]: {}&quot;</span>, <span class="ident">level</span>, <span class="ident">message</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;[{}]: {}&quot;</span>, <span class="ident">level</span>, <span class="ident">message</span>);
         }
     }
 
@@ -338,7 +338,7 @@
     <span class="ident">options</span>.<span class="ident">set_debug</span>(<span class="bool-val">true</span>);
     <span class="ident">options</span>.<span class="ident">set_logger</span>(<span class="op">|</span><span class="ident">level</span>, <span class="ident">message</span><span class="op">|</span> {
         <span class="ident">LOGGED</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">logged</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">logged</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="bool-val">true</span>);
-        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;[{}]: {}&quot;</span>, <span class="ident">level</span>, <span class="ident">message</span>);
+        <span class="macro">println!</span>(<span class="string">&quot;[{}]: {}&quot;</span>, <span class="ident">level</span>, <span class="ident">message</span>);
     });
     <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;
 
@@ -353,7 +353,7 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
     <span class="ident">options</span>.<span class="ident">set_debug</span>(<span class="bool-val">true</span>);
-    <span class="ident">options</span>.<span class="ident">set_logger</span>(<span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;this is a test&quot;</span>));
+    <span class="ident">options</span>.<span class="ident">set_logger</span>(<span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">panic!</span>(<span class="string">&quot;this is a test&quot;</span>));
     <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())

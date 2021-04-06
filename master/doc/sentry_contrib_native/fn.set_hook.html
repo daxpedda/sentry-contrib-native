@@ -30,7 +30,7 @@ that can panic, it might lead to any <a href="https://doc.rust-lang.org/nightly/
 
     <span class="kw">let</span> <span class="ident">_shutdown</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>().<span class="ident">init</span>()<span class="question-mark">?</span>;
 
-    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;application panicked&quot;</span>)
+    <span class="macro">panic!</span>(<span class="string">&quot;application panicked&quot;</span>)
 }</pre></div>
 <p>If you are using <code>panic = &quot;abort&quot;</code> make sure to call <a href="../sentry_contrib_native/fn.shutdown.html" title="shutdown"><code>shutdown</code></a> inside the
 panic handler.</p>

@@ -16,7 +16,7 @@ based on the given DSN.</p>
     <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, ()<span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">CustomTransport</span> {
             <span class="comment">// we can also get the DSN here</span>
-            <span class="ident">dsn</span>: <span class="ident">options</span>.<span class="ident">dsn</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">dsn</span><span class="op">|</span> <span class="ident">Dsn</span>::<span class="ident">new</span>(<span class="ident">dsn</span>).<span class="ident">ok</span>()).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>,
+            <span class="ident">dsn</span>: <span class="ident">options</span>.<span class="ident">dsn</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">dsn</span><span class="op">|</span> <span class="ident">Dsn::new</span>(<span class="ident">dsn</span>).<span class="ident">ok</span>()).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>,
         })
     }
 }
@@ -32,19 +32,19 @@ based on the given DSN.</p>
 
 <span class="kw">let</span> <span class="ident">dsn</span> <span class="op">=</span> <span class="string">&quot;https://public_key_1234@organization_1234.ingest.sentry.io/project_id_1234&quot;</span>;
 
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options::new</span>();
 <span class="ident">options</span>.<span class="ident">set_dsn</span>(<span class="ident">dsn</span>);
 <span class="comment">// we can take the `dsn` right here</span>
 <span class="kw">let</span> <span class="ident">custom_transport</span> <span class="op">=</span> <span class="ident">CustomTransport</span> {
-    <span class="ident">dsn</span>: <span class="ident">Dsn</span>::<span class="ident">new</span>(<span class="ident">dsn</span>)<span class="question-mark">?</span>,
+    <span class="ident">dsn</span>: <span class="ident">Dsn::new</span>(<span class="ident">dsn</span>)<span class="question-mark">?</span>,
 };
 <span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">custom_transport</span>));
 <span class="comment">// this is also possible</span>
 <span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="op">|</span><span class="ident">options</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">CustomTransport</span> {
-    <span class="ident">dsn</span>: <span class="ident">options</span>.<span class="ident">dsn</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">dsn</span><span class="op">|</span> <span class="ident">Dsn</span>::<span class="ident">new</span>(<span class="ident">dsn</span>).<span class="ident">ok</span>()).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>,
+    <span class="ident">dsn</span>: <span class="ident">options</span>.<span class="ident">dsn</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">dsn</span><span class="op">|</span> <span class="ident">Dsn::new</span>(<span class="ident">dsn</span>).<span class="ident">ok</span>()).<span class="ident">ok_or</span>(())<span class="question-mark">?</span>,
 }));
 <span class="comment">// or use a method more directly</span>
-<span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="ident">CustomTransport</span>::<span class="ident">new</span>);</pre></div>
+<span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="ident">CustomTransport::new</span>);</pre></div>
 </div><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><h3 id="impl" class="impl"><code class="in-band">impl <a class="struct" href="../sentry_contrib_native/struct.Dsn.html" title="struct sentry_contrib_native::Dsn">Dsn</a></code><a href="#impl" class="anchor"></a><a class="srclink" href="../src/sentry_contrib_native/transport.rs.html#480-580" title="goto source code">[src]</a></h3><div class="impl-items"><h4 id="method.new" class="method"><code>pub fn <a href="#method.new" class="fnname">new</a>(dsn: &amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Self, <a class="enum" href="../sentry_contrib_native/enum.Error.html" title="enum sentry_contrib_native::Error">Error</a>&gt;</code><a class="srclink" href="../src/sentry_contrib_native/transport.rs.html#486-538" title="goto source code">[src]</a></h4><div class="docblock"><p>Creates a new <a href="../sentry_contrib_native/struct.Dsn.html" title="Dsn"><code>Dsn</code></a> from a <a href="https://doc.rust-lang.org/nightly/std/primitive.str.html" title="str"><code>str</code></a>.</p>
 <h1 id="errors" class="section-header"><a href="#errors">Errors</a></h1>
 <p>Fails with <a href="../sentry_contrib_native/enum.Error.html#variant.Transport"><code>Error::Transport</code></a> if the DSN is

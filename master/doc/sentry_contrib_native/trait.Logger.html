@@ -12,14 +12,14 @@
 
 <span class="kw">impl</span> <span class="ident">Logger</span> <span class="kw">for</span> <span class="ident">Log</span> {
     <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">level</span>: <span class="ident">Level</span>, <span class="ident">message</span>: <span class="ident">Message</span>) {
-        <span class="self">self</span>.<span class="ident">logged</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
+        <span class="self">self</span>.<span class="ident">logged</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>);
         <span class="macro">println!</span>(<span class="string">&quot;[{}]: {}&quot;</span>, <span class="ident">level</span>, <span class="ident">message</span>);
     }
 }
 
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options::new</span>();
 <span class="ident">options</span>.<span class="ident">set_logger</span>(<span class="ident">Log</span> {
-    <span class="ident">logged</span>: <span class="ident">AtomicUsize</span>::<span class="ident">new</span>(<span class="number">0</span>),
+    <span class="ident">logged</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
 });
 <span class="kw">let</span> <span class="ident">_shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;</pre></div>
 </div><h2 id="required-methods" class="small-section-header">Required methods<a href="#required-methods" class="anchor"></a></h2><div class="methods"><h3 id="tymethod.log" class="method"><code>fn <a href="#tymethod.log" class="fnname">log</a>(&amp;self, level: <a class="enum" href="../sentry_contrib_native/enum.Level.html" title="enum sentry_contrib_native::Level">Level</a>, message: <a class="enum" href="../sentry_contrib_native/enum.Message.html" title="enum sentry_contrib_native::Message">Message</a>)</code><a class="srclink" href="../src/sentry_contrib_native/logger.rs.html#70" title="goto source code">[src]</a></h3><div class="docblock"><p>Logger callback.</p>
@@ -34,7 +34,7 @@
 
 <span class="kw">impl</span> <span class="ident">Logger</span> <span class="kw">for</span> <span class="ident">Log</span> {
     <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">level</span>: <span class="ident">Level</span>, <span class="ident">message</span>: <span class="ident">Message</span>) {
-        <span class="self">self</span>.<span class="ident">logged</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
+        <span class="self">self</span>.<span class="ident">logged</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>);
         <span class="macro">println!</span>(<span class="string">&quot;[{}]: {}&quot;</span>, <span class="ident">level</span>, <span class="ident">message</span>);
     }
 }</pre></div>

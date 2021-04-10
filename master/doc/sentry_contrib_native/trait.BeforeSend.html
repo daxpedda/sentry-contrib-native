@@ -12,15 +12,15 @@
 
 <span class="kw">impl</span> <span class="ident">BeforeSend</span> <span class="kw">for</span> <span class="ident">Filter</span> {
     <span class="kw">fn</span> <span class="ident">before_send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">filtered</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
+        <span class="self">self</span>.<span class="ident">filtered</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>);
         <span class="comment">// do something with the value and then return it</span>
         <span class="ident">value</span>
     }
 }
 
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options::new</span>();
 <span class="ident">options</span>.<span class="ident">set_before_send</span>(<span class="ident">Filter</span> {
-    <span class="ident">filtered</span>: <span class="ident">AtomicUsize</span>::<span class="ident">new</span>(<span class="number">0</span>),
+    <span class="ident">filtered</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
 });
 <span class="kw">let</span> <span class="ident">_shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;</pre></div>
 </div><h2 id="required-methods" class="small-section-header">Required methods<a href="#required-methods" class="anchor"></a></h2><div class="methods"><h3 id="tymethod.before_send" class="method"><code>fn <a href="#tymethod.before_send" class="fnname">before_send</a>(&amp;self, value: <a class="enum" href="../sentry_contrib_native/enum.Value.html" title="enum sentry_contrib_native::Value">Value</a>) -&gt; <a class="enum" href="../sentry_contrib_native/enum.Value.html" title="enum sentry_contrib_native::Value">Value</a></code><a class="srclink" href="../src/sentry_contrib_native/before_send.rs.html#66" title="goto source code">[src]</a></h3><div class="docblock"><p>Before send callback.</p>
@@ -35,7 +35,7 @@
 
 <span class="kw">impl</span> <span class="ident">BeforeSend</span> <span class="kw">for</span> <span class="ident">Filter</span> {
     <span class="kw">fn</span> <span class="ident">before_send</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span> {
-        <span class="self">self</span>.<span class="ident">filtered</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
+        <span class="self">self</span>.<span class="ident">filtered</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>);
         <span class="comment">// do something with the value and then return it</span>
         <span class="ident">value</span>
     }

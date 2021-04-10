@@ -5,7 +5,7 @@
 <h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options::new</span>();
     <span class="kw">let</span> <span class="ident">_shutdown</span>: <span class="ident">Shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;
 
     <span class="comment">// ...</span>
@@ -32,7 +32,7 @@ transports to flush out before the program exits.</p>
 }
 
 <span class="kw">fn</span> <span class="ident">sentry_init</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options::new</span>();
     <span class="comment">// call forget because we are leaving the context and we don&#39;t want to shut down the Sentry client yet</span>
     <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>.<span class="ident">forget</span>();
     <span class="prelude-val">Ok</span>(())
@@ -41,7 +41,7 @@ transports to flush out before the program exits.</p>
 <h1 id="examples-2" class="section-header"><a href="#examples-2">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options::new</span>();
     <span class="kw">let</span> <span class="ident">shutdown</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>;
 
     <span class="comment">// ...</span>

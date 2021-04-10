@@ -35,17 +35,17 @@
 
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">panic</span>,
-    <span class="ident">sync</span>::<span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>},
+    <span class="ident">sync::atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>},
 };
 
 <span class="doccomment">/// This global stores if a panic already happened.</span>
-<span class="kw">static</span> <span class="ident">PANICKED</span>: <span class="ident">AtomicBool</span> <span class="op">=</span> <span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">false</span>);
+<span class="kw">static</span> <span class="ident">PANICKED</span>: <span class="ident">AtomicBool</span> <span class="op">=</span> <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>);
 
 <span class="doccomment">/// Call this at the start of a test to record.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_hook</span>() {
-    <span class="kw">let</span> <span class="ident">hook</span> <span class="op">=</span> <span class="ident">panic</span>::<span class="ident">take_hook</span>();
-    <span class="ident">panic</span>::<span class="ident">set_hook</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">panic_info</span><span class="op">|</span> {
-        <span class="ident">PANICKED</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
+    <span class="kw">let</span> <span class="ident">hook</span> <span class="op">=</span> <span class="ident">panic::take_hook</span>();
+    <span class="ident">panic::set_hook</span>(<span class="ident">Box::new</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">panic_info</span><span class="op">|</span> {
+        <span class="ident">PANICKED</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::SeqCst</span>);
         <span class="ident">hook</span>(<span class="ident">panic_info</span>);
     }))
 }
@@ -56,7 +56,7 @@
 <span class="doccomment">/// # Panics</span>
 <span class="doccomment">/// Panics in the main thread if a panic occured in another thread.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">verify_panics</span>() {
-    <span class="kw">if</span> <span class="ident">PANICKED</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>) {
+    <span class="kw">if</span> <span class="ident">PANICKED</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>) {
         <span class="macro">panic!</span>(<span class="string">&quot;panicked in thread&quot;</span>);
     }
 }

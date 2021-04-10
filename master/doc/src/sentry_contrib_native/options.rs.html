@@ -1255,13 +1255,13 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">end_session</span>, <span class="ident">set_user_consent</span>, <span class="ident">shutdown</span>, <span class="ident">start_session</span>, <span class="ident">Consent</span>, <span class="ident">Event</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">env</span>;
+<span class="kw">use</span> <span class="ident">std::env</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doc</span>)]</span>
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">process</span>::<span class="ident">abort</span>;
+<span class="kw">use</span> <span class="ident">std::process::abort</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">fmt</span>::{<span class="ident">Debug</span>, <span class="ident">Formatter</span>, <span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="ident">FmtResult</span>},
     <span class="ident">mem</span>,
-    <span class="ident">path</span>::<span class="ident">PathBuf</span>,
+    <span class="ident">path::PathBuf</span>,
 };
 
 <span class="doccomment">/// The Sentry client options.</span>
@@ -1291,9 +1291,9 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Ownership</span> {
     <span class="doccomment">/// [`Options`] is owned.</span>
-    <span class="ident">Owned</span>(<span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">sys</span>::<span class="ident">Options</span>),
+    <span class="ident">Owned</span>(<span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">sys::Options</span>),
     <span class="doccomment">/// [`Options`] is borrowed.</span>
-    <span class="ident">Borrowed</span>(<span class="kw-2">*</span><span class="kw">const</span> <span class="ident">sys</span>::<span class="ident">Options</span>),
+    <span class="ident">Borrowed</span>(<span class="kw-2">*</span><span class="kw">const</span> <span class="ident">sys::Options</span>),
 }
 
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">Options</span> {}
@@ -1301,7 +1301,7 @@
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Options</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">new</span>()
+        <span class="self">Self</span><span class="ident">::new</span>()
     }
 }
 
@@ -1334,8 +1334,8 @@
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Options</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>() {
-            <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_free</span>(<span class="ident">options</span>) }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Ownership::Owned</span>(<span class="ident">options</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>() {
+            <span class="kw">unsafe</span> { <span class="ident">sys::options_free</span>(<span class="ident">options</span>) }
         }
     }
 }
@@ -1358,7 +1358,7 @@
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span> <span class="op">=</span> <span class="string">&quot;`Options` doesn&#39;t do anything without `Options::init`&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">from_sys</span>(<span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_new</span>() }))
+        <span class="self">Self</span><span class="ident">::from_sys</span>(<span class="ident">Ownership::Owned</span>(<span class="kw">unsafe</span> { <span class="ident">sys::options_new</span>() }))
     }
 
     <span class="doccomment">/// Creates new [`Options`] from a [`sys::Options`] wrapped in</span>
@@ -1375,12 +1375,12 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
         {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="kw">_</span>)) <span class="op">=</span> <span class="ident">options</span>.<span class="ident">raw</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Ownership::Owned</span>(<span class="kw">_</span>)) <span class="op">=</span> <span class="ident">options</span>.<span class="ident">raw</span> {
                 <span class="comment">// will be set up properly for us inside those functions</span>
                 <span class="ident">options</span>.<span class="ident">set_database_path</span>(<span class="string">&quot;.sentry-native&quot;</span>);
                 <span class="ident">options</span>.<span class="ident">set_handler_path</span>(<span class="string">&quot;&quot;</span>);
                 <span class="ident">options</span>.<span class="ident">set_dsn</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;SENTRY_DSN&quot;</span>)
+                    <span class="kw-2">&amp;</span><span class="ident">env::var</span>(<span class="string">&quot;SENTRY_DSN&quot;</span>)
                         .<span class="ident">expect</span>(<span class="string">&quot;tests require a valid `SENTRY_DSN` environment variable&quot;</span>),
                 )
             }
@@ -1390,16 +1390,16 @@
     }
 
     <span class="doccomment">/// Yields a pointer to [`sys::Options`], ownership is retained.</span>
-    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">sys</span>::<span class="ident">Options</span> {
+    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">sys::Options</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
-            <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">options</span>,
-            <span class="ident">Ownership</span>::<span class="ident">Borrowed</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">options</span>,
+            <span class="ident">Ownership::Owned</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">options</span>,
+            <span class="ident">Ownership::Borrowed</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">options</span>,
         }
     }
 
     <span class="doccomment">/// Yields a mutable pointer to [`sys::Options`], ownership is retained.</span>
-    <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">sys</span>::<span class="ident">Options</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
+    <span class="kw">fn</span> <span class="ident">as_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">sys::Options</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Ownership::Owned</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
             <span class="ident">options</span>
         } <span class="kw">else</span> {
             <span class="macro">unreachable!</span>(<span class="string">&quot;can&#39;t mutably borrow `Options`&quot;</span>)
@@ -1434,17 +1434,17 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">startup</span>: <span class="ident">S</span>,
     ) {
-        <span class="kw">let</span> <span class="ident">startup</span> <span class="op">=</span> <span class="ident">TransportState</span>::<span class="ident">Startup</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="op">|</span><span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">startup</span> <span class="op">=</span> <span class="ident">TransportState::Startup</span>(<span class="ident">Box::new</span>(<span class="op">|</span><span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="op">|</span> {
             <span class="ident">startup</span>(<span class="ident">options</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">startup</span><span class="op">|</span> <span class="ident">startup</span>.<span class="ident">into</span>() <span class="kw">as</span> <span class="kw">_</span>)
         }));
-        <span class="kw">let</span> <span class="ident">startup</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">into_raw</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="prelude-val">Some</span>(<span class="ident">startup</span>)));
+        <span class="kw">let</span> <span class="ident">startup</span> <span class="op">=</span> <span class="ident">Box::into_raw</span>(<span class="ident">Box::new</span>(<span class="prelude-val">Some</span>(<span class="ident">startup</span>)));
 
         <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">transport</span> <span class="op">=</span> <span class="ident">sys</span>::<span class="ident">transport_new</span>(<span class="prelude-val">Some</span>(<span class="ident">transport</span>::<span class="ident">send</span>));
-            <span class="ident">sys</span>::<span class="ident">transport_set_state</span>(<span class="ident">transport</span>, <span class="ident">startup</span>.<span class="ident">cast</span>());
-            <span class="ident">sys</span>::<span class="ident">transport_set_startup_func</span>(<span class="ident">transport</span>, <span class="prelude-val">Some</span>(<span class="ident">transport</span>::<span class="ident">startup</span>));
-            <span class="ident">sys</span>::<span class="ident">transport_set_shutdown_func</span>(<span class="ident">transport</span>, <span class="prelude-val">Some</span>(<span class="ident">transport</span>::<span class="ident">shutdown</span>));
-            <span class="ident">sys</span>::<span class="ident">options_set_transport</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">transport</span>)
+            <span class="kw">let</span> <span class="ident">transport</span> <span class="op">=</span> <span class="ident">sys::transport_new</span>(<span class="prelude-val">Some</span>(<span class="ident">transport::send</span>));
+            <span class="ident">sys::transport_set_state</span>(<span class="ident">transport</span>, <span class="ident">startup</span>.<span class="ident">cast</span>());
+            <span class="ident">sys::transport_set_startup_func</span>(<span class="ident">transport</span>, <span class="prelude-val">Some</span>(<span class="ident">transport::startup</span>));
+            <span class="ident">sys::transport_set_shutdown_func</span>(<span class="ident">transport</span>, <span class="prelude-val">Some</span>(<span class="ident">transport::shutdown</span>));
+            <span class="ident">sys::options_set_transport</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">transport</span>)
         }
     }
 
@@ -1465,11 +1465,11 @@
     <span class="doccomment">/// });</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_before_send</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">BeforeSend</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">before_send</span>: <span class="ident">B</span>) {
-        <span class="kw">let</span> <span class="ident">fun</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">into_raw</span>(<span class="ident">Box</span>::<span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">BeforeSend</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="ident">before_send</span>.<span class="ident">into</span>()));
-        <span class="self">self</span>.<span class="ident">before_send</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">unsafe</span> { <span class="ident">Box</span>::<span class="ident">from_raw</span>(<span class="ident">fun</span>) });
+        <span class="kw">let</span> <span class="ident">fun</span> <span class="op">=</span> <span class="ident">Box::into_raw</span>(<span class="ident">Box</span>::<span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">BeforeSend</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">before_send</span>.<span class="ident">into</span>()));
+        <span class="self">self</span>.<span class="ident">before_send</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">unsafe</span> { <span class="ident">Box::from_raw</span>(<span class="ident">fun</span>) });
 
         <span class="kw">unsafe</span> {
-            <span class="ident">sys</span>::<span class="ident">options_set_before_send</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="prelude-val">Some</span>(<span class="ident">before_send</span>::<span class="ident">before_send</span>), <span class="ident">fun</span>.<span class="ident">cast</span>())
+            <span class="ident">sys::options_set_before_send</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="prelude-val">Some</span>(<span class="ident">before_send::before_send</span>), <span class="ident">fun</span>.<span class="ident">cast</span>())
         }
     }
 
@@ -1485,13 +1485,13 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
         <span class="kw">let</span> <span class="ident">dsn</span> <span class="op">=</span> {
             <span class="self">self</span>.<span class="ident">dsn</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">dsn</span>.<span class="ident">into</span>());
-            <span class="ident">env</span>::<span class="ident">var</span>(<span class="string">&quot;SENTRY_DSN&quot;</span>)
+            <span class="ident">env::var</span>(<span class="string">&quot;SENTRY_DSN&quot;</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;tests require a valid `SENTRY_DSN` environment variable&quot;</span>)
                 .<span class="ident">into_cstring</span>()
         };
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>))]</span>
         <span class="kw">let</span> <span class="ident">dsn</span> <span class="op">=</span> <span class="ident">dsn</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_dsn</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">dsn</span>.<span class="ident">as_ptr</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_dsn</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">dsn</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Gets the DSN.</span>
@@ -1507,11 +1507,11 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dsn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="kw">_</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Ownership::Owned</span>(<span class="kw">_</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span> {
             <span class="kw">return</span> <span class="self">self</span>.<span class="ident">dsn</span>.<span class="ident">as_deref</span>();
         }
 
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_dsn</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_get_dsn</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
     }
 
     <span class="doccomment">/// Sets the sample rate, which should be a [`f64`] between `0.0` and `1.0`.</span>
@@ -1530,11 +1530,11 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_sample_rate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">sample_rate</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">if</span> (<span class="number">0.</span> ..<span class="op">=</span><span class="number">1.</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">sample_rate</span>) {
-            <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_sample_rate</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">sample_rate</span>) };
+            <span class="kw">unsafe</span> { <span class="ident">sys::options_set_sample_rate</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">sample_rate</span>) };
 
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">SampleRateRange</span>)
+            <span class="prelude-val">Err</span>(<span class="ident">Error::SampleRateRange</span>)
         }
     }
 
@@ -1552,7 +1552,7 @@
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sample_rate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f64</span> {
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_sample_rate</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_get_sample_rate</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) }
     }
 
     <span class="doccomment">/// Sets the release.</span>
@@ -1565,7 +1565,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_release</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">release</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">release</span> <span class="op">=</span> <span class="ident">release</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_release</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">release</span>.<span class="ident">as_ptr</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_release</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">release</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Gets the release.</span>
@@ -1580,7 +1580,7 @@
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">release</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_release</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_get_release</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
     }
 
     <span class="doccomment">/// Sets the environment.</span>
@@ -1593,7 +1593,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_environment</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">environment</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">environment</span> <span class="op">=</span> <span class="ident">environment</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_environment</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">environment</span>.<span class="ident">as_ptr</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_environment</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">environment</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Gets the environment.</span>
@@ -1608,7 +1608,7 @@
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">environment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_environment</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_get_environment</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
     }
 
     <span class="doccomment">/// Sets the distribution.</span>
@@ -1621,7 +1621,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_distribution</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">distribution</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">distribution</span> <span class="op">=</span> <span class="ident">distribution</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_dist</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">distribution</span>.<span class="ident">as_ptr</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_dist</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">distribution</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Gets the distribution.</span>
@@ -1636,7 +1636,7 @@
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">distribution</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_dist</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_get_dist</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
     }
 
     <span class="doccomment">/// Configures the http proxy.</span>
@@ -1651,7 +1651,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_http_proxy</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">proxy</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">proxy</span> <span class="op">=</span> <span class="ident">proxy</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_http_proxy</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">proxy</span>.<span class="ident">as_ptr</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_http_proxy</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">proxy</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Returns the configured http proxy.</span>
@@ -1666,7 +1666,7 @@
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">http_proxy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_http_proxy</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_get_http_proxy</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
     }
 
     <span class="doccomment">/// Configures the path to a file containing SSL certificates for</span>
@@ -1680,7 +1680,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_ca_certs</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">path</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_ca_certs</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_ca_certs</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Returns the configured path for CA certificates.</span>
@@ -1695,7 +1695,7 @@
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ca_certs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_ca_certs</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_get_ca_certs</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
     }
 
     <span class="doccomment">/// Configures the name of the default transport thread. Has no effect when</span>
@@ -1711,7 +1711,7 @@
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-default&quot;</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_transport_thread_name</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="ident">S</span>) {
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">into</span>().<span class="ident">into_cstring</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_transport_thread_name</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_transport_thread_name</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>()) }
     }
 
     <span class="doccomment">/// Returns the configured default transport thread name.</span>
@@ -1728,7 +1728,7 @@
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-default&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transport_thread_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_transport_thread_name</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_get_transport_thread_name</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>() }
     }
 
     <span class="doccomment">/// Enables or disables debug printing mode.</span>
@@ -1741,7 +1741,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_debug</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">debug</span>: <span class="ident">bool</span>) {
         <span class="kw">let</span> <span class="ident">debug</span> <span class="op">=</span> <span class="ident">debug</span>.<span class="ident">into</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_debug</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">debug</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_debug</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">debug</span>) }
     }
 
     <span class="doccomment">/// Returns the current value of the debug flag.</span>
@@ -1754,10 +1754,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// assert!(options.debug());</span>
     <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::missing_panics_doc</span>)]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">debug</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_debug</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
+        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys::options_get_debug</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
@@ -1774,7 +1774,7 @@
     <span class="doccomment">/// options.set_max_breadcrumbs(10);</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_max_breadcrumbs</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">max_breadcrumbs</span>: <span class="ident">usize</span>) {
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_max_breadcrumbs</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">max_breadcrumbs</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_max_breadcrumbs</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">max_breadcrumbs</span>) }
     }
 
     <span class="doccomment">/// Gets the number of breadcrumbs being tracked and attached to events.</span>
@@ -1789,7 +1789,7 @@
     <span class="doccomment">/// ```</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_breadcrumbs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_max_breadcrumbs</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_get_max_breadcrumbs</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) }
     }
 
     <span class="doccomment">/// Sets a callback that is used for logging purposes when</span>
@@ -1810,10 +1810,10 @@
     <span class="doccomment">/// });</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_logger</span><span class="op">&lt;</span><span class="ident">L</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Logger</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">logger</span>: <span class="ident">L</span>) {
-        <span class="kw">let</span> <span class="ident">fun</span> <span class="op">=</span> <span class="ident">Box</span>::<span class="ident">into_raw</span>(<span class="ident">Box</span>::<span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Logger</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">new</span>(<span class="ident">logger</span>.<span class="ident">into</span>()));
-        <span class="self">self</span>.<span class="ident">logger</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">unsafe</span> { <span class="ident">Box</span>::<span class="ident">from_raw</span>(<span class="ident">fun</span>) });
+        <span class="kw">let</span> <span class="ident">fun</span> <span class="op">=</span> <span class="ident">Box::into_raw</span>(<span class="ident">Box</span>::<span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Logger</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">logger</span>.<span class="ident">into</span>()));
+        <span class="self">self</span>.<span class="ident">logger</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">unsafe</span> { <span class="ident">Box::from_raw</span>(<span class="ident">fun</span>) });
 
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_logger</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="prelude-val">Some</span>(<span class="ident">logger</span>::<span class="ident">logger</span>), <span class="ident">fun</span>.<span class="ident">cast</span>()) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_logger</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="prelude-val">Some</span>(<span class="ident">logger::logger</span>), <span class="ident">fun</span>.<span class="ident">cast</span>()) }
     }
 
     <span class="doccomment">/// Enables or disables automatic session tracking.</span>
@@ -1839,7 +1839,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_auto_session_tracking</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">bool</span>) {
         <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">into</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_auto_session_tracking</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">val</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_auto_session_tracking</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">val</span>) }
     }
 
     <span class="doccomment">/// Returns `true` if automatic session tracking is enabled.</span>
@@ -1852,10 +1852,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// assert!(!options.auto_session_tracking());</span>
     <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::missing_panics_doc</span>)]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">auto_session_tracking</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_auto_session_tracking</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
+        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys::options_get_auto_session_tracking</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
@@ -1876,7 +1876,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_require_user_consent</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">bool</span>) {
         <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">into</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_require_user_consent</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">val</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_require_user_consent</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">val</span>) }
     }
 
     <span class="doccomment">/// Returns `true` if user consent is required.</span>
@@ -1889,10 +1889,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// assert!(options.require_user_consent());</span>
     <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::missing_panics_doc</span>)]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">require_user_consent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_require_user_consent</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
+        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys::options_get_require_user_consent</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
@@ -1914,7 +1914,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_symbolize_stacktraces</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">val</span>: <span class="ident">bool</span>) {
         <span class="kw">let</span> <span class="ident">val</span> <span class="op">=</span> <span class="ident">val</span>.<span class="ident">into</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_symbolize_stacktraces</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">val</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_symbolize_stacktraces</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">val</span>) }
     }
 
     <span class="doccomment">/// Returns `true` if on-device symbolication of stack traces is enabled.</span>
@@ -1927,10 +1927,10 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// assert!(options.symbolize_stacktraces());</span>
     <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::missing_panics_doc</span>)]</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbolize_stacktraces</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_get_symbolize_stacktraces</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
+        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys::options_get_symbolize_stacktraces</span>(<span class="self">self</span>.<span class="ident">as_ref</span>()) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="ident">error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;{} couldn&#39;t be converted to a bool&quot;</span>, <span class="ident">error</span>),
@@ -1950,11 +1950,11 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
         <span class="kw">unsafe</span> {
-            <span class="ident">sys</span>::<span class="ident">options_add_attachmentw</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
+            <span class="ident">sys::options_add_attachmentw</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
         };
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">windows</span>))]</span>
         <span class="kw">unsafe</span> {
-            <span class="ident">sys</span>::<span class="ident">options_add_attachment</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
+            <span class="ident">sys::options_add_attachment</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
         }
     }
 
@@ -1973,23 +1973,23 @@
     <span class="doccomment">/// let mut options = Options::new();</span>
     <span class="doccomment">/// options.set_handler_path(&quot;crashpad_handler&quot;);</span>
     <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>, <span class="ident">crashpad</span>), <span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">needless_pass_by_value</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>, <span class="ident">crashpad</span>), <span class="ident">allow</span>(<span class="ident">clippy::needless_pass_by_value</span>))]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_handler_path</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>, <span class="ident">crashpad</span>), <span class="ident">allow</span>(<span class="ident">unused_variables</span>))]</span> <span class="ident">path</span>: <span class="ident">P</span>,
     ) {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>, <span class="ident">crashpad</span>))]</span>
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">env!</span>(<span class="string">&quot;CRASHPAD_HANDLER&quot;</span>)).<span class="ident">into_os_vec</span>();
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf::from</span>(<span class="macro">env!</span>(<span class="string">&quot;CRASHPAD_HANDLER&quot;</span>)).<span class="ident">into_os_vec</span>();
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>, <span class="ident">crashpad</span>)))]</span>
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">into</span>().<span class="ident">into_os_vec</span>();
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
         <span class="kw">unsafe</span> {
-            <span class="ident">sys</span>::<span class="ident">options_set_handler_pathw</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
+            <span class="ident">sys::options_set_handler_pathw</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
         };
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">windows</span>))]</span>
         <span class="kw">unsafe</span> {
-            <span class="ident">sys</span>::<span class="ident">options_set_handler_path</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
+            <span class="ident">sys::options_set_handler_path</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
         }
     }
 
@@ -2018,7 +2018,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_database_path</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">PathBuf</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">path</span>: <span class="ident">P</span>) {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>)]</span>
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">env!</span>(<span class="string">&quot;OUT_DIR&quot;</span>))
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuf::from</span>(<span class="macro">env!</span>(<span class="string">&quot;OUT_DIR&quot;</span>))
             .<span class="ident">join</span>(<span class="ident">path</span>.<span class="ident">into</span>())
             .<span class="ident">into_os_vec</span>();
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test&quot;</span>))]</span>
@@ -2026,11 +2026,11 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
         <span class="kw">unsafe</span> {
-            <span class="ident">sys</span>::<span class="ident">options_set_database_pathw</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
+            <span class="ident">sys::options_set_database_pathw</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
         };
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">windows</span>))]</span>
         <span class="kw">unsafe</span> {
-            <span class="ident">sys</span>::<span class="ident">options_set_database_path</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
+            <span class="ident">sys::options_set_database_path</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">path</span>.<span class="ident">as_ptr</span>())
         };
     }
 
@@ -2049,7 +2049,7 @@
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_system_crash_reporter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">enabled</span>: <span class="ident">bool</span>) {
         <span class="kw">let</span> <span class="ident">enabled</span> <span class="op">=</span> <span class="ident">enabled</span>.<span class="ident">into</span>();
-        <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">options_set_system_crash_reporter_enabled</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">enabled</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">sys::options_set_system_crash_reporter_enabled</span>(<span class="self">self</span>.<span class="ident">as_mut</span>(), <span class="ident">enabled</span>) }
     }
 
     <span class="doccomment">/// Initializes the Sentry SDK with the specified options. Make sure to</span>
@@ -2069,10 +2069,10 @@
     <span class="doccomment">/// let _shutdown = Options::new().init()?;</span>
     <span class="doccomment">/// # Ok(()) }</span>
     <span class="doccomment">/// ```</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">missing_panics_doc</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::missing_panics_doc</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Shutdown</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="comment">// disolve `Options`, `sys::init` is going to take ownership now</span>
-        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Ownership</span>::<span class="ident">Owned</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>().<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
+        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Ownership::Owned</span>(<span class="ident">options</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">take</span>().<span class="ident">expect</span>(<span class="string">&quot;use after free&quot;</span>) {
             <span class="ident">options</span>
         } <span class="kw">else</span> {
             <span class="macro">unreachable!</span>(<span class="string">&quot;can&#39;t mutably borrow `Options`&quot;</span>)
@@ -2091,14 +2091,14 @@
             <span class="ident">lock</span>
         });
 
-        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys</span>::<span class="ident">init</span>(<span class="ident">options</span>) } {
+        <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">sys::init</span>(<span class="ident">options</span>) } {
             <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Shutdown</span>),
             <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// deallocate globals on failure, which are otherwise unused</span>
                 <span class="ident">before_send</span>.<span class="ident">take</span>().<span class="ident">take</span>();
                 <span class="ident">logger</span>.<span class="ident">take</span>().<span class="ident">take</span>();
 
-                <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Init</span>)
+                <span class="prelude-val">Err</span>(<span class="ident">Error::Init</span>)
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;invalid return value&quot;</span>),
         }
@@ -2128,7 +2128,7 @@
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Shutdown</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">crate</span>::<span class="ident">shutdown</span>();
+        <span class="kw">crate</span><span class="ident">::shutdown</span>();
     }
 }
 
@@ -2160,7 +2160,7 @@
     <span class="doccomment">/// }</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">forget</span>(<span class="self">self</span>) {
-        <span class="ident">mem</span>::<span class="ident">forget</span>(<span class="self">self</span>)
+        <span class="ident">mem::forget</span>(<span class="self">self</span>)
     }
 
     <span class="doccomment">/// Manually shutdown.</span>
@@ -2188,7 +2188,7 @@
 }
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
-<span class="kw">fn</span> <span class="ident">options</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">options</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Level</span>, <span class="ident">Message</span>, <span class="ident">RawEnvelope</span>, <span class="ident">Value</span>};
 
     <span class="kw">struct</span> <span class="ident">CustomTransport</span>;
@@ -2218,10 +2218,10 @@
         <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_level</span>: <span class="ident">Level</span>, <span class="ident">_message</span>: <span class="ident">Message</span>) {}
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options::new</span>();
 
     <span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {}));
-    <span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="ident">CustomTransport</span>::<span class="ident">new</span>);
+    <span class="ident">options</span>.<span class="ident">set_transport</span>(<span class="ident">CustomTransport::new</span>);
 
     <span class="ident">options</span>.<span class="ident">set_before_send</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">value</span>);
     <span class="ident">options</span>.<span class="ident">set_before_send</span>(<span class="ident">Filter</span>);
@@ -2231,7 +2231,7 @@
 
     <span class="kw">let</span> <span class="ident">sample_rate</span> <span class="op">=</span> <span class="number">0.5</span>;
     <span class="ident">options</span>.<span class="ident">set_sample_rate</span>(<span class="ident">sample_rate</span>)<span class="question-mark">?</span>;
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">float_cmp</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::float_cmp</span>)]</span>
     {
         <span class="macro">assert_eq!</span>(<span class="ident">sample_rate</span>, <span class="ident">options</span>.<span class="ident">sample_rate</span>());
     }
@@ -2289,16 +2289,16 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">fork_test</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
-<span class="kw">fn</span> <span class="ident">threaded_stress</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">test</span>;
+<span class="attribute">#[<span class="ident">rusty_fork::fork_test</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
+<span class="kw">fn</span> <span class="ident">threaded_stress</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::test</span>;
     <span class="kw">use</span> <span class="ident">std</span>::{
-        <span class="ident">convert</span>::<span class="ident">TryFrom</span>,
+        <span class="ident">convert::TryFrom</span>,
         <span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">RwLock</span>},
         <span class="ident">thread</span>,
     };
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">type_complexity</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
     <span class="kw">fn</span> <span class="ident">spawns</span>(<span class="ident">tests</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">fn</span>(<span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Options</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">usize</span>)<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Options</span> {
         <span class="doccomment">/// Github Actions MacOS CI machines can&#39;t handle that many threads.</span>
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)]</span>
@@ -2306,19 +2306,19 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>))]</span>
         <span class="kw">static</span> <span class="ident">THREADS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">100</span>;
 
-        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">Options</span>::<span class="ident">new</span>()));
+        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">RwLock::new</span>(<span class="ident">Options::new</span>()));
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">spawns</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">tests</span>.<span class="ident">len</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">spawns</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">tests</span>.<span class="ident">len</span>());
         <span class="kw">for</span> <span class="ident">test</span> <span class="kw">in</span> <span class="ident">tests</span> {
-            <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>);
+            <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>);
 
-            <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handles</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">100</span>);
+            <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handles</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="number">100</span>);
 
                 <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">THREADS</span> {
-                    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>);
+                    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>);
 
-                    <span class="ident">handles</span>.<span class="ident">push</span>(<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">test</span>(<span class="ident">options</span>, <span class="ident">index</span>)))
+                    <span class="ident">handles</span>.<span class="ident">push</span>(<span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">test</span>(<span class="ident">options</span>, <span class="ident">index</span>)))
                 }
 
                 <span class="ident">handles</span>
@@ -2332,10 +2332,10 @@
             }
         }
 
-        <span class="ident">Arc</span>::<span class="ident">try_unwrap</span>(<span class="ident">options</span>).<span class="ident">unwrap</span>().<span class="ident">into_inner</span>().<span class="ident">unwrap</span>()
+        <span class="ident">Arc::try_unwrap</span>(<span class="ident">options</span>).<span class="ident">unwrap</span>().<span class="ident">into_inner</span>().<span class="ident">unwrap</span>()
     }
 
-    <span class="ident">test</span>::<span class="ident">set_hook</span>();
+    <span class="ident">test::set_hook</span>();
 
     <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">spawns</span>(<span class="macro">vec!</span>[
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
@@ -2348,7 +2348,7 @@
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>().<span class="ident">set_dsn</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="kw">_</span><span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">options</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">dsn</span>()),
         <span class="op">|</span><span class="ident">options</span>, <span class="ident">index</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">sample_rate</span> <span class="op">=</span> <span class="ident">f64</span>::<span class="ident">from</span>(<span class="ident">u32</span>::<span class="ident">try_from</span>(<span class="ident">index</span>).<span class="ident">unwrap</span>()) <span class="op">/</span> <span class="number">100.</span>;
+            <span class="kw">let</span> <span class="ident">sample_rate</span> <span class="op">=</span> <span class="ident">f64::from</span>(<span class="ident">u32::try_from</span>(<span class="ident">index</span>).<span class="ident">unwrap</span>()) <span class="op">/</span> <span class="number">100.</span>;
             <span class="ident">options</span>
                 .<span class="ident">write</span>()
                 .<span class="ident">unwrap</span>()
@@ -2444,28 +2444,28 @@
 
     <span class="ident">options</span>.<span class="ident">init</span>()<span class="question-mark">?</span>.<span class="ident">shutdown</span>();
 
-    <span class="ident">test</span>::<span class="ident">verify_panics</span>();
+    <span class="ident">test::verify_panics</span>();
 
     <span class="prelude-val">Ok</span>(())
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="attribute">#[<span class="ident">rusty_fork</span>::<span class="ident">fork_test</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
-<span class="kw">fn</span> <span class="ident">sync</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">test</span>;
+<span class="attribute">#[<span class="ident">rusty_fork::fork_test</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
+<span class="kw">fn</span> <span class="ident">sync</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::test</span>;
     <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">anyhow</span>, <span class="prelude-ty">Result</span>};
-    <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">sync</span>::<span class="ident">Arc</span>, <span class="ident">thread</span>};
+    <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">sync::Arc</span>, <span class="ident">thread</span>};
 
-    <span class="ident">test</span>::<span class="ident">set_hook</span>();
+    <span class="ident">test::set_hook</span>();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Options::new</span>();
     <span class="ident">options</span>.<span class="ident">set_debug</span>(<span class="bool-val">true</span>);
-    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">options</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handles</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">options</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handles</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
 
     <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
-        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>);
-        <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>);
+        <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
             <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">options</span>.<span class="ident">debug</span>());
         });
         <span class="ident">handles</span>.<span class="ident">push</span>(<span class="ident">handle</span>);
@@ -2475,18 +2475,18 @@
         <span class="ident">handle</span>.<span class="ident">join</span>().<span class="ident">unwrap</span>();
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">map_err_ignore</span>)]</span>
-    <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Shutdown</span><span class="op">&gt;</span> {
-        <span class="ident">Arc</span>::<span class="ident">try_unwrap</span>(<span class="ident">options</span>)
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::map_err_ignore</span>)]</span>
+    <span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Shutdown</span><span class="op">&gt;</span> {
+        <span class="ident">Arc::try_unwrap</span>(<span class="ident">options</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="macro">anyhow!</span>(<span class="string">&quot;failed to unwrap arc&quot;</span>))<span class="question-mark">?</span>
             .<span class="ident">init</span>()
-            .<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+            .<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
     })
     .<span class="ident">join</span>()
     .<span class="ident">unwrap</span>()<span class="question-mark">?</span>
     .<span class="ident">shutdown</span>();
 
-    <span class="ident">test</span>::<span class="ident">verify_panics</span>();
+    <span class="ident">test::verify_panics</span>();
 
     <span class="prelude-val">Ok</span>(())
 }

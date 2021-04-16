@@ -14,6 +14,7 @@ use sentry_contrib_native as sentry;
 use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
+#[allow(clippy::too_many_lines)]
 async fn breadcrumb() -> Result<()> {
     util::events_success(
         Some(|options: &mut Options| options.set_max_breadcrumbs(4)),

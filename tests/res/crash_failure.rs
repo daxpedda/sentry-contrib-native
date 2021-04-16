@@ -35,6 +35,7 @@ async fn main() -> Result<()> {
     user.insert("id", id);
     user.set();
 
+    #[allow(deref_nullptr)]
     unsafe {
         *ptr::null_mut() = true;
     }

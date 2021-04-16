@@ -15,6 +15,7 @@ use sentry_contrib_native as sentry;
 use serde_json::Value;
 
 #[tokio::test(flavor = "multi_thread")]
+#[allow(clippy::too_many_lines)]
 async fn lib() -> Result<()> {
     util::events_success(
         Some(|options| options.set_require_user_consent(true)),

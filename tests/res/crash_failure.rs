@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
     user.insert("id", id);
     user.set();
 
-    #[allow(deref_nullptr)]
+    #[cfg_attr(feature = "nightly", allow(deref_nullptr))]
     unsafe {
         *ptr::null_mut() = true;
     }

@@ -159,8 +159,7 @@ pub struct Envelope([u8; 0]);
 /// call `sentry_value_decref` on the provided event, and return a
 /// `sentry_value_new_null()` instead.
 /// This function may be invoked inside of a signal handler and must be safe for
-/// that purpose, see https://man7.org/linux/man-pages/man7/signal-safety.7.html.
-#[allow(clippy::doc_markdown, non_autolinks)]
+/// that purpose, see <https://man7.org/linux/man-pages/man7/signal-safety.7.html>.
 pub type EventFunction =
     extern "C" fn(event: Value, hint: *mut c_void, closure: *mut c_void) -> Value;
 

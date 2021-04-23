@@ -772,6 +772,71 @@
 <span id="769">769</span>
 <span id="770">770</span>
 <span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy::cargo</span>,
@@ -797,7 +862,7 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">c_wchar</span> <span class="op">=</span> <span class="ident">u16</span>;
 
 <span class="doccomment">/// SDK Version</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SDK_USER_AGENT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;sentry.native/0.4.7&quot;</span>;
+<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SDK_USER_AGENT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;sentry.native/0.4.9&quot;</span>;
 
 <span class="doccomment">/// The Sentry Client Options.</span>
 <span class="doccomment">///</span>
@@ -909,7 +974,7 @@
 <span class="doccomment">///   In case of `false`, sentry will log an error, but continue with freeing</span>
 <span class="doccomment">///   the transport.</span>
 <span class="doccomment">/// * `free_func`: Frees the transports `state`. This hook might be called even</span>
-<span class="doccomment">///   though `shudown_func` returned `false` previously.</span>
+<span class="doccomment">///   though `shutdown_func` returned `false` previously.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// The transport interface might be extended in the future with hooks to flush</span>
 <span class="doccomment">/// its internal queue without shutting down, and to dump its internal queue to</span>
@@ -933,8 +998,12 @@
 <span class="doccomment">/// same event. In case the event should be discarded, the callback needs to</span>
 <span class="doccomment">/// call `sentry_value_decref` on the provided event, and return a</span>
 <span class="doccomment">/// `sentry_value_new_null()` instead.</span>
+<span class="doccomment">///</span>
 <span class="doccomment">/// This function may be invoked inside of a signal handler and must be safe for</span>
 <span class="doccomment">/// that purpose, see &lt;https://man7.org/linux/man-pages/man7/signal-safety.7.html&gt;.</span>
+<span class="doccomment">/// On Windows, it may be called from inside of a `UnhandledExceptionFilter`,</span>
+<span class="doccomment">/// see the documentation on SEH (structured exception handling) for more</span>
+<span class="doccomment">/// information &lt;https://docs.microsoft.com/en-us/windows/win32/debug/structured-exception-handling&gt;</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventFunction</span> <span class="op">=</span>
     <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">event</span>: <span class="ident">Value</span>, <span class="ident">hint</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>, <span class="ident">closure</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
 
@@ -1075,23 +1144,79 @@
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_is_true&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_is_true</span>(<span class="ident">value</span>: <span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
 
-    <span class="doccomment">/// Creates a new empty event value.</span>
+    <span class="doccomment">/// Creates a new empty Event value.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See &lt;https://docs.sentry.io/platforms/native/enriching-events/&gt; for how to</span>
+    <span class="doccomment">/// further work with events, and &lt;https://develop.sentry.dev/sdk/event-payloads/&gt;</span>
+    <span class="doccomment">/// for a detailed overview of the possible properties of an Event.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_event&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_event</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
 
-    <span class="doccomment">/// Creates a new message event value.</span>
+    <span class="doccomment">/// Creates a new Message Event value.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See &lt;https://develop.sentry.dev/sdk/event-payloads/message/&gt;</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// `logger` can be NULL to omit the logger value.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_message_event&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_message_event</span>(<span class="ident">level</span>: <span class="ident">i32</span>, <span class="ident">logger</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">text</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>)
         <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
 
-    <span class="doccomment">/// Creates a new breadcrumb with a specific type and message.</span>
+    <span class="doccomment">/// Creates a new Breadcrumb with a specific type and message.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See &lt;https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/&gt;</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Either parameter can be NULL in which case no such attributes is</span>
     <span class="doccomment">/// created.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_breadcrumb&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_breadcrumb</span>(<span class="ident">type_</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">message</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+
+    <span class="doccomment">/// Creates a new Exception value.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is intended for capturing language-level exception, such as from a</span>
+    <span class="doccomment">/// try-catch block. `type` and `value` here refer to the exception class</span>
+    <span class="doccomment">/// and a possible description.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See &lt;https://develop.sentry.dev/sdk/event-payloads/exception/&gt;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The returned value needs to be attached to an event via</span>
+    <span class="doccomment">/// `sentry_event_add_exception`.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_exception&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_exception</span>(<span class="ident">type_</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>, <span class="ident">value</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+
+    <span class="doccomment">/// Creates a new Thread value.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See &lt;https://develop.sentry.dev/sdk/event-payloads/threads/&gt;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The returned value needs to be attached to an event via</span>
+    <span class="doccomment">/// `sentry_event_add_thread`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// `name` can be NULL.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_thread&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_thread</span>(<span class="ident">id</span>: <span class="ident">u64</span>, <span class="ident">value</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+
+    <span class="doccomment">/// Creates a new Stack Trace conforming to the Stack Trace Interface.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See &lt;https://develop.sentry.dev/sdk/event-payloads/stacktrace/&gt;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The returned object needs to be attached to either an exception</span>
+    <span class="doccomment">/// event, or a thread object.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If `ips` is NULL the current stack trace is captured, otherwise `len`</span>
+    <span class="doccomment">/// stack trace instruction pointers are attached to the event.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_new_stacktrace&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_new_stacktrace</span>(<span class="ident">ips</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>, <span class="ident">len</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Value</span>;
+
+    <span class="doccomment">/// Adds an Exception to an Event value.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This takes ownership of the `exception`.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_event_add_exception&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">event_add_exception</span>(<span class="ident">event</span>: <span class="ident">Value</span>, <span class="ident">exception</span>: <span class="ident">Value</span>);
+
+    <span class="doccomment">/// Adds a Thread to an Event value.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This takes ownership of the `thread`.</span>
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_event_add_thread&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">event_add_thread</span>(<span class="ident">event</span>: <span class="ident">Value</span>, <span class="ident">thread</span>: <span class="ident">Value</span>);
 
     <span class="doccomment">/// Serialize a Sentry value to msgpack.</span>
     <span class="doccomment">///</span>
@@ -1101,10 +1226,15 @@
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_value_to_msgpack&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value_to_msgpack</span>(<span class="ident">value</span>: <span class="ident">Value</span>, <span class="ident">size_out</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_char</span>;
 
-    <span class="doccomment">/// Adds a stacktrace to an event.</span>
+    <span class="doccomment">/// Adds a stack trace to an event.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// If `ips` is NULL the current stacktrace is captured, otherwise `len`</span>
-    <span class="doccomment">/// stacktrace instruction pointers are attached to the event.</span>
+    <span class="doccomment">/// The stack trace is added as part of a new thread object.</span>
+    <span class="doccomment">/// This function is **deprecated** in favor of using</span>
+    <span class="doccomment">/// `sentry_value_new_stacktrace` in combination with</span>
+    <span class="doccomment">/// `sentry_value_new_thread` and `sentry_event_add_thread`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If `ips` is NULL the current stack trace is captured, otherwise `len`</span>
+    <span class="doccomment">/// stack trace instruction pointers are attached to the event.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_event_value_add_stacktrace&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">event_value_add_stacktrace</span>(<span class="ident">event</span>: <span class="ident">Value</span>, <span class="ident">ips</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_void</span>, <span class="ident">len</span>: <span class="ident">usize</span>);
 
@@ -1302,7 +1432,7 @@
     <span class="doccomment">/// Automatic session tracking is enabled by default and is equivalent to</span>
     <span class="doccomment">/// calling `sentry_start_session` after startup.</span>
     <span class="doccomment">/// There can only be one running session, and the current session will</span>
-    <span class="doccomment">/// always be closed implicitly by `sentry_shutdown`, when starting a</span>
+    <span class="doccomment">/// always be closed implicitly by `sentry_close`, when starting a</span>
     <span class="doccomment">/// new session with `sentry_start_session`, or manually by calling</span>
     <span class="doccomment">/// `sentry_end_session`.</span>
     <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_options_set_auto_session_tracking&quot;</span>]</span>
@@ -1426,8 +1556,8 @@
     <span class="doccomment">/// Shuts down the Sentry client and forces transports to flush out.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns 0 on success.</span>
-    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_shutdown&quot;</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">shutdown</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
+    <span class="attribute">#[<span class="ident">link_name</span> <span class="op">=</span> <span class="string">&quot;sentry_close&quot;</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span>;
 
     <span class="doccomment">/// This will lazily load and cache a list of all the loaded libraries.</span>
     <span class="doccomment">///</span>

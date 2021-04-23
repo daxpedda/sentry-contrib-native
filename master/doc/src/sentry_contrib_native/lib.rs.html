@@ -935,7 +935,7 @@
 <span class="doccomment">/// }</span>
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">shutdown</span>() {
-    <span class="kw">unsafe</span> { <span class="ident">sys::shutdown</span>() };
+    <span class="kw">unsafe</span> { <span class="ident">sys::close</span>() };
 
     <span class="comment">// de-allocate `BEFORE_SEND`</span>
     <span class="ident">BEFORE_SEND</span>

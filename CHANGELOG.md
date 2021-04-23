@@ -6,21 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
+## [0.3.1] - 2021-04-23
 
 ### Changed
 
-### Deprecated
-
-### Removed
+- Updated `sentry-native` to 0.4.9.
 
 ### Fixed
 
 - Improved README.
-
-### Security
+- Fixed cross-compilation from x86_64-apple-darwin to aarch64-apple-darwin
 
 ## [0.3.0] - 2021-02-08
 
@@ -157,8 +152,7 @@ and this project adheres to
 
 - Initial release.
 
-[unreleased]:
-  https://github.com/daxpedda/sentry-contrib-native/compare/0.3.0...HEAD
+[0.3.1]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.3.1
 [0.3.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.3.0
 [0.2.1]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.2.1
 [0.2.0]: https://github.com/daxpedda/sentry-contrib-native/releases/tag/0.2.0

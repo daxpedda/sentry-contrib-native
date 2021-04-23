@@ -196,7 +196,7 @@ impl Consent {
 /// }
 /// ```
 pub fn shutdown() {
-    unsafe { sys::shutdown() };
+    unsafe { sys::close() };
 
     // de-allocate `BEFORE_SEND`
     BEFORE_SEND

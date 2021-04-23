@@ -22,7 +22,7 @@ use std::{
 pub type c_wchar = u16;
 
 /// SDK Version
-pub const SDK_USER_AGENT: &str = "sentry.native/0.4.7";
+pub const SDK_USER_AGENT: &str = "sentry.native/0.4.9";
 
 /// The Sentry Client Options.
 ///
@@ -134,7 +134,7 @@ pub enum UserConsent {
 ///   In case of `false`, sentry will log an error, but continue with freeing
 ///   the transport.
 /// * `free_func`: Frees the transports `state`. This hook might be called even
-///   though `shudown_func` returned `false` previously.
+///   though `shutdown_func` returned `false` previously.
 ///
 /// The transport interface might be extended in the future with hooks to flush
 /// its internal queue without shutting down, and to dump its internal queue to
@@ -158,8 +158,12 @@ pub struct Envelope([u8; 0]);
 /// same event. In case the event should be discarded, the callback needs to
 /// call `sentry_value_decref` on the provided event, and return a
 /// `sentry_value_new_null()` instead.
+///
 /// This function may be invoked inside of a signal handler and must be safe for
 /// that purpose, see <https://man7.org/linux/man-pages/man7/signal-safety.7.html>.
+/// On Windows, it may be called from inside of a `UnhandledExceptionFilter`,
+/// see the documentation on SEH (structured exception handling) for more
+/// information <https://docs.microsoft.com/en-us/windows/win32/debug/structured-exception-handling>
 pub type EventFunction =
     extern "C" fn(event: Value, hint: *mut c_void, closure: *mut c_void) -> Value;
 
@@ -300,23 +304,79 @@ extern "C" {
     #[link_name = "sentry_value_is_true"]
     pub fn value_is_true(value: Value) -> c_int;
 
-    /// Creates a new empty event value.
+    /// Creates a new empty Event value.
+    ///
+    /// See <https://docs.sentry.io/platforms/native/enriching-events/> for how to
+    /// further work with events, and <https://develop.sentry.dev/sdk/event-payloads/>
+    /// for a detailed overview of the possible properties of an Event.
     #[link_name = "sentry_value_new_event"]
     pub fn value_new_event() -> Value;
 
-    /// Creates a new message event value.
+    /// Creates a new Message Event value.
+    ///
+    /// See <https://develop.sentry.dev/sdk/event-payloads/message/>
     ///
     /// `logger` can be NULL to omit the logger value.
     #[link_name = "sentry_value_new_message_event"]
     pub fn value_new_message_event(level: i32, logger: *const c_char, text: *const c_char)
         -> Value;
 
-    /// Creates a new breadcrumb with a specific type and message.
+    /// Creates a new Breadcrumb with a specific type and message.
+    ///
+    /// See <https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/>
     ///
     /// Either parameter can be NULL in which case no such attributes is
     /// created.
     #[link_name = "sentry_value_new_breadcrumb"]
     pub fn value_new_breadcrumb(type_: *const c_char, message: *const c_char) -> Value;
+
+    /// Creates a new Exception value.
+    ///
+    /// This is intended for capturing language-level exception, such as from a
+    /// try-catch block. `type` and `value` here refer to the exception class
+    /// and a possible description.
+    ///
+    /// See <https://develop.sentry.dev/sdk/event-payloads/exception/>
+    ///
+    /// The returned value needs to be attached to an event via
+    /// `sentry_event_add_exception`.
+    #[link_name = "sentry_value_new_exception"]
+    pub fn value_new_exception(type_: *const c_char, value: *const c_char) -> Value;
+
+    /// Creates a new Thread value.
+    ///
+    /// See <https://develop.sentry.dev/sdk/event-payloads/threads/>
+    ///
+    /// The returned value needs to be attached to an event via
+    /// `sentry_event_add_thread`.
+    ///
+    /// `name` can be NULL.
+    #[link_name = "sentry_value_new_thread"]
+    pub fn value_new_thread(id: u64, value: *const c_char) -> Value;
+
+    /// Creates a new Stack Trace conforming to the Stack Trace Interface.
+    ///
+    /// See <https://develop.sentry.dev/sdk/event-payloads/stacktrace/>
+    ///
+    /// The returned object needs to be attached to either an exception
+    /// event, or a thread object.
+    ///
+    /// If `ips` is NULL the current stack trace is captured, otherwise `len`
+    /// stack trace instruction pointers are attached to the event.
+    #[link_name = "sentry_value_new_stacktrace"]
+    pub fn value_new_stacktrace(ips: *mut *mut c_void, len: usize) -> Value;
+
+    /// Adds an Exception to an Event value.
+    ///
+    /// This takes ownership of the `exception`.
+    #[link_name = "sentry_event_add_exception"]
+    pub fn event_add_exception(event: Value, exception: Value);
+
+    /// Adds a Thread to an Event value.
+    ///
+    /// This takes ownership of the `thread`.
+    #[link_name = "sentry_event_add_thread"]
+    pub fn event_add_thread(event: Value, thread: Value);
 
     /// Serialize a Sentry value to msgpack.
     ///
@@ -326,10 +386,15 @@ extern "C" {
     #[link_name = "sentry_value_to_msgpack"]
     pub fn value_to_msgpack(value: Value, size_out: *mut usize) -> *mut c_char;
 
-    /// Adds a stacktrace to an event.
+    /// Adds a stack trace to an event.
     ///
-    /// If `ips` is NULL the current stacktrace is captured, otherwise `len`
-    /// stacktrace instruction pointers are attached to the event.
+    /// The stack trace is added as part of a new thread object.
+    /// This function is **deprecated** in favor of using
+    /// `sentry_value_new_stacktrace` in combination with
+    /// `sentry_value_new_thread` and `sentry_event_add_thread`.
+    ///
+    /// If `ips` is NULL the current stack trace is captured, otherwise `len`
+    /// stack trace instruction pointers are attached to the event.
     #[link_name = "sentry_event_value_add_stacktrace"]
     pub fn event_value_add_stacktrace(event: Value, ips: *mut *mut c_void, len: usize);
 
@@ -527,7 +592,7 @@ extern "C" {
     /// Automatic session tracking is enabled by default and is equivalent to
     /// calling `sentry_start_session` after startup.
     /// There can only be one running session, and the current session will
-    /// always be closed implicitly by `sentry_shutdown`, when starting a
+    /// always be closed implicitly by `sentry_close`, when starting a
     /// new session with `sentry_start_session`, or manually by calling
     /// `sentry_end_session`.
     #[link_name = "sentry_options_set_auto_session_tracking"]
@@ -651,8 +716,8 @@ extern "C" {
     /// Shuts down the Sentry client and forces transports to flush out.
     ///
     /// Returns 0 on success.
-    #[link_name = "sentry_shutdown"]
-    pub fn shutdown() -> c_int;
+    #[link_name = "sentry_close"]
+    pub fn close() -> c_int;
 
     /// This will lazily load and cache a list of all the loaded libraries.
     ///

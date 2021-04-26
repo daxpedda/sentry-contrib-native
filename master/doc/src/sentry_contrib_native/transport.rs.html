@@ -1339,7 +1339,7 @@
 
     <span class="kw">impl</span> <span class="ident">CustomTransport</span> {
         <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">dsn</span>: <span class="ident">Dsn</span>, <span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, <span class="ident">STARTUP</span>.<span class="ident">swap</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::SeqCst</span>));
+            <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">STARTUP</span>.<span class="ident">swap</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::SeqCst</span>));
             <span class="macro">assert_eq!</span>(<span class="ident">dsn</span>, <span class="ident">Dsn::new</span>(<span class="ident">options</span>.<span class="ident">dsn</span>().<span class="ident">unwrap</span>()).<span class="ident">unwrap</span>());
 
             <span class="self">Self</span> { <span class="ident">dsn</span> }
@@ -1362,7 +1362,7 @@
         }
 
         <span class="kw">fn</span> <span class="ident">shutdown</span>(<span class="self">self</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>, <span class="kw">_</span>: <span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Shutdown</span> {
-            <span class="macro">assert_eq!</span>(<span class="bool-val">false</span>, <span class="ident">SHUTDOWN</span>.<span class="ident">swap</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::SeqCst</span>));
+            <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">SHUTDOWN</span>.<span class="ident">swap</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::SeqCst</span>));
             <span class="ident">Shutdown::Success</span>
         }
     }

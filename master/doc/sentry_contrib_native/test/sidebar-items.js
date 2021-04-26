@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["set_hook","Call this at the start of a test to record."],["verify_panics","Call this at the end of a test to check if a thread panicked, if it did, panic!"]]});

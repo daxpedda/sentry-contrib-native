@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
     sentry::clear_modulecache();
     assert!(sentry::modules_list().contains(&lib_location.to_str().unwrap().to_string()));
     let func: Symbol<extern "C" fn() -> bool> = unsafe { lib.get(b"test\0") }.unwrap();
-    assert_eq!(true, func());
+    assert!(func());
 
     // tag
     sentry::set_tag("test-tag", "test");

@@ -43,7 +43,7 @@ async fn lib() -> Result<()> {
                         .contains(&lib_location.to_str().unwrap().to_string()));
                     let func: Symbol<extern "C" fn() -> bool> =
                         unsafe { lib.get(b"test\0") }.unwrap();
-                    assert_eq!(true, func());
+                    assert!(func());
 
                     let mut event = Event::new();
                     event.add_stacktrace(0);

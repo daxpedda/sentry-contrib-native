@@ -620,7 +620,7 @@ fn transport() -> anyhow::Result<()> {
 
     impl CustomTransport {
         fn new(dsn: Dsn, options: &Options) -> Self {
-            assert_eq!(false, STARTUP.swap(true, Ordering::SeqCst));
+            assert!(!STARTUP.swap(true, Ordering::SeqCst));
             assert_eq!(dsn, Dsn::new(options.dsn().unwrap()).unwrap());
 
             Self { dsn }
@@ -643,7 +643,7 @@ fn transport() -> anyhow::Result<()> {
         }
 
         fn shutdown(self: Box<Self>, _: Duration) -> Shutdown {
-            assert_eq!(false, SHUTDOWN.swap(true, Ordering::SeqCst));
+            assert!(!SHUTDOWN.swap(true, Ordering::SeqCst));
             Shutdown::Success
         }
     }

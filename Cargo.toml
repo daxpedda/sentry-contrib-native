@@ -10,6 +10,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["sentry", "crash", "crashpad", "breakpad", "minidump"]
 categories = ["api-bindings", "development-tools::debugging"]
 exclude = [".github", ".gitmodules"]
+resolver = "2"
 
 [workspace]
 members = ["sentry-contrib-native-sys", "tests/res/dylib"]

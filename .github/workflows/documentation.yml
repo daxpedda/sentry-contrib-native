@@ -38,7 +38,7 @@ jobs:
 
       - name: Checkout
         if: steps.rustc-version.outcome != 'failure'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           submodules: recursive
       - name: Install Curl

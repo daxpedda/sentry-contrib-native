@@ -48,7 +48,7 @@ sentry-contrib-native = { path = ".", default-features = false, features = [
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
-sha-1 = "0.9"
+sha-1 = "0.10"
 tokio = { version = "1", features = [
   "io-util",
   "macros",

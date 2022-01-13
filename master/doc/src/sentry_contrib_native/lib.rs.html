@@ -1,7 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../sentry_contrib_native/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a class="sidebar-logo" href="../../sentry_contrib_native/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.png" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../sentry_contrib_native/index.html"><img class="rust-logo" src="../../rust-logo.png" alt="logo"></a><nav class="sub"><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><div>
+                                <input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -728,29 +728,13 @@
 <span id="725">725</span>
 <span id="726">726</span>
 <span id="727">727</span>
-<span id="728">728</span>
-<span id="729">729</span>
-<span id="730">730</span>
-<span id="731">731</span>
-<span id="732">732</span>
-<span id="733">733</span>
-<span id="734">734</span>
-<span id="735">735</span>
-</pre><pre class="rust">
-<span class="attribute">#![<span class="ident">warn</span>(
+</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">warn</span>(
     <span class="ident">clippy::cargo</span>,
     <span class="ident">clippy::missing_docs_in_private_items</span>,
-    <span class="ident">clippy::nursery</span>,
     <span class="ident">clippy::pedantic</span>,
     <span class="ident">missing_docs</span>
 )]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(
-    <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>,
-    <span class="ident">feature</span>(<span class="ident">doc_cfg</span>),
-    <span class="ident">feature</span>(<span class="ident">external_doc</span>),
-    <span class="ident">doc</span>(<span class="ident">include</span> <span class="op">=</span> <span class="string">&quot;../README.md&quot;</span>)
-)]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>), <span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>)]</span>
+<span class="attribute">#![<span class="ident">doc</span> <span class="op">=</span> <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]</span>
 
 <span class="kw">mod</span> <span class="ident">before_send</span>;
 <span class="kw">mod</span> <span class="ident">breadcrumb</span>;
@@ -823,13 +807,12 @@
     <span class="ident">Fingerprints</span>,
     <span class="doccomment">/// Failed at custom transport.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-custom&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;transport-custom&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed at custom transport&quot;</span>)]</span>
     <span class="ident">Transport</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">TransportError</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Infallible</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">from</span>: <span class="ident">Infallible</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">from</span>: <span class="ident">Infallible</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">from</span> {}
     }
 }
@@ -850,13 +833,13 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Level</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FmtResult</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">FmtResult</span> {
         <span class="kw">let</span> <span class="ident">text</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Debug</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Debug&quot;</span>,
-            <span class="self">Self</span><span class="ident">::Info</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Info&quot;</span>,
-            <span class="self">Self</span><span class="ident">::Warning</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Warning&quot;</span>,
-            <span class="self">Self</span><span class="ident">::Error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Error&quot;</span>,
-            <span class="self">Self</span><span class="ident">::Fatal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;Fatal&quot;</span>,
+            <span class="ident"><span class="self">Self</span>::Debug</span> =&gt; <span class="string">&quot;Debug&quot;</span>,
+            <span class="ident"><span class="self">Self</span>::Info</span> =&gt; <span class="string">&quot;Info&quot;</span>,
+            <span class="ident"><span class="self">Self</span>::Warning</span> =&gt; <span class="string">&quot;Warning&quot;</span>,
+            <span class="ident"><span class="self">Self</span>::Error</span> =&gt; <span class="string">&quot;Error&quot;</span>,
+            <span class="ident"><span class="self">Self</span>::Fatal</span> =&gt; <span class="string">&quot;Fatal&quot;</span>,
         };
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">text</span>)
     }
@@ -864,25 +847,25 @@
 
 <span class="kw">impl</span> <span class="ident">Level</span> {
     <span class="doccomment">/// Convert [`Level`] to [`i32`].</span>
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">into_raw</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span> {
+    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">into_raw</span>(<span class="self">self</span>) -&gt; <span class="ident">i32</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Debug</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sys::Level::Debug</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="self">Self</span><span class="ident">::Info</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sys::Level::Info</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="self">Self</span><span class="ident">::Warning</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sys::Level::Warning</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="self">Self</span><span class="ident">::Error</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sys::Level::Error</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="self">Self</span><span class="ident">::Fatal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sys::Level::Fatal</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident"><span class="self">Self</span>::Debug</span> =&gt; <span class="ident">sys::Level::Debug</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident"><span class="self">Self</span>::Info</span> =&gt; <span class="ident">sys::Level::Info</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident"><span class="self">Self</span>::Warning</span> =&gt; <span class="ident">sys::Level::Warning</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident"><span class="self">Self</span>::Error</span> =&gt; <span class="ident">sys::Level::Error</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident"><span class="self">Self</span>::Fatal</span> =&gt; <span class="ident">sys::Level::Fatal</span> <span class="kw">as</span> <span class="kw">_</span>,
         }
     }
 
     <span class="doccomment">/// Convert [`i32`] to [`Level`].</span>
-    <span class="kw">fn</span> <span class="ident">from_raw</span>(<span class="ident">level</span>: <span class="ident">i32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from_raw</span>(<span class="ident">level</span>: <span class="ident">i32</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">level</span> {
-            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sys::Level::Debug</span> <span class="kw">as</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Debug</span>,
-            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sys::Level::Info</span> <span class="kw">as</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Info</span>,
-            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sys::Level::Warning</span> <span class="kw">as</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Warning</span>,
-            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sys::Level::Error</span> <span class="kw">as</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Error</span>,
-            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sys::Level::Fatal</span> <span class="kw">as</span> <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Fatal</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;failed to convert `i32` to `Level`&quot;</span>),
+            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">==</span> <span class="ident">sys::Level::Debug</span> <span class="kw">as</span> <span class="kw">_</span> =&gt; <span class="ident"><span class="self">Self</span>::Debug</span>,
+            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">==</span> <span class="ident">sys::Level::Info</span> <span class="kw">as</span> <span class="kw">_</span> =&gt; <span class="ident"><span class="self">Self</span>::Info</span>,
+            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">==</span> <span class="ident">sys::Level::Warning</span> <span class="kw">as</span> <span class="kw">_</span> =&gt; <span class="ident"><span class="self">Self</span>::Warning</span>,
+            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">==</span> <span class="ident">sys::Level::Error</span> <span class="kw">as</span> <span class="kw">_</span> =&gt; <span class="ident"><span class="self">Self</span>::Error</span>,
+            <span class="ident">level</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">==</span> <span class="ident">sys::Level::Fatal</span> <span class="kw">as</span> <span class="kw">_</span> =&gt; <span class="ident"><span class="self">Self</span>::Fatal</span>,
+            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;failed to convert `i32` to `Level`&quot;</span>),
         }
     }
 }
@@ -900,11 +883,11 @@
 
 <span class="kw">impl</span> <span class="ident">Consent</span> {
     <span class="doccomment">/// Convert [`sys::UserConsent`] to [`Consent`].</span>
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from_raw</span>(<span class="ident">level</span>: <span class="ident">sys::UserConsent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from_raw</span>(<span class="ident">level</span>: <span class="ident">sys::UserConsent</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">level</span> {
-            <span class="ident">sys::UserConsent::Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Unknown</span>,
-            <span class="ident">sys::UserConsent::Revoked</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Revoked</span>,
-            <span class="ident">sys::UserConsent::Given</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Given</span>,
+            <span class="ident">sys::UserConsent::Unknown</span> =&gt; <span class="ident"><span class="self">Self</span>::Unknown</span>,
+            <span class="ident">sys::UserConsent::Revoked</span> =&gt; <span class="ident"><span class="self">Self</span>::Revoked</span>,
+            <span class="ident">sys::UserConsent::Given</span> =&gt; <span class="ident"><span class="self">Self</span>::Given</span>,
         }
     }
 }
@@ -965,7 +948,7 @@
 <span class="doccomment">/// # Ok(()) }</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">modules_list</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">modules_list</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">unsafe</span> { <span class="ident">Value::from_raw</span>(<span class="ident">sys::get_modules_list</span>()) }
         .<span class="ident">into_list</span>()
         .<span class="ident">map</span>(<span class="ident">Vec::into_iter</span>)
@@ -1013,8 +996,8 @@
 <span class="doccomment">/// # Errors</span>
 <span class="doccomment">/// Fails with [`Error::ReinstallBackend`] if re-initializing the backend</span>
 <span class="doccomment">/// failed.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reinstall_backend</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">sys::reinstall_backend</span>() } <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reinstall_backend</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">sys::reinstall_backend</span>() } <span class="op">==</span> <span class="number">0</span> {
         <span class="prelude-val">Ok</span>(())
     } <span class="kw">else</span> {
         <span class="prelude-val">Err</span>(<span class="ident">Error::ReinstallBackend</span>)
@@ -1037,9 +1020,9 @@
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_user_consent</span>(<span class="ident">consent</span>: <span class="ident">Consent</span>) {
     <span class="kw">match</span> <span class="ident">consent</span> {
-        <span class="ident">Consent::Unknown</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">sys::user_consent_reset</span>() },
-        <span class="ident">Consent::Revoked</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">sys::user_consent_revoke</span>() },
-        <span class="ident">Consent::Given</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">sys::user_consent_give</span>() },
+        <span class="ident">Consent::Unknown</span> =&gt; <span class="kw">unsafe</span> { <span class="ident">sys::user_consent_reset</span>() },
+        <span class="ident">Consent::Revoked</span> =&gt; <span class="kw">unsafe</span> { <span class="ident">sys::user_consent_revoke</span>() },
+        <span class="ident">Consent::Given</span> =&gt; <span class="kw">unsafe</span> { <span class="ident">sys::user_consent_give</span>() },
     }
 }
 
@@ -1058,7 +1041,7 @@
 <span class="doccomment">/// # Ok(()) }</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_consent</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Consent</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">user_consent</span>() -&gt; <span class="ident">Consent</span> {
     <span class="ident">Consent::from_raw</span>(<span class="kw">unsafe</span> { <span class="ident">sys::user_consent_get</span>() })
 }
 
@@ -1170,7 +1153,7 @@
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_fingerprint</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(
     <span class="ident">fingerprints</span>: <span class="ident">I</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">fingerprints</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">fingerprints</span>
         .<span class="ident">into_iter</span>()
         .<span class="ident">map</span>(<span class="ident">Into::into</span>)
@@ -1223,8 +1206,8 @@
                 <span class="ident">raw_fingerprints</span>[<span class="number">30</span>],
                 <span class="ident">raw_fingerprints</span>[<span class="number">31</span>],
                 <span class="ident">ptr::null</span>::<span class="op">&lt;</span><span class="ident">c_char</span><span class="op">&gt;</span>(),
-            )
-        };
+            );
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1311,7 +1294,7 @@
 }
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
-<span class="kw">fn</span> <span class="ident">error</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">error</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="prelude-val">Ok</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">Infallible</span><span class="op">&gt;</span>(())<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
@@ -1333,34 +1316,34 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="attribute">#[<span class="ident">rusty_fork::fork_test</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
-<span class="kw">fn</span> <span class="ident">consent</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="kw">crate</span><span class="ident">::user_consent</span>());
+<span class="kw">fn</span> <span class="ident">consent</span>() -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="ident"><span class="kw">crate</span>::user_consent</span>());
 
-    <span class="kw">crate</span><span class="ident">::set_user_consent</span>(<span class="ident">Consent::Unknown</span>);
-    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="kw">crate</span><span class="ident">::user_consent</span>());
+    <span class="ident"><span class="kw">crate</span>::set_user_consent</span>(<span class="ident">Consent::Unknown</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="ident"><span class="kw">crate</span>::user_consent</span>());
 
-    <span class="kw">crate</span><span class="ident">::set_user_consent</span>(<span class="ident">Consent::Revoked</span>);
-    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="kw">crate</span><span class="ident">::user_consent</span>());
+    <span class="ident"><span class="kw">crate</span>::set_user_consent</span>(<span class="ident">Consent::Revoked</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="ident"><span class="kw">crate</span>::user_consent</span>());
 
-    <span class="kw">crate</span><span class="ident">::set_user_consent</span>(<span class="ident">Consent::Given</span>);
-    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="kw">crate</span><span class="ident">::user_consent</span>());
+    <span class="ident"><span class="kw">crate</span>::set_user_consent</span>(<span class="ident">Consent::Given</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="ident"><span class="kw">crate</span>::user_consent</span>());
 
     <span class="kw">let</span> <span class="ident">_shutdown</span> <span class="op">=</span> <span class="ident">Options::new</span>().<span class="ident">init</span>()<span class="question-mark">?</span>;
 
-    <span class="kw">crate</span><span class="ident">::set_user_consent</span>(<span class="ident">Consent::Given</span>);
-    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Given</span>, <span class="kw">crate</span><span class="ident">::user_consent</span>());
+    <span class="ident"><span class="kw">crate</span>::set_user_consent</span>(<span class="ident">Consent::Given</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Given</span>, <span class="ident"><span class="kw">crate</span>::user_consent</span>());
 
-    <span class="kw">crate</span><span class="ident">::set_user_consent</span>(<span class="ident">Consent::Revoked</span>);
-    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Revoked</span>, <span class="kw">crate</span><span class="ident">::user_consent</span>());
+    <span class="ident"><span class="kw">crate</span>::set_user_consent</span>(<span class="ident">Consent::Revoked</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Revoked</span>, <span class="ident"><span class="kw">crate</span>::user_consent</span>());
 
-    <span class="kw">crate</span><span class="ident">::set_user_consent</span>(<span class="ident">Consent::Unknown</span>);
-    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="kw">crate</span><span class="ident">::user_consent</span>());
+    <span class="ident"><span class="kw">crate</span>::set_user_consent</span>(<span class="ident">Consent::Unknown</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">Consent::Unknown</span>, <span class="ident"><span class="kw">crate</span>::user_consent</span>());
 
     <span class="prelude-val">Ok</span>(())
 }
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
-<span class="kw">fn</span> <span class="ident">fingerprint</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">fingerprint</span>() -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">for</span> <span class="ident">len</span> <span class="kw">in</span> <span class="number">1</span>..<span class="number">33</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fingerprints</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">len</span>);
 
@@ -1368,7 +1351,7 @@
             <span class="ident">fingerprints</span>.<span class="ident">push</span>(<span class="ident">fingerprint</span>.<span class="ident">to_string</span>());
         }
 
-        <span class="kw">crate</span><span class="ident">::set_fingerprint</span>(<span class="ident">fingerprints</span>)<span class="question-mark">?</span>;
+        <span class="ident"><span class="kw">crate</span>::set_fingerprint</span>(<span class="ident">fingerprints</span>)<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(())
@@ -1383,12 +1366,12 @@
         <span class="ident">fingerprints</span>.<span class="ident">push</span>(<span class="ident">fingerprint</span>.<span class="ident">to_string</span>());
     }
 
-    <span class="kw">crate</span><span class="ident">::set_fingerprint</span>(<span class="ident">fingerprints</span>).<span class="ident">unwrap</span>()
+    <span class="ident"><span class="kw">crate</span>::set_fingerprint</span>(<span class="ident">fingerprints</span>).<span class="ident">unwrap</span>();
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="attribute">#[<span class="ident">rusty_fork::fork_test</span>(<span class="ident">timeout_ms</span> <span class="op">=</span> <span class="number">60000</span>)]</span>
-<span class="kw">fn</span> <span class="ident">threaded_stress</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">threaded_stress</span>() -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">use</span> <span class="ident">std::thread</span>;
 
     <span class="kw">fn</span> <span class="ident">spawns</span>(<span class="ident">tests</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">fn</span>(<span class="ident">i32</span>)<span class="op">&gt;</span>) {
@@ -1399,17 +1382,17 @@
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handles</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="number">100</span>);
 
                 <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
-                    <span class="ident">handles</span>.<span class="ident">push</span>(<span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">test</span>(<span class="ident">index</span>)))
+                    <span class="ident">handles</span>.<span class="ident">push</span>(<span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">test</span>(<span class="ident">index</span>)));
                 }
 
                 <span class="ident">handles</span>
             });
-            <span class="ident">spawns</span>.<span class="ident">push</span>(<span class="ident">handle</span>)
+            <span class="ident">spawns</span>.<span class="ident">push</span>(<span class="ident">handle</span>);
         }
 
         <span class="kw">for</span> <span class="ident">spawn</span> <span class="kw">in</span> <span class="ident">spawns</span> {
             <span class="kw">for</span> <span class="ident">handle</span> <span class="kw">in</span> <span class="ident">spawn</span>.<span class="ident">join</span>().<span class="ident">unwrap</span>() {
-                <span class="ident">handle</span>.<span class="ident">join</span>().<span class="ident">unwrap</span>()
+                <span class="ident">handle</span>.<span class="ident">join</span>().<span class="ident">unwrap</span>();
             }
         }
     }
@@ -1422,48 +1405,48 @@
 
     <span class="ident">spawns</span>(<span class="macro">vec!</span>[
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">_modules</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::modules_list</span>();
+            <span class="kw">let</span> <span class="ident">_modules</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::modules_list</span>();
         },
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::clear_modulecache</span>(),
+        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::clear_modulecache</span>(),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> {
-            <span class="kw">crate</span><span class="ident">::set_user_consent</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">3</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Consent::Unknown</span>,
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Consent::Given</span>,
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Consent::Revoked</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
-            })
+            <span class="ident"><span class="kw">crate</span>::set_user_consent</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">3</span> {
+                <span class="number">0</span> =&gt; <span class="ident">Consent::Unknown</span>,
+                <span class="number">1</span> =&gt; <span class="ident">Consent::Given</span>,
+                <span class="number">2</span> =&gt; <span class="ident">Consent::Revoked</span>,
+                <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
+            });
         },
         <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::user_consent</span>();
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::user_consent</span>();
         },
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">user</span> <span class="op">=</span> <span class="ident">User::new</span>();
             <span class="ident">user</span>.<span class="ident">insert</span>(<span class="string">&quot;id&quot;</span>, <span class="ident">index</span>);
             <span class="ident">user</span>.<span class="ident">set</span>();
         },
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::remove_user</span>(),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::set_tag</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::remove_tag</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::set_extra</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::remove_extra</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::set_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="macro">vec!</span>[(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>)]),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::remove_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::set_fingerprint</span>(<span class="macro">vec!</span>[<span class="ident">index</span>.<span class="ident">to_string</span>()]).<span class="ident">unwrap</span>(),
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::remove_fingerprint</span>(),
-        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::set_transaction</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::remove_transaction</span>(),
+        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::remove_user</span>(),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::set_tag</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>.<span class="ident">to_string</span>()),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::remove_tag</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::set_extra</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::remove_extra</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::set_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="macro">vec!</span>[(<span class="ident">index</span>.<span class="ident">to_string</span>(), <span class="ident">index</span>)]),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::remove_context</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::set_fingerprint</span>(<span class="macro">vec!</span>[<span class="ident">index</span>.<span class="ident">to_string</span>()]).<span class="ident">unwrap</span>(),
+        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::remove_fingerprint</span>(),
+        <span class="op">|</span><span class="ident">index</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::set_transaction</span>(<span class="ident">index</span>.<span class="ident">to_string</span>()),
+        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::remove_transaction</span>(),
         <span class="op">|</span><span class="ident">index</span><span class="op">|</span> {
-            <span class="kw">crate</span><span class="ident">::set_level</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">5</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Level::Debug</span>,
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Level::Info</span>,
-                <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Level::Warning</span>,
-                <span class="number">3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Level::Error</span>,
-                <span class="number">4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Level::Fatal</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
-            })
+            <span class="ident"><span class="kw">crate</span>::set_level</span>(<span class="kw">match</span> <span class="ident">index</span> <span class="op">%</span> <span class="number">5</span> {
+                <span class="number">0</span> =&gt; <span class="ident">Level::Debug</span>,
+                <span class="number">1</span> =&gt; <span class="ident">Level::Info</span>,
+                <span class="number">2</span> =&gt; <span class="ident">Level::Warning</span>,
+                <span class="number">3</span> =&gt; <span class="ident">Level::Error</span>,
+                <span class="number">4</span> =&gt; <span class="ident">Level::Fatal</span>,
+                <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
+            });
         },
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::start_session</span>(),
-        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::end_session</span>(),
+        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::start_session</span>(),
+        <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::end_session</span>(),
     ]);
 
     <span class="ident">shutdown</span>.<span class="ident">shutdown</span>();
@@ -1472,5 +1455,6 @@
 
     <span class="prelude-val">Ok</span>(())
 }
-</pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="sentry_contrib_native" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
+</code></pre></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="sentry_contrib_native" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (1bd4fdc94 2022-01-12)" ></div>
+</body></html>

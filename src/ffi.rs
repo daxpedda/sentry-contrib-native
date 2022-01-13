@@ -1,6 +1,6 @@
 //! FFI helper functions, traits and types to communicate with `sentry-native`.
 
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 use std::os::windows::ffi::OsStrExt;
 #[cfg(doc)]
 use std::process::abort;
@@ -12,14 +12,14 @@ use std::{
     process,
 };
 
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 use std::{mem, os::unix::ffi::OsStringExt};
 
 /// Cross-platform return type for [`CPath::into_os_vec`].
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 type COsString = u16;
 /// Cross-platform return type for [`CPath::into_os_vec`].
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 type COsString = c_char;
 
 /// Helper trait to convert [`PathBuf`] to `Vec<COsString>`.
@@ -32,14 +32,17 @@ impl CPath for PathBuf {
     fn into_os_vec(self) -> Vec<COsString> {
         let path = self.into_os_string();
 
-        #[cfg(windows)]
+        #[cfg(target_os = "windows")]
         let path = path.encode_wide();
-        #[cfg(not(any(windows, target_arch = "aarch64")))]
+        #[cfg(all(
+            not(target_os = "windows"),
+            not(all(target_os = "linux", target_arch = "aarch64"))
+        ))]
         let path = path
             .into_vec()
             .into_iter()
             .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) });
-        #[cfg(all(not(windows), target_arch = "aarch64"))]
+        #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
         let path = path.into_vec().into_iter();
 
         path.take_while(|ch| *ch != 0).chain(Some(0)).collect()
@@ -104,20 +107,23 @@ mod cpath {
     #![allow(clippy::non_ascii_literal)]
 
     use crate::CPath;
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     use std::os::windows::ffi::OsStringExt;
     use std::{ffi::OsString, path::PathBuf};
-    #[cfg(not(windows))]
+    #[cfg(not(target_os = "windows"))]
     use std::{mem, os::unix::ffi::OsStringExt};
 
     fn convert(string: &str) -> OsString {
         let path = PathBuf::from(string.to_owned()).into_os_vec();
 
-        #[cfg(windows)]
+        #[cfg(target_os = "windows")]
         {
             OsString::from_wide(&path[..])
         }
-        #[cfg(not(any(windows, target_arch = "aarch64")))]
+        #[cfg(all(
+            not(target_os = "windows"),
+            not(all(target_os = "linux", target_arch = "aarch64"))
+        ))]
         {
             OsString::from_vec(
                 path.into_iter()
@@ -125,7 +131,7 @@ mod cpath {
                     .collect(),
             )
         }
-        #[cfg(all(not(windows), target_arch = "aarch64"))]
+        #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
         {
             OsString::from_vec(path.into_iter().collect())
         }

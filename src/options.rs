@@ -460,7 +460,6 @@ impl Options {
     /// options.set_transport_thread_name("sentry transport");
     /// ```
     #[cfg(feature = "transport-default")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-default")))]
     pub fn set_transport_thread_name<S: Into<String>>(&mut self, name: S) {
         let name = name.into().into_cstring();
         unsafe { sys::options_set_transport_thread_name(self.as_mut(), name.as_ptr()) }
@@ -477,7 +476,6 @@ impl Options {
     /// assert_eq!(Some("sentry transport"), options.transport_thread_name());
     /// ```
     #[cfg(feature = "transport-default")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-default")))]
     #[must_use]
     pub fn transport_thread_name(&self) -> Option<&str> {
         unsafe { sys::options_get_transport_thread_name(self.as_ref()).as_str() }

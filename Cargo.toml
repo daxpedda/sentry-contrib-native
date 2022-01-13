@@ -66,7 +66,6 @@ backend-breakpad = ["sys/backend-breakpad"]
 backend-inproc = ["sys/backend-inproc"]
 transport-default = ["sys/transport-default"]
 transport-custom = ["http", "url"]
-nightly = ["sys/nightly"]
 test = []
 
 [[example]]
@@ -86,6 +85,6 @@ name = "panic"
 path = "tests/res/panic.rs"
 
 [package.metadata.docs.rs]
-features = ["transport-custom", "nightly"]
+features = ["transport-custom"]
 no-default-features = true
 targets = ["x86_64-unknown-linux-gnu"]

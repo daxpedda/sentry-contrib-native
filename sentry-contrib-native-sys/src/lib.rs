@@ -5,12 +5,7 @@
     clippy::pedantic,
     missing_docs
 )]
-#![cfg_attr(
-    feature = "nightly",
-    feature(external_doc),
-    doc(include = "../README.md")
-)]
-#![cfg_attr(not(feature = "nightly"), doc = "")]
+#![doc = include_str!("../README.md")]
 
 use std::{
     fmt::Debug,

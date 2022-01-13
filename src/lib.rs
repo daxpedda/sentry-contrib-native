@@ -5,13 +5,7 @@
     clippy::pedantic,
     missing_docs
 )]
-#![cfg_attr(
-    feature = "nightly",
-    feature(doc_cfg),
-    feature(external_doc),
-    doc(include = "../README.md")
-)]
-#![cfg_attr(not(feature = "nightly"), doc = "")]
+#![doc = include_str!("../README.md")]
 
 mod before_send;
 mod breadcrumb;
@@ -84,7 +78,6 @@ pub enum Error {
     Fingerprints,
     /// Failed at custom transport.
     #[cfg(feature = "transport-custom")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
     #[error("failed at custom transport")]
     Transport(#[from] TransportError),
 }

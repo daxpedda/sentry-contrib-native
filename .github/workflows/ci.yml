@@ -77,7 +77,7 @@ jobs:
         rust:
           - { channel: stable, feature: "" }
           - { channel: beta, feature: "" }
-          - { channel: nightly, feature: --features nightly }
+          - { channel: nightly, feature: "" }
         feature:
           - {
               name: "--no-default-features --features transport-custom",

@@ -170,10 +170,6 @@ for more details.
 - **backend-breakpad** - Will use Breakpad.
 - **backend-inproc** - Will use InProc.
 - **transport-custom** - Adds helper types and methods to custom transport.
-- **nightly** - Enables full documentation through
-  [`feature(external_doc)`](https://doc.rust-lang.org/unstable-book/language-features/external-doc.html)
-  and
-  [`feature(doc_cfg)`](https://doc.rust-lang.org/unstable-book/language-features/doc-cfg.html).
 
 By default the selected backend will be Crashpad for Linux, MacOS and Windows
 and InProc for Android, even if no corresponding feature is active. See
@@ -197,11 +193,6 @@ See the [Usage section](#usage) for an example.
   [![Docs](https://docs.rs/sentry-contrib-native/badge.svg)](https://docs.rs/sentry-contrib-native).
 - For the master branch:
   [![Docs](https://github.com/daxpedda/sentry-contrib-native/workflows/docs/badge.svg)](https://daxpedda.github.io/sentry-contrib-native/master/doc/index.html).
-
-Currently, nightly is needed for full documentation:
-`cargo doc --features nightly`
-
-If nightly isn't available, use `cargo doc` as usual.
 
 ## Tests
 

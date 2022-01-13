@@ -43,7 +43,7 @@ jobs:
         rust:
           - { channel: stable, feature: "" }
           - { channel: beta, feature: "" }
-          - { channel: nightly, feature: --features nightly }
+          - { channel: nightly, feature: "" }
         branch: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
 
     runs-on: ubuntu-latest

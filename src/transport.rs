@@ -28,7 +28,6 @@ use ::{
 
 /// Sentry errors.
 #[cfg(feature = "transport-custom")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 #[derive(Debug, Error, PartialEq)]
 pub enum Error {
     /// Failed to parse DSN URL.
@@ -57,7 +56,6 @@ impl From<Infallible> for Error {
 
 /// The [`http::Request`] request your [`Transport`] is expected to send.
 #[cfg(feature = "transport-custom")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 pub type Request = HttpRequest<Envelope>;
 
 /// The MIME type for Sentry envelopes.
@@ -319,7 +317,6 @@ impl RawEnvelope {
     ///
     /// For more information see [`Envelope::into_request`].
     #[cfg(feature = "transport-custom")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
     #[must_use = "`Request` doesn't do anything until it is sent"]
     pub fn to_request(&self, dsn: Dsn) -> Request {
         self.serialize().into_request(dsn)
@@ -398,7 +395,6 @@ impl Envelope {
     /// `AsRef<[u8]>` to retrieve the actual bytes that should be sent as the
     /// body.
     #[cfg(feature = "transport-custom")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
     #[must_use = "`Request` doesn't do anything until it is sent"]
     pub fn into_request(self, dsn: Dsn) -> Request {
         let mut request = HttpRequest::builder();
@@ -466,7 +462,6 @@ impl Envelope {
 /// # } Ok(()) }
 /// ```
 #[cfg(feature = "transport-custom")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Dsn {
     /// The auth header value
@@ -476,7 +471,6 @@ pub struct Dsn {
 }
 
 #[cfg(feature = "transport-custom")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 impl Dsn {
     /// Creates a new [`Dsn`] from a [`str`].
     ///
@@ -562,7 +556,6 @@ impl Dsn {
     /// Yields a [`HeaderMap`] to build a correct HTTP request with this
     /// [`Dsn`].
     #[cfg(feature = "transport-custom")]
-    #[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
     #[must_use]
     pub fn to_headers(&self) -> HeaderMap {
         let mut headers = HeaderMap::new();
@@ -599,7 +592,6 @@ impl TryFrom<&str> for Dsn {
 
 /// [`Parts`] aquired from [`Dsn::into_parts`].
 #[cfg(feature = "transport-custom")]
-#[cfg_attr(feature = "nightly", doc(cfg(feature = "transport-custom")))]
 #[derive(Clone, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Parts {
     /// The auth header value

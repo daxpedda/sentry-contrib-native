@@ -34,11 +34,13 @@ impl CPath for PathBuf {
 
         #[cfg(windows)]
         let path = path.encode_wide();
-        #[cfg(not(windows))]
+        #[cfg(not(any(windows, target_arch = "aarch64")))]
         let path = path
             .into_vec()
             .into_iter()
             .map(|ch| unsafe { mem::transmute::<u8, i8>(ch) });
+        #[cfg(all(not(windows), target_arch = "aarch64"))]
+        let path = path.into_vec().into_iter();
 
         path.take_while(|ch| *ch != 0).chain(Some(0)).collect()
     }
@@ -115,13 +117,17 @@ mod cpath {
         {
             OsString::from_wide(&path[..])
         }
-        #[cfg(not(windows))]
+        #[cfg(not(any(windows, target_arch = "aarch64")))]
         {
             OsString::from_vec(
                 path.into_iter()
                     .map(|ch| unsafe { mem::transmute::<i8, u8>(ch) })
                     .collect(),
             )
+        }
+        #[cfg(all(not(windows), target_arch = "aarch64"))]
+        {
+            OsString::from_vec(path.into_iter().collect())
         }
     }
 

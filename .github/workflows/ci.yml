@@ -91,11 +91,6 @@ jobs:
               target: x86_64-unknown-linux-gnu,
               test: true,
             }
-          - {
-              runner: ubuntu-latest,
-              target: aarch64-unknown-linux-gnu,
-              test: true,
-            }
           - { runner: macos-latest, target: x86_64-apple-darwin, test: true }
           - {
               runner: macos-latest,

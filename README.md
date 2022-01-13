@@ -120,7 +120,6 @@ sentry::set_hook(None, Some(Box::new(|_| sentry::shutdown())));
 Currently the following systems are tested with CI:
 
 - x86_64-unknown-linux-gnu
-- aarch64-unknown-linux-gnu (building only)
 - x86_64-apple-darwin
 - aarch64-apple-darwin (building only)
 - x86_64-pc-windows-msvc

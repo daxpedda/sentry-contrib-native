@@ -20,7 +20,7 @@ and this project adheres to
 
 ### Fixed
 
-- Fixed compilation on aarch64-apple-darwin
+- Fixed compilation on aarch64-unknown-linux-gnu
 
 ### Security
 

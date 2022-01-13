@@ -14,7 +14,7 @@ pub fn set_hook() {
     panic::set_hook(Box::new(move |panic_info| {
         PANICKED.store(true, Ordering::SeqCst);
         hook(panic_info);
-    }))
+    }));
 }
 
 /// Call this at the end of a test to check if a thread panicked, if it did,
@@ -23,7 +23,5 @@ pub fn set_hook() {
 /// # Panics
 /// Panics in the main thread if a panic occured in another thread.
 pub fn verify_panics() {
-    if PANICKED.load(Ordering::SeqCst) {
-        panic!("panicked in thread");
-    }
+    assert!(!PANICKED.load(Ordering::SeqCst), "panicked in thread");
 }

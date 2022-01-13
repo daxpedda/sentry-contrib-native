@@ -88,7 +88,7 @@ impl Value {
                 for index in 0..unsafe { sys::value_get_length(raw_value) } {
                     list.push(unsafe {
                         Self::from_raw_borrowed(sys::value_get_by_index(raw_value, index))
-                    })
+                    });
                 }
 
                 Self::List(list)
@@ -746,9 +746,7 @@ impl From<f32> for Value {
 #[allow(clippy::fallible_impl_from)]
 impl From<String> for Value {
     fn from(value: String) -> Self {
-        if value.contains('\0') {
-            panic!("found null byte")
-        }
+        assert!(!value.contains('\0'), "found null byte");
 
         Self::String(value)
     }

@@ -93,7 +93,7 @@ impl RToC for String {
 
 /// Catch unwinding panics and [`abort`] if any occured.
 pub fn catch<R>(fun: impl FnOnce() -> R) -> R {
-    match panic::catch_unwind(AssertUnwindSafe(|| fun())) {
+    match panic::catch_unwind(AssertUnwindSafe(fun)) {
         Ok(ret) => ret,
         Err(_) => process::abort(),
     }
@@ -204,5 +204,5 @@ mod rtoc {
 #[rusty_fork::fork_test(timeout_ms = 60000)]
 #[should_panic]
 fn catch_panic() {
-    catch(|| panic!("test"))
+    catch(|| panic!("test"));
 }

@@ -176,7 +176,7 @@ pub trait Transport: 'static + Send + Sync {
 
 impl<T: Fn(RawEnvelope) + 'static + Send + Sync> Transport for T {
     fn send(&self, envelope: RawEnvelope) {
-        self(envelope)
+        self(envelope);
     }
 }
 
@@ -513,11 +513,9 @@ impl Dsn {
                     auth.push_str(password);
                 }
 
-                let host = if let Some(port) = dsn_url.port() {
-                    format!("{}:{}", host, port)
-                } else {
-                    host.to_owned()
-                };
+                let host = dsn_url
+                    .port()
+                    .map_or_else(|| host.to_owned(), |port| format!("{}:{}", host, port));
 
                 let url = format!(
                     "{}://{}/api/{}/envelope/",

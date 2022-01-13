@@ -1,7 +1,6 @@
 #![warn(
     clippy::cargo,
     clippy::missing_docs_in_private_items,
-    clippy::nursery,
     clippy::pedantic,
     missing_docs
 )]
@@ -244,12 +243,11 @@ fn build(
         let mut toolchain = PathBuf::from(ndk_root);
         toolchain.push("build/cmake/android.toolchain.cmake");
 
-        if !toolchain.exists() {
-            panic!(
-                "Unable to find cmake toolchain file {}",
-                toolchain.display()
-            );
-        }
+        assert!(
+            toolchain.exists(),
+            "Unable to find cmake toolchain file {}",
+            toolchain.display()
+        );
 
         let abi = match target_arch.as_ref() {
             "aarch64" => "arm64-v8a",

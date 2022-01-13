@@ -134,7 +134,7 @@ impl Options {
                 options.set_dsn(
                     &env::var("SENTRY_DSN")
                         .expect("tests require a valid `SENTRY_DSN` environment variable"),
-                )
+                );
             }
         }
 
@@ -196,7 +196,7 @@ impl Options {
             sys::transport_set_state(transport, startup.cast());
             sys::transport_set_startup_func(transport, Some(transport::startup));
             sys::transport_set_shutdown_func(transport, Some(transport::shutdown));
-            sys::options_set_transport(self.as_mut(), transport)
+            sys::options_set_transport(self.as_mut(), transport);
         }
     }
 
@@ -221,7 +221,7 @@ impl Options {
         self.before_send = Some(unsafe { Box::from_raw(fun) });
 
         unsafe {
-            sys::options_set_before_send(self.as_mut(), Some(before_send::before_send), fun.cast())
+            sys::options_set_before_send(self.as_mut(), Some(before_send::before_send), fun.cast());
         }
     }
 
@@ -704,7 +704,7 @@ impl Options {
         };
         #[cfg(not(windows))]
         unsafe {
-            sys::options_add_attachment(self.as_mut(), path.as_ptr())
+            sys::options_add_attachment(self.as_mut(), path.as_ptr());
         }
     }
 
@@ -739,7 +739,7 @@ impl Options {
         };
         #[cfg(not(windows))]
         unsafe {
-            sys::options_set_handler_path(self.as_mut(), path.as_ptr())
+            sys::options_set_handler_path(self.as_mut(), path.as_ptr());
         }
     }
 
@@ -780,7 +780,7 @@ impl Options {
         };
         #[cfg(not(windows))]
         unsafe {
-            sys::options_set_database_path(self.as_mut(), path.as_ptr())
+            sys::options_set_database_path(self.as_mut(), path.as_ptr());
         };
     }
 
@@ -910,7 +910,7 @@ impl Shutdown {
     /// }
     /// ```
     pub fn forget(self) {
-        mem::forget(self)
+        mem::forget(self);
     }
 
     /// Manually shutdown.
@@ -933,7 +933,7 @@ impl Shutdown {
     /// }
     /// ```
     pub fn shutdown(self) {
-        drop(self)
+        drop(self);
     }
 }
 
@@ -1068,17 +1068,17 @@ fn threaded_stress() -> anyhow::Result<()> {
                 for index in 0..THREADS {
                     let options = Arc::clone(&options);
 
-                    handles.push(thread::spawn(move || test(options, index)))
+                    handles.push(thread::spawn(move || test(options, index)));
                 }
 
                 handles
             });
-            spawns.push(handle)
+            spawns.push(handle);
         }
 
         for spawn in spawns {
             for handle in spawn.join().unwrap() {
-                handle.join().unwrap()
+                handle.join().unwrap();
             }
         }
 
@@ -1092,7 +1092,7 @@ fn threaded_stress() -> anyhow::Result<()> {
             options
                 .write()
                 .unwrap()
-                .set_transport(move |_| Ok(move |_| println!("{}", index)))
+                .set_transport(move |_| Ok(move |_| println!("{}", index)));
         },
         |options, _| options.write().unwrap().set_before_send(|value| value),
         |options, index| options.write().unwrap().set_dsn(index.to_string()),
@@ -1103,7 +1103,7 @@ fn threaded_stress() -> anyhow::Result<()> {
                 .write()
                 .unwrap()
                 .set_sample_rate(sample_rate)
-                .unwrap()
+                .unwrap();
         },
         |options, _| println!("{:?}", options.read().unwrap().sample_rate()),
         |options, index| options.write().unwrap().set_release(index.to_string()),
@@ -1121,7 +1121,7 @@ fn threaded_stress() -> anyhow::Result<()> {
             options
                 .write()
                 .unwrap()
-                .set_transport_thread_name(index.to_string())
+                .set_transport_thread_name(index.to_string());
         },
         #[cfg(feature = "transport-default")]
         |options, _| println!("{:?}", options.read().unwrap().transport_thread_name()),
@@ -1130,14 +1130,14 @@ fn threaded_stress() -> anyhow::Result<()> {
                 0 => false,
                 1 => true,
                 _ => unreachable!(),
-            })
+            });
         },
         |options, _| println!("{:?}", options.read().unwrap().debug()),
         |options, index| {
             options
                 .write()
                 .unwrap()
-                .set_logger(move |_, _| println!("{}", index))
+                .set_logger(move |_, _| println!("{}", index));
         },
         |options, index| {
             options
@@ -1147,7 +1147,7 @@ fn threaded_stress() -> anyhow::Result<()> {
                     0 => false,
                     1 => true,
                     _ => unreachable!(),
-                })
+                });
         },
         |options, _| println!("{:?}", options.read().unwrap().auto_session_tracking()),
         |options, index| {
@@ -1158,7 +1158,7 @@ fn threaded_stress() -> anyhow::Result<()> {
                     0 => false,
                     1 => true,
                     _ => unreachable!(),
-                })
+                });
         },
         |options, _| println!("{:?}", options.write().unwrap().require_user_consent()),
         |options, index| {
@@ -1169,7 +1169,7 @@ fn threaded_stress() -> anyhow::Result<()> {
                     0 => false,
                     1 => true,
                     _ => unreachable!(),
-                })
+                });
         },
         |options, _| println!("{:?}", options.read().unwrap().symbolize_stacktraces()),
         |options, index| options.write().unwrap().add_attachment(index.to_string()),
@@ -1178,7 +1178,7 @@ fn threaded_stress() -> anyhow::Result<()> {
             options
                 .write()
                 .unwrap()
-                .set_database_path(index.to_string())
+                .set_database_path(index.to_string());
         },
         |options, index| {
             options
@@ -1188,7 +1188,7 @@ fn threaded_stress() -> anyhow::Result<()> {
                     0 => false,
                     1 => true,
                     _ => unreachable!(),
-                })
+                });
         },
     ]);
 

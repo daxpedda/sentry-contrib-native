@@ -62,6 +62,7 @@ async fn main() -> Result<()> {
         user.set();
     }
 
+    #[allow(deref_nullptr)]
     unsafe {
         *ptr::null_mut() = true;
     }

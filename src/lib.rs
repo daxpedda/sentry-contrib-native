@@ -1,7 +1,6 @@
 #![warn(
     clippy::cargo,
     clippy::missing_docs_in_private_items,
-    clippy::nursery,
     clippy::pedantic,
     missing_docs
 )]
@@ -477,8 +476,8 @@ pub fn set_fingerprint<I: IntoIterator<Item = S>, S: Into<String>>(
                 raw_fingerprints[30],
                 raw_fingerprints[31],
                 ptr::null::<c_char>(),
-            )
-        };
+            );
+        }
 
         Ok(())
     }
@@ -637,7 +636,7 @@ fn fingerprint_invalid() {
         fingerprints.push(fingerprint.to_string());
     }
 
-    crate::set_fingerprint(fingerprints).unwrap()
+    crate::set_fingerprint(fingerprints).unwrap();
 }
 
 #[cfg(test)]
@@ -653,17 +652,17 @@ fn threaded_stress() -> anyhow::Result<()> {
                 let mut handles = Vec::with_capacity(100);
 
                 for index in 0..100 {
-                    handles.push(thread::spawn(move || test(index)))
+                    handles.push(thread::spawn(move || test(index)));
                 }
 
                 handles
             });
-            spawns.push(handle)
+            spawns.push(handle);
         }
 
         for spawn in spawns {
             for handle in spawn.join().unwrap() {
-                handle.join().unwrap()
+                handle.join().unwrap();
             }
         }
     }
@@ -685,7 +684,7 @@ fn threaded_stress() -> anyhow::Result<()> {
                 1 => Consent::Given,
                 2 => Consent::Revoked,
                 _ => unreachable!(),
-            })
+            });
         },
         |_| {
             let _ = crate::user_consent();
@@ -714,7 +713,7 @@ fn threaded_stress() -> anyhow::Result<()> {
                 3 => Level::Error,
                 4 => Level::Fatal,
                 _ => unreachable!(),
-            })
+            });
         },
         |_| crate::start_session(),
         |_| crate::end_session(),

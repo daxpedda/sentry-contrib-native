@@ -118,7 +118,7 @@ fn before_send_test() -> anyhow::Result<()> {
 
     impl Drop for Filter {
         fn drop(&mut self) {
-            COUNTER.with(|counter| *counter.borrow_mut() = *self.counter.get_mut())
+            COUNTER.with(|counter| *counter.borrow_mut() = *self.counter.get_mut());
         }
     }
 

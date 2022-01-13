@@ -72,7 +72,7 @@ pub trait Logger: 'static + Send + Sync {
 
 impl<T: Fn(Level, Message) + 'static + Send + Sync> Logger for T {
     fn log(&self, level: Level, message: Message) {
-        self(level, message)
+        self(level, message);
     }
 }
 
@@ -118,7 +118,7 @@ pub extern "C" fn logger(
         )
     };
 
-    ffi::catch(|| logger.log(level, message))
+    ffi::catch(|| logger.log(level, message));
 }
 
 #[cfg(test)]
@@ -148,7 +148,7 @@ fn logger_test() -> anyhow::Result<()> {
 
     impl Drop for Log {
         fn drop(&mut self) {
-            LOGGED.with(|logged| *logged.borrow_mut() = *self.logged.get_mut())
+            LOGGED.with(|logged| *logged.borrow_mut() = *self.logged.get_mut());
         }
     }
 

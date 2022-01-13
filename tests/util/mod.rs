@@ -308,12 +308,11 @@ async fn events_internal(
                 // run our checks against it
                 panic::catch_unwind(AssertUnwindSafe(|| check(event))).map_err(|error| {
                     // if there was a response and the check failed dump that information in the CI
-                    if let Some(event) = response {
-                        eprintln!("Event: {:?}", event)
                     // if there was no response than we timed out
-                    } else {
-                        eprintln!("[Timeout]: {}", uuid)
-                    }
+                    response.map_or_else(
+                        || eprintln!("[Timeout]: {}", uuid),
+                        |event| eprintln!("Event: {:?}", event),
+                    );
 
                     // return that error
                     if let Ok(error) = error.downcast::<Error>() {
@@ -445,12 +444,11 @@ async fn external_events_internal(
                 // run our checks against it
                 panic::catch_unwind(AssertUnwindSafe(|| check(event.clone()))).map_err(|error| {
                     // if there was a response and the check failed dump that information in the CI
-                    if let Some(event) = event {
-                        eprintln!("Event: {:?}", event)
                     // if there was no response than we timed out
-                    } else {
-                        eprintln!("[Timeout]: {}", user_id)
-                    }
+                    event.map_or_else(
+                        || eprintln!("[Timeout]: {}", user_id),
+                        |event| eprintln!("Event: {:?}", event),
+                    );
 
                     if let Ok(error) = error.downcast::<Error>() {
                         *error

@@ -28,9 +28,9 @@ fn main() -> Result<()> {
     let _shutdown = options.init()?;
 
     if ask_user_for_consent() {
-        sentry::set_user_consent(Consent::Given)
+        sentry::set_user_consent(Consent::Given);
     } else {
-        sentry::set_user_consent(Consent::Revoked)
+        sentry::set_user_consent(Consent::Revoked);
     }
 
     // TODO: use extra, context and so on

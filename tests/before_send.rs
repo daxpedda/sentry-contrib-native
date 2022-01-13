@@ -20,7 +20,7 @@ async fn before_send() -> Result<()> {
                 let event = value.as_mut_map().unwrap();
                 event.remove("extra");
                 value
-            })
+            });
         }),
         vec![(
             || {

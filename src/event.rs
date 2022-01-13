@@ -272,7 +272,7 @@ impl Ord for Uuid {
 
 impl Hash for Uuid {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.into_bytes().hash(state)
+        self.into_bytes().hash(state);
     }
 }
 
@@ -356,7 +356,7 @@ fn event() {
     let event = Event::new();
 
     if let Interface::Message { .. } = event.interface {
-        unreachable!("event is incorrectly a message")
+        unreachable!("event is incorrectly a message");
     }
 
     event.capture();
@@ -373,7 +373,7 @@ fn event() {
         assert_eq!(&Some("test".into()), logger);
         assert_eq!("test", text);
     } else {
-        unreachable!("event is incorrectly plain")
+        unreachable!("event is incorrectly plain");
     }
 
     event.capture();

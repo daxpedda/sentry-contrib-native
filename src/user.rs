@@ -91,5 +91,5 @@ fn user() {
 
     let mut user = User::new();
     user.insert("test", "test");
-    user.set()
+    user.set();
 }

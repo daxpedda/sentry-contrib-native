@@ -114,5 +114,5 @@ fn breadcrumb() {
     let mut breadcrumb = Breadcrumb::new(None, None);
     breadcrumb.insert("test", "test");
     assert_eq!(Some("test"), breadcrumb.get("test").and_then(Value::as_str));
-    breadcrumb.add()
+    breadcrumb.add();
 }

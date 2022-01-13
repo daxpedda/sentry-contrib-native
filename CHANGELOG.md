@@ -12,11 +12,15 @@ and this project adheres to
 
 ### Changed
 
+- Updated `rmpv` to 1.0.0
+
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Fixed compilation on aarch64-apple-darwin
 
 ### Security
 

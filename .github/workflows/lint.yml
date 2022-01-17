@@ -40,10 +40,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust:
-          - { channel: stable, feature: "" }
-          - { channel: beta, feature: "" }
-          - { channel: nightly, feature: "" }
         branch: ${{ fromJson(needs.build-matrix.outputs.matrix) }}
 
     runs-on: ubuntu-latest
@@ -56,12 +52,11 @@ jobs:
           path: |
             ~/rustc-version.txt
             ~/outcome.txt
-          key: lint-${{ matrix.branch }}-${{ matrix.rust.channel }}
+          key: lint-${{ matrix.branch }}
 
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
         with:
-          rust-version: ${{ matrix.rust.channel }}
           components: clippy
       - name: Compare rustc versions
         id: rustc-version
@@ -116,7 +111,7 @@ jobs:
           RUSTDOCFLAGS: -D warnings
         run:
           cargo -v doc --no-deps --document-private-items --workspace --features
-          transport-custom ${{ matrix.rust.feature }}
+          transport-custom
 
       - name: Save outcome
         if:

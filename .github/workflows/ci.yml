@@ -9,8 +9,6 @@ on:
     branches:
       - master
       - release
-  schedule:
-    - cron: 0 0 * * *
 
 defaults:
   run:
@@ -74,10 +72,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust:
-          - { channel: stable, feature: "" }
-          - { channel: beta, feature: "" }
-          - { channel: nightly, feature: "" }
         feature:
           - {
               name: "--no-default-features --features transport-custom",
@@ -122,13 +116,11 @@ jobs:
             ~/rustc-version.txt
             ~/outcome.txt
           key:
-            CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.rust.channel
-            }}-${{ matrix.feature.transport-default }}
+            CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.feature.transport-default }}
 
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1
         with:
-          rust-version: ${{ matrix.rust.channel }}
           targets: ${{ matrix.os.target }}
       - name: Compare rustc versions
         id: rustc-version
@@ -178,27 +170,22 @@ jobs:
       - name: Build
         id: build
         if: steps.rustc-version.outcome != 'failure'
-        run:
-          cargo -v build ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+        run: cargo -v build ${{ matrix.feature.name }}
       - name: Test
         if:
           always() && steps.build.outcome == 'success' && github.event_name !=
           'pull_request' && matrix.os.test
-        run: cargo -v test ${{ matrix.feature.name }} ${{ matrix.rust.feature }}
+        run: cargo -v test ${{ matrix.feature.name }}
       - name: Example
         if:
           always() && steps.build.outcome == 'success' && github.event_name !=
           'pull_request' && matrix.os.test && matrix.feature.transport-default
-        run:
-          cargo -v run --example example ${{ matrix.feature.name }} ${{
-          matrix.rust.feature }}
+        run: cargo -v run --example example ${{ matrix.feature.name }}
       - name: Custom transport example
         if:
           always() && steps.build.outcome == 'success' && github.event_name !=
           'pull_request' && matrix.os.test && matrix.feature.transport-custom
-        run:
-          cargo -v run --example custom-transport ${{ matrix.feature.name }} ${{
-          matrix.rust.feature }}
+        run: cargo -v run --example custom-transport ${{ matrix.feature.name }}
 
       - name: Save outcome
         if:

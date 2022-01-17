@@ -116,7 +116,8 @@ jobs:
             ~/rustc-version.txt
             ~/outcome.txt
           key:
-            CI-${{ matrix.branch }}-${{ runner.os }}-${{ matrix.feature.transport-default }}
+            CI-${{ matrix.branch }}-${{ runner.os }}-${{
+            matrix.feature.transport-default }}
 
       - name: Install Rust
         uses: hecrj/setup-rust-action@v1

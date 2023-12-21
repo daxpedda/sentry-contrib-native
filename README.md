@@ -1,3 +1,9 @@
+# Deprecated
+
+This crate has been deprecated in favor of [`crash-handler`](https://crates.io/crates/crash-handler), a pure Rust alternative to relying on Sentry's C/C++ SDK.
+
+See [`sentry-rust-minidump`](https://crates.io/crates/sentry-rust-minidump) as well for more integration with Sentry.
+
 # sentry-contrib-native
 
 [![Crates.io](https://img.shields.io/crates/v/sentry-contrib-native.svg)](https://crates.io/crates/sentry-contrib-native)
